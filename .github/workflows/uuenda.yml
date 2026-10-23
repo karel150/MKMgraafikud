@@ -1,0 +1,81 @@
+name: Uuenda andmed ja avalda
+
+on:
+  schedule:
+    - cron: "15 6 * * 1-5"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["andmed/**", "docs/**", "R/**", ".github/workflows/**"]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: uuenda
+  cancel-in-progress: false
+
+jobs:
+  uuenda:
+    runs-on: ubuntu-latest
+    outputs:
+      hoiatusi: ${{ steps.kontroll.outputs.hoiatusi }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          cache-version: 1
+      - name: Arvuta andmed
+        env:
+          TZ: Europe/Tallinn
+          LANG: C.UTF-8
+        run: Rscript R/uuenda.R
+      - name: Salvesta muudetud andmed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data
+          if git diff --cached --quiet; then
+            echo "Andmed ei muutunud."
+          else
+            git commit -m "Andmed $(date +%F)"
+            git pull --rebase
+            git push
+          fi
+      - name: Loe hoiatused
+        id: kontroll
+        run: |
+          if [ -s hoiatused.txt ]; then
+            echo "hoiatusi=$(wc -l < hoiatused.txt)" >> "$GITHUB_OUTPUT"
+            while IFS= read -r rida; do echo "::warning::$rida"; done < hoiatused.txt
+          else
+            echo "hoiatusi=0" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  avalda:
+    needs: uuenda
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+  teavita:
+    needs: [uuenda, avalda]
+    if: needs.uuenda.outputs.hoiatusi != '0'
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Andmete uuendamisel tekkis ${{ needs.uuenda.outputs.hoiatusi }} hoiatust. Vaata töö 'uuenda' logi."
+          exit 1
