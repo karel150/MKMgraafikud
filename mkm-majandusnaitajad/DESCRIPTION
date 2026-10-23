@@ -1,0 +1,12 @@
+Package: mkmmajandusnaitajad
+Title: Eesti majandusnaitajate andmete uuendamine
+Version: 0.1.0
+Description: Laeb andmed Statistikaametist ja Eurostatist, arvutab
+    majandusplaaniindeksi ning kirjutab veebilehe JSON-failid.
+License: file LICENSE
+Encoding: UTF-8
+Imports:
+    tidyverse,
+    eurostat,
+    httr,
+    jsonlite
