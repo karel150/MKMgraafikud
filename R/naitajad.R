@@ -180,8 +180,8 @@ koosta_naitajad <- function(esi_kuu = NULL) {
     stk_flow = "L_LE", partner = "WRL_REST", freq = "Q")), c(1, 1e6))
   lisa("elekter_h", function() eurostat_seeria("nrg_pc_205", list(
     geo = "EE", nrg_cons = "TOT_KWH", tax = "X_TAX", currency = "EUR", unit = "KWH")), c(0, 2))
-  # Kodumajapidamiste säästumäär (brutosäästu määr, %): kvartal SA, aasta
-  lisa("saast_q", function() eurostat_seeria("nasq_10_ki", list(geo = "EE", na_item = "SRG_S14_S15", s_adj = "SCA", unit = "PC", freq = "Q")), c(-50, 60))
+  # Kodumajapidamiste säästumäär (brutosäästu määr, %): kvartal NSA (Eesti kohta SA rida puudub), aasta
+  lisa("saast_q", function() eurostat_seeria("nasq_10_ki", list(geo = "EE", na_item = "SRG_S14_S15", s_adj = "NSA", unit = "PC", freq = "Q")), c(-50, 60))
   lisa("saast_a", function() eurostat_seeria("nasa_10_ki", list(geo = "EE", na_item = "SRG_S14_S15", unit = "PC", freq = "A")), c(-50, 60))
   # Tehisintellekti kasutavad ettevõtted (>= 10 hõivatut), % ettevõtetest
   for (k in list(c("EE", "ee"), c("EU27_2020", "eu"))) local({

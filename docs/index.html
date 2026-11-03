@@ -450,7 +450,7 @@ function koostaGrupid(D, META) {
       F: { Q: xy(Q('jae_q_G47'), { series: [{ name: 'Jaekaubandus (G47)', y: Q('jae_q_G47').values, c: '--s1' }, { name: 'Mootorsõidukid (G45)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45')), c: '--s2' }, { name: 'Kokku (G45+G47)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45_47')), c: '--s3' }] }) },
       src: 'Statistikaamet KM0102', url: SA('KM0102'), note: 'Püsivhindades. Pealkirjas jaekaubandus ilma mootorsõidukiteta (G47).' },
     { nr: '26', unitChip: '% kasutatavast tulust', kind: 'line', unit: '%', head: 'level',
-      F: { Q: xy(Q('saast_q'), { note: 'Sesoonselt korrigeeritud.' }), A: xy(S('saast_a')) },
+      F: { Q: xy(Q('saast_q'), { note: 'Sesoonselt korrigeerimata (Eurostat ei avalda Eesti kohta korrigeeritud rida).' }), A: xy(S('saast_a')) },
       src: 'Eurostat nasq_10_ki / nasa_10_ki', url: 'https://doi.org/10.2908/TEINA500', note: 'Kodumajapidamiste brutosäästu määr.' },
     { nr: '27', unitChip: 'eluruumide arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
       F: { Q: xy(alates(ehQ, ALGUS)), A: xy(ehA) },
