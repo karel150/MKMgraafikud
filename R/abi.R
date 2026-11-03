@@ -61,8 +61,11 @@ px_paring <- function(tabel, ..., katseid = 3) {
 }
 
 # ---- Eurostat ---------------------------------------------------------------
-eurostat_seeria <- function(id, filters) {
+# vali: lisavalik pärast allalaadimist, nt list(nace_r2 = "C10-S951_X_K"), kui
+# dimensiooni ei saa päringusse panna või selle nimi võib erineda.
+eurostat_seeria <- function(id, filters, vali = NULL) {
   df <- eurostat::get_eurostat(id, filters = filters, time_format = "raw", cache = FALSE)
+  for (v in names(vali)) if (v %in% names(df)) df <- df[df[[v]] %in% vali[[v]], ]
   tcol <- intersect(c("time", "TIME_PERIOD"), names(df))[1]
   df <- df[!is.na(df$values), ]
   if (!nrow(df)) stop(id, ": päring ei tagastanud andmeid.")
