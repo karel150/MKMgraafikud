@@ -265,7 +265,7 @@ footer a { color: var(--muted); }
           <details class="mp-meth">
             <summary>Metoodika</summary>
             <p>Majandusplaaniindeks koondab kaheksa hooajaliselt korrigeeritud näitajat: SKP, eksport, põhivarainvesteeringud, tootlikkus hõivatu kohta, hõive, välisinvesteeringute positsioon, tööstuse tootmisvõimsuste rakendamine ja majandususaldus. Iga näitaja kvartalimuutus (100 × Δlog) kaalutakse pöördvõrdeliselt tema standardhälbega (Conference Boardi meetod), et volatiilsed näitajad ei domineeriks. Muutused kumuleeritakse tasemeindeksiks, mille 2023. aasta keskmine on 100.</p>
-            <p>Standardiseerimise keskmine ja hälve on hinnatud perioodil 2010–2023, COVID-aastad 2020–2021 välja jäetud. Majandususaldus on Eurostati ametlik ESI. Kuud, mida Eurostat pole avaldanud (alates 05/2026), on hinnatud Statistikaameti baromeetritest Euroopa Komisjoni metoodikaga ja kalibreeritud ametliku ESI vastu.</p>
+            <p>Standardiseerimise keskmine ja hälve on hinnatud perioodil 2010–2023, COVID-aastad 2020–2021 välja jäetud. Majandususaldus on Eurostati ametlik ESI. Kuud, mida Eurostat pole avaldanud (alates 05/2026), on hinnatud Statistikaameti baromeetritest Euroopa Komisjoni metoodikaga ja kalibreeritud ametliku ESI vastu. Tootmisvõimsuste rakendatuse tase on kuni 2026. aasta II kvartalini Eurostati hooajaliselt korrigeeritud rida, alates III kvartalist Statistikaameti tööstusbaromeetri tabel BAR03. BAR03 väärtused on hooajaliselt korrigeeritud Eurostati viimase viie aasta keskmise hooajateguriga.</p>
           </details>
         </div>
       </div>
@@ -907,7 +907,8 @@ function mpInitControls() {
   const esiH = MP.esi_hinnatud;
   const mmyy = (s) => s.slice(5, 7) + '/' + s.slice(0, 4);
   document.getElementById('mp-stamp').innerHTML = `Andmed uuendatud: ${upd_.toLocaleDateString('et-EE')} ${upd_.toLocaleTimeString('et-EE', { hour: '2-digit', minute: '2-digit' })}` +
-    (esiH.length ? `<br>Majandususaldus hinnatud: ${mmyy(esiH[0][0])}–${mmyy(esiH.at(-1)[0])}` : '');
+    (esiH.length ? `<br>Majandususaldus hinnatud: ${mmyy(esiH[0][0])}–${mmyy(esiH.at(-1)[0])}` : '') +
+    ((MP.icu_bar03 || []).length ? `<br>Tootmisvõimsused Statistikaameti tabelist BAR03: alates ${['I','II','III','IV'][(+MP.icu_bar03[0].slice(5, 7) - 1) / 3]} kv ${MP.icu_bar03[0].slice(0, 4)}` : '');
 }
 
 function mpDispose() { mpCharts.forEach((c) => c.dispose()); mpCharts = []; }

@@ -154,7 +154,7 @@ aeg_utc <- function() format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
 # ---- Majandusplaaniindeks -> JSON ---------------------------------------------
 # Kutsutakse välja majandusplaaniindeks_sca.R lõpus.
 kirjuta_majandusplaan <- function(kokku, naitajad, esi, base_year, std_algus, std_lopp, std_valja,
-                                  fail = "majandusplaan.json") {
+                                  icu_bar03 = NULL, fail = "majandusplaan.json") {
   cols <- c("time", "n_naitajaid", "Majandusplaaniindeks", "Koond_kv_muutus_%",
             "Koond_aasta_muutus_%", "Koond_z", naitajad, "ESI_hinnatud_kuid")
   puudu <- setdiff(cols, names(kokku))
@@ -188,7 +188,9 @@ kirjuta_majandusplaan <- function(kokku, naitajad, esi, base_year, std_algus, st
     base_year    = base_year,
     std          = list(algus = format(std_algus), lopp = format(std_lopp), valja = I(as.integer(std_valja))),
     uuendatud    = as.numeric(Sys.time()),
-    esi_hinnatud = esi_hinnatud
+    esi_hinnatud = esi_hinnatud,
+    # Kvartalid, mille tootmisvõimsuste tase on Statistikaameti tabelist BAR03
+    icu_bar03    = I(if (is.null(icu_bar03)) character() else format(as.Date(icu_bar03$time), "%Y-%m-%d"))
   ), fail)
   invisible(TRUE)
 }
