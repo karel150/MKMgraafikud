@@ -92,6 +92,51 @@ tasemed <- pmap(spec, \(nimi, id, sagedus, filters) {
   df
 }) |> set_names(spec$nimi)
 
+# ---- Tootmisvõimsused alates 2026 III kvartalist: Statistikaamet BAR03 --------
+# Eurostati rida (SA) kasutatakse kuni 2026 II kvartalini. Alates 2026 III
+# kvartalist võetakse tase Statistikaameti tabelist BAR03 (näitaja
+# INDU_TOT_13_QP_Q, "Tootmisvõimsuste rakendatuse tase praegu, %"). Küsimus on
+# kvartaalne ja seda küsitakse kvartali esimesel kuul, ülejäänud kuud on tühjad.
+# BAR03 on korrigeerimata (NSA). Hooajategur = Eurostati NSA − SA keskmine sama
+# kvartali kohta viimase 5 täisaasta jooksul (sama põhimõte nagu esi_eesti.R-is).
+icu_bar03_algus <- as.Date("2026-07-01")
+
+icu_bar03 <- esi_lae_statee_tabel("BAR03", "INDU_TOT_13_QP_Q") |>
+  mutate(time = floor_date(time, "quarter")) |>
+  filter(time >= icu_bar03_algus) |>
+  group_by(time) |>
+  summarise(NSA = mean(NSA), .groups = "drop")
+
+icu_hooaeg <- tryCatch({
+  get_eurostat("ei_bsin_q_r2", filters = list(geo = "EE", indic = "BS-ICU-PC", s_adj = c("SA", "NSA"), freq = "Q"),
+               time_format = "date", cache = FALSE) |>
+    filter(!is.na(values)) |>
+    select(time, s_adj, values) |>
+    pivot_wider(names_from = s_adj, values_from = values) |>
+    filter(!is.na(SA), !is.na(NSA), time < icu_bar03_algus) |>
+    filter(year(time) > max(year(time)) - 5) |>
+    group_by(kv = quarter(time)) |>
+    summarise(tegur = mean(NSA - SA), .groups = "drop")
+}, error = function(e) {
+  hoiata("Tootmisvõimsused: Eurostati NSA rida ei laadinud (", conditionMessage(e),
+         "). BAR03 andmeid kasutatakse hooajaliselt korrigeerimata kujul.")
+  tibble(kv = 1:4, tegur = 0)
+})
+
+icu_bar03 <- icu_bar03 |>
+  mutate(kv = quarter(time)) |>
+  left_join(icu_hooaeg, by = "kv") |>
+  mutate(values = NSA - coalesce(tegur, 0)) |>
+  select(time, values)
+
+tasemed[["Tootmisv\u00f5imsused"]] <- tasemed[["Tootmisv\u00f5imsused"]] |>
+  filter(time < icu_bar03_algus) |>
+  bind_rows(icu_bar03) |>
+  arrange(time)
+
+message("Tootmisvõimsused BAR03-st: ",
+        if (nrow(icu_bar03)) paste(format(icu_bar03$time, "%Y-%m"), round(icu_bar03$values, 1), collapse = "; ") else "andmeid pole")
+
 # Majandususaldus (ESI): Eurostati ametlik ESI; kuud, mida Eurostat veel ei
 # avalda, arvutatakse statistikaameti baromeetritest EK metoodikaga.
 esi <- esi_eesti()
@@ -199,5 +244,6 @@ kirjuta_majandusplaan(
   base_year = base_year,
   std_algus = std_algus,
   std_lopp  = std_lopp,
-  std_valja = std_valja
+  std_valja = std_valja,
+  icu_bar03 = icu_bar03
 )
