@@ -3,7 +3,7 @@
 Avalik näidikulaud kolme vaatega:
 
 1. **Majandusplaani näitajad**: majandusplaaniindeks ja selle 8 alamnäitajat (tasemed, muutused, soojuskaart, andmetabel).
-2. **Eesti majanduse graafikud**: 15 näitajat kuu-, kvartali- ja aastavaatega.
+2. **Eesti majanduse graafikud**: 30 näitajat (neist 15 põhinäitajat) kuu-, kvartali- ja aastavaatega.
 3. **Eesti positsioon indeksites**: 6 rahvusvahelist edetabelit.
 
 Andmed uuendatakse automaatselt tööpäeviti GitHub Actionsiga. Leht on staatiline: HTML, JavaScript ja JSON-failid, ilma serverita. Graafikud on tehtud ECharts'iga (Apache 2.0).
@@ -33,7 +33,8 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `andmed/indeksid.csv` | Edetabelid, üks rida edetabeli kohta. **Uuendatakse käsitsi.** |
 | `andmed/indeksid_vordlus.csv` | Võrdlusriikide kohad edetabelites. **Uuendatakse käsitsi.** |
 | `docs/index.html` | Veebileht. |
-| `docs/data/` | Andmefailid. Neid kirjutab robot, käsitsi ei muuda. |
+| `docs/data/` | Andmefailid. Neid kirjutab robot, käsitsi ei muuda (v.a `kirjeldused.json`). |
+| `docs/data/kirjeldused.json` | Näitajate nimed, valdkonnad, põhinäitaja märge ja selgitused (indikaatorite tabeli lehelt 2.1 AS-IS). **Muudetakse käsitsi.** |
 | `docs/lib/`, `docs/fonts/` | ECharts ja fondid. Asuvad samas kohas, et leht ei laadiks midagi välistest teenustest. |
 | `.github/workflows/uuenda.yml` | Automaatne uuendamine ja avaldamine. |
 | `mkm-ee/manustamine.html` | Koodijupp mkm.ee veebimeeskonnale. |
@@ -122,6 +123,8 @@ Kui ilmub uus väljaanne, muuda faile `andmed/indeksid.csv` ja `andmed/indeksid_
 `indeksid.csv` veerud: `koht` = Eesti koht; `riike` = riikide arv (tühi, kui pole teada); `silt` = lühike lisainfo kaardil; `vordlus_aasta` ja `vordlus_riike` = mis väljaandest võrdlusriikide kohad pärinevad.
 
 ## Näitajate muutmine
+
+* **Nime, selgituse või põhinäitaja märke muutmine:** muuda faili `docs/data/kirjeldused.json` (võti on näitaja number tabelis).
 
 * **Uue näitaja lisamine:** lisa päring faili `R/naitajad.R` (`lisa("nimi", function() ..., vahemik)`). Seejärel lisa kaart failis `docs/index.html` funktsioonis `koostaGrupid` (kopeeri olemasolev kaart eeskujuks).
 * **Majandusplaaniindeksi metoodika muutmine:** muuda faili `R/majandusplaaniindeks_sca.R` samamoodi nagu varem. JSON-i kirjutab funktsioon `kirjuta_majandusplaan()` faili lõpus. Kui lisad indeksisse näitaja, tuleb see lehele automaatselt.

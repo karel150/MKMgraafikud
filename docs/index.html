@@ -24,6 +24,8 @@ body { margin: 0; }
   --s1: #2F5FB3;
   --s2: #C7781A;
   --s3: #00897A;
+  --s4: #8B5CC4;
+  --s5: #C24A6E;
   --neg: #C0503A;
   --peer: #9AA4B5;
   --chip: #EDF0F5;
@@ -37,14 +39,14 @@ body { margin: 0; }
   :root:not([data-theme="light"]) {
     --bg: #0D1424; --surface: #141E33; --fg: #E6EAF2; --muted: #9AA5BA;
     --line: #253150; --grid: #1F2A43; --band: #0A1222; --band-fg: #EEF1F7; --band-muted: #8D99B0;
-    --accent: #F0B24F; --s1: #5E8CDB; --s2: #C27E1C; --s3: #14A493; --neg: #E07A62;
+    --accent: #F0B24F; --s1: #5E8CDB; --s2: #C27E1C; --s3: #14A493; --s4: #A07AD8; --s5: #DB6A7E; --neg: #E07A62;
     --peer: #6C7790; --chip: #1C2740; --mid: #26314A; --dark-line: #C9D1DE; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0D1424; --surface: #141E33; --fg: #E6EAF2; --muted: #9AA5BA;
   --line: #253150; --grid: #1F2A43; --band: #0A1222; --band-fg: #EEF1F7; --band-muted: #8D99B0;
-  --accent: #F0B24F; --s1: #5E8CDB; --s2: #C27E1C; --s3: #14A493; --neg: #E07A62;
+  --accent: #F0B24F; --s1: #5E8CDB; --s2: #C27E1C; --s3: #14A493; --s4: #A07AD8; --s5: #DB6A7E; --neg: #E07A62;
   --peer: #6C7790; --chip: #1C2740; --mid: #26314A; --dark-line: #C9D1DE; color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -99,6 +101,12 @@ main { padding-block: 28px 48px; }
 .per { font-size: 13.5px; color: var(--muted); }
 .delta { font-size: 13px; font-family: var(--f-mono); padding: 1px 6px; border-radius: 4px; background: var(--chip); color: var(--fg); }
 .chart { height: 200px; width: 100%; }
+.chart.tall { height: 290px; }
+.pohi { margin-left: auto; flex: none; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--s2); border: 1px solid currentColor; border-radius: 4px; padding: 1px 5px; align-self: center; }
+details.kirj { padding: 0 16px 10px 48px; font-size: 13px; color: var(--muted); }
+details.kirj summary { cursor: pointer; color: var(--fg); font-weight: 600; font-size: 13px; }
+details.kirj summary:focus-visible { outline: 2px solid var(--accent); }
+details.kirj p { margin: 6px 0 0; }
 .card-foot { margin-top: auto; border-top: 1px solid var(--line); padding: 8px 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
 .card-foot a { color: var(--muted); }
 .card-foot a:hover { color: var(--fg); }
@@ -213,7 +221,7 @@ footer a { color: var(--muted); }
         <span class="tnum">01</span><span class="tname">Majandusplaani näitajad</span><span class="tdesc">Koondindeks ja 8 alamnäitajat</span>
       </button>
       <button class="tab" role="tab" id="tab-majandus" aria-controls="p-majandus" aria-selected="true" data-key="majandus">
-        <span class="tnum">02</span><span class="tname">Eesti majanduse graafikud</span><span class="tdesc">15 näitajat kasvust võlani</span>
+        <span class="tnum">02</span><span class="tname">Eesti majanduse graafikud</span><span class="tdesc">30 näitajat, neist 15 põhinäitajat</span>
       </button>
       <button class="tab" role="tab" id="tab-indeksid" aria-controls="p-indeksid" aria-selected="false" data-key="indeksid">
         <span class="tnum">03</span><span class="tname">Eesti positsioon indeksites</span><span class="tdesc">6 rahvusvahelist edetabelit</span>
@@ -332,27 +340,41 @@ const pais = (big, unit, per, d) => ({ big, bigUnit: unit, per, deltaTxt: d });
 const SA = (t) => `https://andmed.stat.ee/et/stat/${t}`;
 const ALGUS = 2019; // kuu- ja kvartalivaadete algusaasta
 
-function koostaGrupid(D) {
+function koostaGrupid(D, META) {
   const S = (k) => D.seeriad[k] || { periods: [], values: [] };
   const Q = (k) => alates(S(k), ALGUS);
+  const sumS = (a, b) => ({ periods: a.periods.filter((p) => b.periods.includes(p)), values: a.periods.filter((p) => b.periods.includes(p)).map((p) => { const x = a.values[a.periods.indexOf(p)], y = b.values[b.periods.indexOf(p)]; return x == null || y == null ? null : x + y; }) });
+  // joondab mitu seeriat sama perioodide loendi peale
+  const joonda = (per, s) => per.map((p) => { const i = s.periods.indexOf(p); return i < 0 ? null : s.values[i]; });
+  const kuuKv = (s) => koonda(s, kvKey, 3, sum);
+  const lvlPais = (lvlS, chgS, fmt, unit, prefix, kv) => {
+    const l = viimane(lvlS), c = chgS.values.length ? chgS.values.at(-1) : null;
+    return pais(fmt(l.v), unit, `${prefix}${kv ? silt(l.p) + ' kv' : silt(l.p)}`, c == null ? '' : sgn(c) + ' % aastaga');
+  };
 
-  // Tööstus: kvartali- ja aastamuutus mahuindeksi summadest
+  // ---- 1, 2: kasv ja tööstus -------------------------------------------------
   const tooQ = alates(muutus(koonda(S('too_m_lvl'), kvKey, 3, sum), 4), ALGUS);
   const tooA = muutus(koonda(S('too_m_lvl'), aKey, 12, sum), 1);
-  // Otseinvesteeringud
+  // ---- 3–5: eksport -------------------------------------------------------------
+  const ekspNom = (k) => ({ Q: alates(muutus(S(k + '_q_cur'), 4), ALGUS), A: muutus(S(k + '_a_cur'), 1) });
+  const kaupN = ekspNom('ekspK'), teenN = ekspNom('ekspT');
+  // ---- 6: otseinvesteeringud ----------------------------------------------------
   const fdi = S('fdi_q');
   const fdiQ = alates(muutus(fdi, 4), ALGUS);
   const fdiQ4 = { periods: fdi.periods.filter((p) => p.endsWith('Q4')), values: fdi.values.filter((_, i) => fdi.periods[i].endsWith('Q4')) };
   const fdiA = muutus({ periods: fdiQ4.periods.map(aKey), values: fdiQ4.values }, 1);
-  // Palgad
+  // ---- 11, 12: palgad -----------------------------------------------------------
   const palkL = S('palk_q_lvl'), palkY = S('palk_q_yoy');
-  const palkAL = koonda(palkL, aKey, 4, mean); const palkA = muutus(palkAL, 1);
+  const palkAL = S('palk_a_lvl').values.length ? S('palk_a_lvl') : koonda(palkL, aKey, 4, mean);
+  const palkA = muutus(palkAL, 1);
   const med = S('mediaan_q'); const medQ = muutus(med, 4);
-  const medAL = koonda(med, aKey, 4, mean); const medA = muutus(medAL, 1);
-  // Elekter (eurot/kWh -> senti/kWh)
+  const medAL = S('mediaan_a').values.length ? S('mediaan_a') : koonda(med, aKey, 4, mean);
+  const medA = muutus(medAL, 1);
+  const ametlikA = S('palk_a_lvl').values.length > 0;
+  // ---- 10: elekter --------------------------------------------------------------
   const el_ = S('elekter_h'); const elH = { periods: el_.periods, values: el_.values.map((v) => r2(v * 100)) };
   const elA = koonda(elH, aKey, 2, (v) => r2(mean(v)));
-  // Majandususaldus: ametlik + hinnang
+  // ---- 13: majandususaldus ------------------------------------------------------
   const esiO = S('esi_m'), esiH = S('esi_m_hinnang');
   const lastO = esiO.periods.at(-1);
   const hinn = { periods: esiH.periods.filter((p) => p > lastO), values: esiH.values.filter((_, i) => esiH.periods[i] > lastO) };
@@ -363,79 +385,193 @@ function koostaGrupid(D) {
   const qEst = new Set(hinn.periods.map(kvKey));
   const esiA = koonda(esiO, aKey, 12, (v) => r1(mean(v)));
   const mmyy = (p) => p.slice(5) + '/' + p.slice(0, 4);
-  const esiNote = 'Sesoonselt korrigeeritud. Alla 100 tähendab keskmisest nõrgemat kindlustunnet.' +
+  const esiNote = 'Sesoonselt korrigeeritud. 2026. aastal vahetus konjunktuuribaromeetrite uuringu läbiviija, mistõttu võib aegreas olla katkestusi.' +
     (hinn.periods.length ? ` Eurostat pole pärast ${mmyy(lastO)} andmeid avaldanud. Katkendjoon: hinnang Statistikaameti baromeetritest EK metoodikaga.` : '');
+  // ---- 16: vabad ametikohad -------------------------------------------------------
+  const vabM = S('vab_maar_q'), vabA = S('vab_arv_q');
+  // ---- 17: tööjõu ühikukulu ---------------------------------------------------------
+  // ---- 18: põhivara -----------------------------------------------------------------
+  const kapQ = Q('kapital_q_osa'), kapA = S('kapital_a_osa');
+  // ---- 20: jaekaubandus --------------------------------------------------------------
+  // ---- 21, 22: hõive ja mitteaktiivsus -----------------------------------------------
+  // ---- 23: tootjahinnad --------------------------------------------------------------
+  const ppiM = (k) => alates(muutus(S('ppi_m_' + k), 12), ALGUS);
+  const ppiQ = (k) => alates(muutus(koonda(S('ppi_m_' + k), kvKey, 3, mean), 4), ALGUS);
+  // ---- 24: tegevusalade panus ----------------------------------------------------------
+  const PANUS_GR = [
+    { name: 'Töötlev tööstus', k: ['5'], c: '--s1' },
+    { name: 'Kaubandus ja veondus', k: ['9', '10'], c: '--s2' },
+    { name: 'Ehitus', k: ['8'], c: '--s3' },
+    { name: 'Info ja side', k: ['12'], c: '--s4' },
+    { name: 'Avalikud teenused', k: ['17', '18', '19'], c: '--s5' },
+    { name: 'Muud tegevusalad ja tootemaksud', k: ['1', '4', '6', '7', '11', '13', '14', '15', '16', '20', '21', '23', '25'], c: '--peer' },
+  ];
+  const panus = (fq) => {
+    const base = fq === 'q' ? Q('skp_q') : S('skp_a');
+    const per = base.periods;
+    const series = PANUS_GR.map((g) => ({ name: g.name, c: g.c, y: per.map((p) => {
+      const v = g.k.map((k) => { const s = S(`panus_${fq}_${k}`); const i = s.periods.indexOf(p); return i < 0 ? null : s.values[i]; });
+      return v.some((x) => x == null) ? null : r2(v.reduce((a, b) => a + b, 0));
+    }) }));
+    return { x: per.map(silt), y: base.values, series };
+  };
+  // ---- 27, 28, 30: kogused -------------------------------------------------------------
+  const ehQ = S('ehitusload_q'); const ehA = koonda(ehQ, aKey, 4, sum);
+  const veduQ = sumS(S('vedu_q_riigisis'), S('vedu_q_rahvusv')), veduA = sumS(S('vedu_a_riigisis'), S('vedu_a_rahvusv'));
+  const autoM = S('autod_m'); const autoQ = kuuKv(autoM); const autoA = koonda(autoM, aKey, 12, sum);
+  // ---- 29: eluaseme hinnad --------------------------------------------------------------
+  const elu = S('eluase_q');
+  const eluQ = alates(muutus(elu, 4), ALGUS);
+  const eluA = muutus(koonda(elu, aKey, 4, mean), 1);
+  // ---- 31: KRT -----------------------------------------------------------------------------
+  const krtQ = alates(muutus(S('krt_q_cur'), 4), ALGUS), skpNQ = alates(muutus(S('skp_q_cur'), 4), ALGUS);
+  const krtA = muutus(S('krt_a_cur'), 1), skpNA = muutus(S('skp_a_cur'), 1);
 
   const lp = viimane(palkL), ly = viimane(palkY), lm = viimane(med);
   const lf = viimane(fdi), lfq4 = viimane(fdiQ4);
+  const f0s = (v) => f0(v);
+  const VED = (v) => f0(v);
 
-  return [
-    { name: 'Kasv ja tootmine', desc: 'Kogutoodang, tööstus ja tootlikkus', items: [
-      { nr: '1', title: 'SKP reaalkasv', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'yoy',
-        F: { Q: xy(Q('skp_q')), A: xy(S('skp_a')) },
-        src: 'Statistikaamet RAA0012', url: SA('RAA0012'), note: 'Sesoonselt ja tööpäevade arvuga korrigeerimata.' },
-      { nr: '2', title: 'Tööstustoodangu mahuindeks', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'yoy',
-        F: { M: xy(Q('too_m_yoy')), Q: xy(tooQ), A: xy(tooA) },
-        src: 'Statistikaamet TO0053', url: SA('TO0053'), note: 'Kõik sektorid (B–D), kalendaarselt korrigeeritud. Kvartali- ja aastamuutus on arvutatud mahuindeksi summadest.' },
-      { nr: '8', title: 'Tootlikkus töötatud tunni kohta', unitChip: 'reaalkasv, %', kind: 'bar', unit: '%', head: 'yoy',
-        F: { Q: xy(Q('tootl_q'), { note: 'Sesoonselt korrigeeritud.' }), A: xy(S('tootl_a')) },
-        src: 'Statistikaamet RAL0013', url: SA('RAL0013') },
-    ]},
-    { name: 'Väliskaubandus ja investeeringud', desc: 'Eksport ja välisinvesteeringute positsioon', items: [
-      { nr: '3–5', title: 'Eksport: kokku, kaubad ja teenused', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'yoy',
-        F: { Q: xy(Q('eksp_q'), { series: [{ name: 'Kokku', y: Q('eksp_q').values, c: '--s1' }, { name: 'Kaubad', y: Q('ekspK_q').values, c: '--s2' }, { name: 'Teenused', y: Q('ekspT_q').values, c: '--s3' }] }),
-             A: xy(S('eksp_a'), { series: [{ name: 'Kokku', y: S('eksp_a').values, c: '--s1' }, { name: 'Kaubad', y: S('ekspK_a').values, c: '--s2' }, { name: 'Teenused', y: S('ekspT_a').values, c: '--s3' }] }) },
-        src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Pealkirjas kogu eksport. Aheldatud väärtuse muutus.' },
-      { nr: '6', title: 'Välismaised otseinvesteeringud Eestis', unitChip: 'positsiooni muutus, %', kind: 'bar', unit: '%', head: 'custom',
-        F: { Q: xy(fdiQ, pais(f1(lf.v / 1000), 'mld €', `positsioon, ${silt(lf.p)} kv`, sgn(fdiQ.values.at(-1)) + ' % aastaga')),
-             A: xy(fdiA, { ...pais(f1(lfq4.v / 1000), 'mld €', `positsioon, ${aKey(lfq4.p)} lõpp`, sgn(fdiA.values.at(-1)) + ' % aastaga'), note: 'Aastamuutus: IV kvartali lõpu positsioon.' }) },
-        src: 'Eurostat bop_iip6_q', url: 'https://ec.europa.eu/eurostat/databrowser/view/bop_iip6_q/default/table',
-        note: 'Kohustiste positsioon perioodi lõpus. Eesti Panga tabel kasutab suunapõhimõtet, seetõttu võivad tasemed erineda.' },
-    ]},
-    { name: 'Innovatsioon', desc: 'Ettevõtete teadus- ja arendustegevus', items: [
-      { nr: '7', title: 'Ettevõtlussektori T&A kulutused', unitChip: '% SKP-st', kind: 'col', unit: '%', dec: 2, head: 'level',
-        F: { A: xy(S('berd_a')) }, src: 'Statistikaamet TD052', url: SA('TD052') },
-    ]},
-    { name: 'Hinnad ja palgad', desc: 'Inflatsioon, energia ja töötasu', items: [
-      { nr: '9', title: 'Tarbijahinnaindeks', unitChip: '%, aasta varem', kind: 'line', unit: '%', head: 'yoy',
-        F: { M: xy(Q('thi_m')), Q: xy(koonda(Q('thi_m'), kvKey, 3, (v) => r1(mean(v))), { note: 'Kvartali kuude aastamuutuste keskmine.' }),
-             A: xy(S('thi_a'), { src: 'Statistikaamet IA001', url: SA('IA001') }) },
-        src: 'Statistikaamet IA021', url: SA('IA021') },
-      { nr: '10', title: 'Tööstustarbija elektri lõpphind', unitChip: 'senti/kWh', kind: 'line', unit: ' s/kWh', dec: 2, head: 'level',
-        F: { H: xy(elH, { per: silt(elH.periods.at(-1) || '') + ' poolaasta' }), A: xy(elA, { note: 'Aasta väärtus on kahe poolaasta keskmine.' }) },
-        src: 'Eurostat nrg_pc_205', url: 'https://doi.org/10.2908/NRG_PC_205', note: 'Mittekodutarbijad, kõik tarbimisgrupid, ilma maksude ja tasudeta.' },
-      { nr: '11', title: 'Keskmise brutokuupalga muutus', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'custom',
-        F: { Q: xy(palkY, pais(f0(lp.v), '€', `keskmine palk, ${silt(lp.p)} kv`, sgn(ly.v) + ' % aastaga')),
-             A: xy(palkA, { ...pais(f0(palkAL.values.at(-1)), '€', `keskmine palk, ${palkAL.periods.at(-1)}`, sgn(palkA.values.at(-1)) + ' % aastaga'), note: 'Aasta keskmine arvutatud kvartalitest.' }) },
-        src: 'Statistikaamet PA115', url: SA('PA115') },
-      { nr: '12', title: 'Brutokuupalga mediaani muutus', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'custom',
-        F: { Q: xy(medQ, pais(f0(lm.v), '€', `mediaanpalk, ${silt(lm.p)} kv`, sgn(medQ.values.at(-1)) + ' % aastaga')),
-             A: xy(medA, { ...pais(f0(medAL.values.at(-1)), '€', `kvartalite keskmine, ${medAL.periods.at(-1)}`, sgn(medA.values.at(-1)) + ' % aastaga'), note: 'Aasta väärtus on kvartalimediaanide keskmine, mitte aasta mediaan.' }) },
-        src: 'Statistikaamet PA115', url: SA('PA115'), note: 'Muutus arvutatud mediaani tasemest.' },
-    ]},
-    { name: 'Tööturg ja kindlustunne', desc: 'Töötus ja majandususaldus', items: [
-      { nr: '14', title: 'Töötuse määr', unitChip: '%', extraChip: '15–74', kind: 'line', unit: '%', head: 'level',
-        F: { Q: xy(Q('tootus_q')), A: xy(koonda(S('tootus_q'), aKey, 4, (v) => r1(mean(v))), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
-        src: 'Statistikaamet TT0160', url: SA('TT0160') },
-      { nr: '13', title: 'Majandususaldusindeks (ESI)', unitChip: 'punkti', extraChip: 'pikaaegne keskmine = 100', kind: 'line', unit: '', ref: 100, head: 'level',
-        F: { M: { x: esiM.periods.map(silt), y: esiM.periods.map((p, i) => (isEst.has(p) ? null : esiM.values[i])),
-                  est: hinn.periods.length ? esiM.periods.map((p, i) => (isEst.has(p) || p === lastO ? esiM.values[i] : null)) : undefined },
-             Q: { x: esiQall.periods.map(silt), y: esiQall.periods.map((p, i) => (qEst.has(p) ? null : esiQall.values[i])),
-                  est: qEst.size ? esiQall.periods.map((p, i) => (qEst.has(p) || qEst.has(esiQall.periods[i + 1]) ? esiQall.values[i] : null)) : undefined, note: 'Kvartali kuude keskmine.' },
-             A: xy(alates(esiA, ALGUS), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
-        src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table', note: esiNote },
-    ]},
-    { name: 'Riigi rahandus', desc: '', items: [
-      { nr: '15', title: 'Valitsemissektori võlg', unitChip: '% SKP-st', kind: 'col', unit: '%', head: 'level',
-        F: { A: xy(S('volg_a')) }, src: 'Statistikaamet RR061', url: SA('RR061'), note: 'Konsolideeritud võlg (Maastrichti võlg).' },
-    ]},
+  const items = [
+    { nr: '1', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'yoy',
+      F: { Q: xy(Q('skp_q')), A: xy(S('skp_a')) },
+      src: 'Statistikaamet RAA0012', url: SA('RAA0012'), note: 'Sesoonselt ja tööpäevade arvuga korrigeerimata.' },
+    { nr: '24', unitChip: 'panus, protsendipunkti', kind: 'stack', unit: '%', head: 'yoy',
+      F: { Q: panus('q'), A: panus('a') },
+      src: 'Statistikaamet RAA0042', url: SA('RAA0042'), note: 'Tulbad: tegevusalade panus SKP aastakasvu. Joon: SKP reaalkasv kokku, %.' },
+    { nr: '31', unitChip: 'nominaalmuutus, %', kind: 'lines', unit: '%', head: 'yoy',
+      F: { Q: xy(krtQ, { series: [{ name: 'Kogurahvatulu', y: krtQ.values, c: '--s1' }, { name: 'SKP jooksevhindades', y: joonda(krtQ.periods, skpNQ), c: '--s2' }] }),
+           A: xy(krtA, { series: [{ name: 'Kogurahvatulu', y: krtA.values, c: '--s1' }, { name: 'SKP jooksevhindades', y: joonda(krtA.periods, skpNA), c: '--s2' }] }) },
+      src: 'Statistikaamet RAA0012', url: SA('RAA0012'), note: 'Jooksevhindades, seega sisaldab hinnamuutust.' },
+    { nr: '2', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'yoy',
+      F: { M: xy(Q('too_m_yoy')), Q: xy(tooQ), A: xy(tooA) },
+      src: 'Statistikaamet TO0053', url: SA('TO0053'), note: 'Kõik sektorid (B–D), kalendaarselt korrigeeritud. Kvartali- ja aastamuutus on arvutatud mahuindeksi perioodikeskmistest.' },
+    { nr: '20', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'yoy',
+      F: { Q: xy(Q('jae_q_G47'), { series: [{ name: 'Jaekaubandus (G47)', y: Q('jae_q_G47').values, c: '--s1' }, { name: 'Mootorsõidukid (G45)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45')), c: '--s2' }, { name: 'Kokku (G45+G47)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45_47')), c: '--s3' }] }) },
+      src: 'Statistikaamet KM0102', url: SA('KM0102'), note: 'Püsivhindades. Pealkirjas jaekaubandus ilma mootorsõidukiteta (G47).' },
+    { nr: '26', unitChip: '% kasutatavast tulust', kind: 'line', unit: '%', head: 'level',
+      F: { Q: xy(Q('saast_q'), { note: 'Sesoonselt korrigeeritud.' }), A: xy(S('saast_a')) },
+      src: 'Eurostat nasq_10_ki / nasa_10_ki', url: 'https://doi.org/10.2908/TEINA500', note: 'Kodumajapidamiste brutosäästu määr.' },
+    { nr: '27', unitChip: 'eluruumide arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
+      F: { Q: xy(alates(ehQ, ALGUS)), A: xy(ehA) },
+      src: 'Statistikaamet EH04', url: SA('EH04'), note: 'Uusehitus. Aasta väärtus on kvartalite summa.' },
+    { nr: '28', unitChip: 'tuhat tonni', kind: 'lines', unit: '', dec: 0, head: 'levelpct',
+      F: { Q: xy(alates(veduQ, ALGUS), { series: [{ name: 'Riigisisene', y: joonda(alates(veduQ, ALGUS).periods, S('vedu_q_riigisis')), c: '--s1' }, { name: 'Rahvusvaheline', y: joonda(alates(veduQ, ALGUS).periods, S('vedu_q_rahvusv')), c: '--s2' }] }),
+           A: xy(veduA, { series: [{ name: 'Riigisisene', y: joonda(veduA.periods, S('vedu_a_riigisis')), c: '--s1' }, { name: 'Rahvusvaheline', y: joonda(veduA.periods, S('vedu_a_rahvusv')), c: '--s2' }] }) },
+      src: 'Statistikaamet TS54', url: SA('TS54'), note: 'Pealkirjas vedu kokku. Eesti registreeritud veoautode vedu, valimipõhine uuring.' },
+    { nr: '29', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'yoy',
+      F: { Q: xy(eluQ), A: xy(eluA, { note: 'Aastamuutus arvutatud kvartaliindeksite keskmisest.' }) },
+      src: 'Statistikaamet IA028', url: SA('IA028'), note: 'Kõik eluasemed (korterid ja majad).' },
+    { nr: '30', unitChip: 'sõiduautode arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
+      F: { M: xy(alates(autoM, ALGUS)), Q: xy(alates(autoQ, ALGUS)), A: xy(autoA) },
+      src: 'Statistikaamet TS322', url: SA('TS322'), note: 'Esmaselt registreeritud uued sõiduautod. Kvartal ja aasta on kuude summa. Suurte autoparkide tehingud tekitavad hüppeid.' },
+
+    { nr: '3', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'yoy',
+      F: { Q: xy(Q('eksp_q'), { series: [{ name: 'Kokku', y: Q('eksp_q').values, c: '--s1' }, { name: 'Kaubad', y: Q('ekspK_q').values, c: '--s2' }, { name: 'Teenused', y: Q('ekspT_q').values, c: '--s3' }] }),
+           A: xy(S('eksp_a'), { series: [{ name: 'Kokku', y: S('eksp_a').values, c: '--s1' }, { name: 'Kaubad', y: S('ekspK_a').values, c: '--s2' }, { name: 'Teenused', y: S('ekspT_a').values, c: '--s3' }] }) },
+      src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Pealkirjas kogu eksport. Aheldatud väärtuse muutus.' },
+    { nr: '4', unitChip: 'nominaalmuutus, %', kind: 'bar', unit: '%', head: 'custom',
+      F: { Q: xy(kaupN.Q, lvlPais(S('ekspK_q_cur'), kaupN.Q, f0s, 'mln €', '', true)), A: xy(kaupN.A, lvlPais(S('ekspK_a_cur'), kaupN.A, f0s, 'mln €', '', false)) },
+      src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Jooksevhindades (sisaldab hinnamuutust). Kuuandmed (VKK12) lisanduvad, kui Statistikaameti uue andmebaasi API on kasutusel.' },
+    { nr: '5', unitChip: 'nominaalmuutus, %', kind: 'bar', unit: '%', head: 'custom',
+      F: { Q: xy(teenN.Q, lvlPais(S('ekspT_q_cur'), teenN.Q, f0s, 'mln €', '', true)), A: xy(teenN.A, lvlPais(S('ekspT_a_cur'), teenN.A, f0s, 'mln €', '', false)) },
+      src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Jooksevhindades. Väliskaubandusstatistika tabelid (VKT21/VKT41) lisanduvad, kui Statistikaameti uue andmebaasi API on kasutusel.' },
+
+    { nr: '6', unitChip: 'positsiooni muutus, %', kind: 'bar', unit: '%', head: 'custom',
+      F: { Q: xy(fdiQ, pais(f1(lf.v / 1000), 'mld €', `positsioon, ${silt(lf.p || '')} kv`, sgn(fdiQ.values.at(-1)) + ' % aastaga')),
+           A: xy(fdiA, { ...pais(f1(lfq4.v / 1000), 'mld €', `positsioon, ${aKey(lfq4.p || '')} lõpp`, sgn(fdiA.values.at(-1)) + ' % aastaga'), note: 'Aastamuutus: IV kvartali lõpu positsioon.' }) },
+      src: 'Eurostat bop_iip6_q', url: 'https://ec.europa.eu/eurostat/databrowser/view/bop_iip6_q/default/table',
+      note: 'Kohustiste positsioon perioodi lõpus. Eesti Panga tabel kasutab suunapõhimõtet, seetõttu võivad tasemed erineda.' },
+    { nr: '18', unitChip: '% SKP-st', kind: 'line', unit: '%', head: 'custom',
+      F: { Q: xy(kapQ, pais(f1(viimane(kapQ).v), '%', `SKP-st, ${silt(viimane(kapQ).p || '')} kv`, 'reaalkasv ' + sgn(Q('kapital_q_yoy').values.at(-1)) + ' %')),
+           A: xy(kapA, pais(f1(viimane(kapA).v), '%', `SKP-st, ${viimane(kapA).p || ''}`, 'reaalkasv ' + sgn(S('kapital_a_yoy').values.at(-1)) + ' %')) },
+      src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Avaliku ja erasektori investeeringud kokku, jooksevhindades. Kvartaliosakaal on sesoonselt korrigeerimata.' },
+
+    { nr: '7', unitChip: '% SKP-st', kind: 'col', unit: '%', dec: 2, head: 'level',
+      F: { A: xy(S('berd_a')) }, src: 'Statistikaamet TD052', url: SA('TD052') },
+    { nr: '19', unitChip: '% ettevõtetest', kind: 'lines', unit: '%', head: 'level',
+      F: { A: xy(S('ai_a_ee'), { series: [{ name: 'Eesti', y: S('ai_a_ee').values, c: '--s1' }, { name: 'EL-27', y: joonda(S('ai_a_ee').periods, S('ai_a_eu')), c: '--peer' }] }) },
+      src: 'Eurostat isoc_eb_ai', url: 'https://ec.europa.eu/eurostat/databrowser/product/page/isoc_eb_ai', note: 'Vähemalt 10 hõivatuga ettevõtted, mis kasutavad vähemalt üht tehisintellekti tehnoloogiat.' },
+
+    { nr: '8', unitChip: 'reaalkasv, %', kind: 'bar', unit: '%', head: 'yoy',
+      F: { Q: xy(Q('tootl_q'), { note: 'Sesoonselt korrigeeritud.' }), A: xy(S('tootl_a')) },
+      src: 'Statistikaamet RAL0013', url: SA('RAL0013') },
+    { nr: '17', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'yoy',
+      F: { Q: xy(Q('ulc_nom_q'), { series: [{ name: 'Nominaalne', y: Q('ulc_nom_q').values, c: '--s1' }, { name: 'Reaalne', y: joonda(Q('ulc_nom_q').periods, Q('ulc_real_q')), c: '--s2' }], note: 'Sesoonselt korrigeeritud.' }),
+           A: xy(S('ulc_nom_a'), { series: [{ name: 'Nominaalne', y: S('ulc_nom_a').values, c: '--s1' }, { name: 'Reaalne', y: joonda(S('ulc_nom_a').periods, S('ulc_real_a')), c: '--s2' }] }) },
+      src: 'Statistikaamet RAL0013', url: SA('RAL0013'), note: 'Pealkirjas nominaalne tööjõu ühikukulu.' },
+
+    { nr: '9', unitChip: '%, aasta varem', kind: 'line', unit: '%', head: 'yoy',
+      F: { M: xy(Q('thi_m')), Q: xy(koonda(Q('thi_m'), kvKey, 3, (v) => r1(mean(v))), { note: 'Kvartali kuude aastamuutuste keskmine.' }),
+           A: xy(S('thi_a'), { src: 'Statistikaamet IA001', url: SA('IA001') }) },
+      src: 'Statistikaamet IA021', url: SA('IA021') },
+    { nr: '23', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'yoy',
+      F: { M: xy(ppiM('kokku'), { series: [{ name: 'Tööstus kokku', y: ppiM('kokku').values, c: '--s1' }, { name: 'Töötlev tööstus', y: joonda(ppiM('kokku').periods, ppiM('c')), c: '--s2' }] }),
+           Q: xy(ppiQ('kokku'), { series: [{ name: 'Tööstus kokku', y: ppiQ('kokku').values, c: '--s1' }, { name: 'Töötlev tööstus', y: joonda(ppiQ('kokku').periods, ppiQ('c')), c: '--s2' }], note: 'Kvartalimuutus kuuindeksite keskmisest.' }),
+           A: xy(S('ppi_a_kokku'), { series: [{ name: 'Tööstus kokku', y: S('ppi_a_kokku').values, c: '--s1' }, { name: 'Töötlev tööstus', y: joonda(S('ppi_a_kokku').periods, S('ppi_a_c')), c: '--s2' }], src: 'Statistikaamet IA029', url: SA('IA029') }) },
+      src: 'Statistikaamet IA039', url: SA('IA039'), note: 'Pealkirjas tööstus kokku.' },
+
+    { nr: '10', unitChip: 'senti/kWh', kind: 'line', unit: ' s/kWh', dec: 2, head: 'level',
+      F: { H: xy(elH, { per: silt(elH.periods.at(-1) || '') + ' poolaasta' }), A: xy(elA, { note: 'Aasta väärtus on kahe poolaasta keskmine.' }) },
+      src: 'Eurostat nrg_pc_205', url: 'https://doi.org/10.2908/NRG_PC_205', note: 'Mittekodutarbijad, kõik tarbimisgrupid, ilma maksude ja tasudeta.' },
+
+    { nr: '11', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'custom',
+      F: { Q: xy(palkY, pais(f0(lp.v), '€', `keskmine palk, ${silt(lp.p || '')} kv`, sgn(ly.v) + ' % aastaga')),
+           A: xy(palkA, { ...pais(f0(palkAL.values.at(-1)), '€', `keskmine palk, ${palkAL.periods.at(-1)}`, sgn(palkA.values.at(-1)) + ' % aastaga'), src: ametlikA ? 'Statistikaamet PA101' : undefined, url: ametlikA ? SA('PA101') : undefined, note: ametlikA ? '' : 'Aasta keskmine arvutatud kvartalitest.' }) },
+      src: 'Statistikaamet PA115', url: SA('PA115') },
+    { nr: '12', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'custom',
+      F: { Q: xy(medQ, pais(f0(lm.v), '€', `mediaanpalk, ${silt(lm.p || '')} kv`, sgn(medQ.values.at(-1)) + ' % aastaga')),
+           A: xy(medA, { ...pais(f0(medAL.values.at(-1)), '€', `mediaanpalk, ${medAL.periods.at(-1)}`, sgn(medA.values.at(-1)) + ' % aastaga'), src: ametlikA ? 'Statistikaamet PA101' : undefined, url: ametlikA ? SA('PA101') : undefined, note: ametlikA ? '' : 'Aasta väärtus on kvartalimediaanide keskmine.' }) },
+      src: 'Statistikaamet PA115', url: SA('PA115'), note: 'Muutus arvutatud mediaani tasemest.' },
+    { nr: '14', unitChip: '% tööjõust', extraChip: '15–74', kind: 'line', unit: '%', head: 'level',
+      F: { Q: xy(Q('tootus_q')), A: xy(koonda(S('tootus_q'), aKey, 4, (v) => r1(mean(v))), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
+      src: 'Statistikaamet TT0160', url: SA('TT0160') },
+    { nr: '16', unitChip: '% ametikohtadest', kind: 'line', unit: '%', head: 'custom',
+      F: { Q: xy(Q('vab_maar_q'), pais(f1(viimane(vabM).v), '%', `${silt(viimane(vabM).p || '')} kv · ${f0(viimane(vabA).v)} vaba kohta`, '')),
+           A: xy(koonda(S('vab_maar_q'), aKey, 4, (v) => r1(mean(v))), { ...pais(f1(viimane(koonda(S('vab_maar_q'), aKey, 4, (v) => r1(mean(v)))).v), '%', `${viimane(koonda(S('vab_maar_q'), aKey, 4, mean)).p || ''} · ${f0(viimane(koonda(vabA, aKey, 4, mean)).v)} vaba kohta (keskmine)`, ''), note: 'Aasta väärtus on kvartalite keskmine.' }) },
+      src: 'Statistikaamet PAV011', url: SA('PAV011') },
+    { nr: '21', unitChip: '% rahvastikust', kind: 'lines', unit: '%', head: 'level',
+      F: { Q: xy(Q('hoive_q_1574'), { series: [{ name: '15–74', y: Q('hoive_q_1574').values, c: '--s1' }, { name: '20–64', y: joonda(Q('hoive_q_1574').periods, Q('hoive_q_2064')), c: '--s2' }] }),
+           A: (() => { const a = koonda(S('hoive_q_1574'), aKey, 4, (v) => r1(mean(v))), b = koonda(S('hoive_q_2064'), aKey, 4, (v) => r1(mean(v))); return xy(a, { series: [{ name: '15–74', y: a.values, c: '--s1' }, { name: '20–64', y: joonda(a.periods, b), c: '--s2' }], note: 'Aasta väärtus on kvartalite keskmine.' }); })() },
+      src: 'Statistikaamet TT0160', url: SA('TT0160'), note: 'Pealkirjas vanuserühm 15–74.' },
+    { nr: '22', unitChip: '% rahvastikust', extraChip: '15–74', kind: 'line', unit: '%', head: 'level',
+      F: { Q: xy(Q('mitteakt_q')), A: xy(koonda(S('mitteakt_q'), aKey, 4, (v) => r1(mean(v))), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
+      src: 'Statistikaamet TT0160', url: SA('TT0160'), note: 'Mitteaktiivsed 15–74-aastaste rahvastikust (tööjõud + mitteaktiivsed).' },
+
+    { nr: '13', unitChip: 'punkti', extraChip: 'pikaajaline keskmine = 100', kind: 'line', unit: '', ref: 100, head: 'level',
+      F: { M: { x: esiM.periods.map(silt), y: esiM.periods.map((p, i) => (isEst.has(p) ? null : esiM.values[i])),
+                est: hinn.periods.length ? esiM.periods.map((p, i) => (isEst.has(p) || p === lastO ? esiM.values[i] : null)) : undefined },
+           Q: { x: esiQall.periods.map(silt), y: esiQall.periods.map((p, i) => (qEst.has(p) ? null : esiQall.values[i])),
+                est: qEst.size ? esiQall.periods.map((p, i) => (qEst.has(p) || qEst.has(esiQall.periods[i + 1]) ? esiQall.values[i] : null)) : undefined, note: 'Kvartali kuude keskmine.' },
+           A: xy(alates(esiA, ALGUS), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
+      src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table', note: esiNote },
+
+    { nr: '15', unitChip: '% SKP-st', kind: 'col', unit: '%', head: 'level',
+      F: { A: xy(S('volg_a')) }, src: 'Statistikaamet RR061', url: SA('RR061'), note: 'Konsolideeritud võlg (Maastrichti võlg).' },
   ];
+
+  // Rühmitamine valdkondade kaupa (järjekord nagu indikaatorite tabelis)
+  const VALDKONNAD = ['Majanduskasv, tootmine ja tarbimine', 'Väliskaubandus', 'Investeeringud ja kapital', 'Teadmised ja tehnoloogia',
+    'Tootlikkus ja kulud', 'Hinnad ja ostujõud', 'Energia ja kulud', 'Tööturg ja palgad', 'Kindlustunne ja ootused', 'Riigi rahandus'];
+  const out = VALDKONNAD.map((v) => ({ name: v, desc: '', items: [] }));
+  items.forEach((it) => {
+    const m = META[it.nr] || {};
+    it.title = m.nimi || it.title || ('Näitaja ' + it.nr);
+    it.peamine = !!m.peamine; it.kirjeldus = m.kirjeldus || ''; it.miks = m.miks || '';
+    // näitaja ilma andmeteta (nt uus seeria enne esimest uuendust) jäetakse välja
+    if (!Object.values(it.F).some((d) => d && d.x && d.x.length)) return;
+    const g = out.find((x) => x.name === m.valdkond) || out[0];
+    g.items.push(it);
+  });
+  return out.filter((g) => g.items.length);
 }
 
 // ---- Sageduse valik ----
 const FREQ_NAME = { M: 'kuu', Q: 'kvartal', H: 'poolaasta', A: 'aasta' };
 const FREQ_ORDER = { M: ['M', 'Q', 'H', 'A'], Q: ['Q', 'H', 'M', 'A'], A: ['A', 'H', 'Q', 'M'] };
 let econFreq = 'Q';
+let econValik = 'koik';
+try { const v = localStorage.getItem('econValik'); if (['pohi', 'koik'].includes(v)) econValik = v; } catch (e) {}
 try { const s = localStorage.getItem('econFreq'); if (['M', 'Q', 'A'].includes(s)) econFreq = s; } catch (e) {}
 function resolveItem(def, want) {
   const f = FREQ_ORDER[want].find((k) => def.F[k] && def.F[k].x.length);
@@ -471,21 +607,37 @@ function buildEconomy() {
   const bar = el('div', 'freqbar');
   bar.innerHTML = `<span class="fl" id="freq-l">Sagedus</span><div class="seg" role="radiogroup" aria-labelledby="freq-l">` +
     [['M', 'Kuu'], ['Q', 'Kvartal'], ['A', 'Aasta']].map(([k, n]) => `<button type="button" role="radio" data-f="${k}" aria-checked="${k === econFreq}" tabindex="${k === econFreq ? 0 : -1}">${n}</button>`).join('') +
+    `</div><span class="fl" id="valik-l">Näitajad</span><div class="seg seg-v" role="radiogroup" aria-labelledby="valik-l">` +
+    [['pohi', 'Põhinäitajad'], ['koik', 'Kõik']].map(([k, n]) => `<button type="button" role="radio" data-v="${k}" aria-checked="${k === econValik}" tabindex="${k === econValik ? 0 : -1}">${n}</button>`).join('') +
     `</div><span class="fnote">Kui näitajal valitud sagedusega andmeid pole, näidatakse lähimat olemasolevat. See on märgitud kaardi sildil.</span>`;
   root.append(bar);
-  const btns = [...bar.querySelectorAll('button')];
+  const vbtns = [...bar.querySelectorAll('button[data-v]')];
+  vbtns.forEach((b, i) => {
+    b.addEventListener('click', () => setValik(b.dataset.v));
+    b.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { setValik(vbtns[(i + 1) % 2].dataset.v); e.preventDefault(); } });
+  });
+  const btns = [...bar.querySelectorAll('button[data-f]')];
   btns.forEach((b, i) => {
     b.addEventListener('click', () => setFreq(b.dataset.f));
     b.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const n = btns[(i + (e.key === 'ArrowRight' ? 1 : btns.length - 1)) % btns.length]; setFreq(n.dataset.f); e.preventDefault(); } });
   });
   GROUPS.forEach((g) => {
+    const naha = g.items.filter((d) => econValik === 'koik' || d.peamine);
+    if (!naha.length) return;
     const sec = el('div', 'group');
-    sec.append(el('div', 'group-h', `<h2>${esc(g.name)}</h2>${g.desc ? `<span>${esc(g.desc)}</span>` : ''}`));
+    sec.append(el('div', 'group-h', `<h2>${esc(g.name)}</h2><span>${naha.length} ${naha.length === 1 ? 'näitaja' : 'näitajat'}</span>`));
     const grid = el('div', 'grid');
-    g.items.forEach((def) => grid.append(buildCard(resolveItem(def, econFreq))));
+    naha.forEach((def) => grid.append(buildCard(resolveItem(def, econFreq))));
     sec.append(grid);
     root.append(sec);
   });
+}
+function setValik(v) {
+  econValik = v;
+  try { localStorage.setItem('econValik', v); } catch (e) {}
+  buildEconomy();
+  renderPanel('majandus');
+  const b = document.querySelector(`.freqbar button[data-v="${v}"]`); if (b) b.focus();
 }
 function setFreq(f) {
   econFreq = f;
@@ -503,10 +655,9 @@ function headline(it) {
   const v = it.y[i];
   const per = it.per || (it.freq === 'Q' ? it.x[i] + ' kv' : it.x[i]);
   let delta = null;
-  if (it.head === 'level') {
-    const lag = { M: 12, Q: 4, H: 2, A: 1 }[it.freq];
-    if (i - lag >= 0) delta = sgn(v - it.y[i - lag], fmt) + (it.unit === '%' ? ' pp' : '') + ' aastaga';
-  }
+  const lag = { M: 12, Q: 4, H: 2, A: 1 }[it.freq];
+  if (it.head === 'level' && i - lag >= 0 && it.y[i - lag] != null) delta = sgn(v - it.y[i - lag], fmt) + (it.unit === '%' ? ' pp' : '') + ' aastaga';
+  if (it.head === 'levelpct' && i - lag >= 0 && it.y[i - lag]) delta = sgn((v / it.y[i - lag] - 1) * 100) + ' % aastaga';
   return { big: (it.head === 'yoy' ? sgn(v, fmt) : fmt(v)), unit: it.unit.trim(), per, delta };
 }
 
@@ -514,15 +665,20 @@ function buildCard(it) {
   const c = el('article', 'card');
   const h = headline(it);
   const head = el('div', 'card-head');
-  head.append(el('div', 'card-title', `<span class="nr">${esc(it.nr)}</span><h3>${esc(it.title)}</h3>`));
+  head.append(el('div', 'card-title', `<span class="nr">${esc(it.nr)}</span><h3>${esc(it.title)}</h3>${it.peamine ? '<span class="pohi" title="Põhinäitaja">põhinäitaja</span>' : ''}`));
   head.append(el('div', 'chips', it.chips.map((x, i) => `<span class="chip${i === 1 && it.fallback ? ' warn' : ''}">${esc(x)}</span>`).join('')));
   head.append(el('div', 'headline', `<span class="big">${esc(h.big)}<small>${esc(h.unit)}</small></span><span class="per">${esc(h.per)}</span>${h.delta ? `<span class="delta">${esc(h.delta)}</span>` : ''}`));
   c.append(head);
-  const ch = el('div', 'chart');
+  const ch = el('div', 'chart' + (it.kind === 'stack' ? ' tall' : ''));
   ch.setAttribute('role', 'img');
   ch.setAttribute('aria-label', `${it.title}: viimane väärtus ${h.big} ${h.unit}, ${h.per}.`);
   c.append(ch);
   if (it.note) c.append(el('div', 'note', esc(it.note)));
+  if (it.kirjeldus || it.miks) {
+    const d = el('details', 'kirj');
+    d.innerHTML = `<summary>Mida see näitab?</summary>${it.kirjeldus ? `<p>${esc(it.kirjeldus)}</p>` : ''}${it.miks ? `<p><b>Miks see on oluline:</b> ${esc(it.miks)}</p>` : ''}`;
+    c.append(d);
+  }
   const foot = el('div', 'card-foot');
   foot.append(el('span', '', `Allikas: <a href="${it.url}" target="_blank" rel="noopener">${esc(it.src)}</a>`));
   foot.append(buildTable(it));
@@ -569,13 +725,14 @@ function economyOption(it) {
   const base = {
     animation: false,
     textStyle: { fontFamily: t.font },
-    grid: { left: 40, right: 14, top: it.kind === 'lines' ? 34 : 14, bottom: 26 },
+    grid: { left: 8, right: 14, top: it.kind === 'stack' ? 74 : it.kind === 'lines' ? (it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
     tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.line, textStyle: { color: t.fg, fontSize: 12 },
       valueFormatter: fmt, axisPointer: { type: it.kind === 'bar' || it.kind === 'col' ? 'shadow' : 'line', lineStyle: { color: t.muted }, shadowStyle: { color: 'rgba(128,140,160,.12)' } } },
     xAxis: xAxisFor(it, t),
     yAxis: { type: 'value', scale: it.kind === 'line' && !it.ref && it.unit !== '%', splitLine: { lineStyle: { color: t.grid } },
       axisLabel: { color: t.muted, fontSize: 11, formatter: (v) => nf(Number.isInteger(v) ? 0 : 1).format(v) } },
   };
+  const legend = { top: 0, left: 0, right: 0, itemWidth: 14, itemHeight: 2, icon: 'rect', itemGap: 12, textStyle: { color: t.muted, fontSize: 12 } };
   if (it.kind === 'bar') {
     base.series = [{ type: 'bar', data: it.y, barCategoryGap: it.monthly ? '20%' : '28%',
       itemStyle: { color: (p) => (p.value < 0 ? t.neg : t.s1), borderRadius: 0 } }];
@@ -592,8 +749,16 @@ function economyOption(it) {
     base.series = [s];
     if (it.est) base.series.push({ type: 'line', name: 'Hinnang', data: it.est, showSymbol: false, connectNulls: false, lineStyle: { color: t.s2, width: 2, type: 'dashed' }, itemStyle: { color: t.s2 } });
     if (it.ref != null) { base.yAxis.min = (v) => Math.floor(Math.min(v.min, it.ref) - 2); base.yAxis.max = (v) => Math.ceil(Math.max(v.max, it.ref) + 2); }
+  } else if (it.kind === 'stack') {
+    base.legend = { ...legend, itemHeight: 8, icon: 'roundRect' };
+    base.tooltip.axisPointer = { type: 'shadow', shadowStyle: { color: 'rgba(128,140,160,.12)' } };
+    base.tooltip.valueFormatter = (v) => (v == null ? '–' : nf(1).format(v) + ' pp');
+    base.series = [
+      ...it.series.map((s) => ({ type: 'bar', name: s.name, stack: 'panus', data: s.y, barCategoryGap: '25%', itemStyle: { color: t.get(s.c), borderColor: t.surface, borderWidth: 0.5 } })),
+      { type: 'line', name: 'SKP kasv kokku, %', data: it.y, showSymbol: true, symbol: 'circle', symbolSize: 5, lineStyle: { color: t.fg, width: 1.5 }, itemStyle: { color: t.fg }, z: 5 },
+    ];
   } else if (it.kind === 'lines') {
-    base.legend = { top: 0, left: 0, itemWidth: 14, itemHeight: 2, icon: 'rect', textStyle: { color: t.muted, fontSize: 12 } };
+    base.legend = legend;
     base.series = it.series.map((s) => ({ type: 'line', name: s.name, data: s.y, showSymbol: false, lineStyle: { width: 2, color: t.get(s.c) }, itemStyle: { color: t.get(s.c) } }));
   }
   return base;
@@ -914,8 +1079,8 @@ const laeJson = (f) => fetch(f, { cache: 'no-cache' }).then((r) => { if (!r.ok) 
 
 async function kaivita() {
   try {
-    const [nait, mp, ix] = await Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json')]);
-    GROUPS = koostaGrupid(nait);
+    const [nait, mp, ix, meta] = await Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json')]);
+    GROUPS = koostaGrupid(nait, meta.naitajad);
     INDEXES = ix.indeksid;
     MP = mp; mpPrepare();
     const d = new Date(nait.uuendatud);

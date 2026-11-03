@@ -1,0 +1,215 @@
+{
+ "allikas": "To-do list MAPO analüütika, leht 2.1 AS-IS",
+ "naitajad": {
+  "1": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": true,
+   "nimi": "SKP reaalkasv",
+   "kirjeldus": "Reaalse sisemajanduse koguprodukti (aheldatud maht) muutus eelmise aasta sama perioodi või aasta suhtes. SKP iseloomustab kogu majanduse lisandväärtuse ja netotootemaksude summat",
+   "miks": "Keskne majanduse üldseisu ja kasvutsükli näitaja; annab teiste töö-, hinna- ja investeeringunäitajate tõlgendamiseks ühise lähtekoha"
+  },
+  "2": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": true,
+   "nimi": "Tööstustoodangu mahuindeks",
+   "kirjeldus": "Tööstustoodangu mahu muutus püsivhindades; tegevusalade ulatus tuleb määrata: BTD = mäetööstus + töötlev tööstus + energeetika või C = ainult töötlev tööstus",
+   "miks": "Annab varajase signaali tootmise ja eksporditööstuse tsükli muutumisest; aitab hinnata, kas SKP ja ekspordi taastumine jõuab tööstusettevõtetesse"
+  },
+  "3": {
+   "valdkond": "Väliskaubandus",
+   "peamine": false,
+   "nimi": "Kaupade ja teenuste eksport",
+   "kirjeldus": "Kogu kaupade ja teenuste ekspordi aheldatud mahu muutus rahvamajanduse arvepidamise (ESA 2010) põhjal",
+   "miks": "Näitab välisnõudluse panust Eesti majanduskasvu, arvestamata puhtalt hinnatõusust tulenevaid ekspordikäibe muutusi."
+  },
+  "4": {
+   "valdkond": "Väliskaubandus",
+   "peamine": true,
+   "nimi": "Kaupade eksport",
+   "kirjeldus": "Eestist mitteresidentidele eksporditud kaupade statistiline väärtus jooksevhindades; aastamuutus leitakse võrreldavate perioodide ekspordiväärtustest",
+   "miks": "Näitab kaupade müügiturgude arengut ja ekspordisektori käivet; kuine sagedus aitab pöördeid varakult märgata ning partnerriike võrrelda"
+  },
+  "5": {
+   "valdkond": "Väliskaubandus",
+   "peamine": true,
+   "nimi": "Teenuste eksport",
+   "kirjeldus": "Eesti residentide osutatud teenused mitteresidentidele; aastamuutus kajastab ekspordiväärtuse muutust jooksevhindades",
+   "miks": "Teenused moodustavad Eesti ekspordis suure osa; näitaja aitab näha, kas IKT- ja äriteenuste vedamisel majanduse kasvubaas laieneb"
+  },
+  "6": {
+   "valdkond": "Investeeringud ja kapital",
+   "peamine": true,
+   "nimi": "Välismaiste otseinvesteeringute positsioon Eestis",
+   "kirjeldus": "Mitteresidentide Eestisse tehtud otseinvesteeringute akumuleerunud positsioon (kohustused) perioodi lõpus rahvusvahelise investeerimispositsiooni statistikas",
+   "miks": "Iseloomustab väliskapitali pikaajalist kohalolu Eesti majanduses ja rahvusvaheliste ettevõtete sidemeid; aitab hinnata investeerimiskeskkonna atraktiivsust"
+  },
+  "7": {
+   "valdkond": "Teadmised ja tehnoloogia",
+   "peamine": false,
+   "nimi": "Ettevõtlussektori T&A kulutused suhtena SKP-sse",
+   "kirjeldus": "Ettevõtlussektori ettevõttesisesed teadus- ja arendustegevuse kulutused (BERD) jagatud sama aasta jooksevhindades SKP-ga, väljendatuna protsendina",
+   "miks": "Võimaldab hinnata teadmistepõhistesse kasvuvõimalustesse tehtavaid investeeringuid ja innovatsioonivõime kasvu; võtmenäitaja rahvusvaheliseks võrdluseks"
+  },
+  "8": {
+   "valdkond": "Tootlikkus ja kulud",
+   "peamine": true,
+   "nimi": "Tööjõu tootlikkus töötatud tunni kohta",
+   "kirjeldus": "Majanduse reaalse lisandväärtuse või SKP ja töötatud tundide suhe ning selle muutus ajas. Võrdleb tootmismahu arengut kasutatud tööajaga",
+   "miks": "Majanduse jõukuse ja kestliku palgakasvu alus; näitab, kas ettevõtted suudavad sama tööajaga luua rohkem väärtust"
+  },
+  "9": {
+   "valdkond": "Hinnad ja ostujõud",
+   "peamine": true,
+   "nimi": "Tarbijahinnaindeks",
+   "kirjeldus": "Tarbijate soetatud kaupade ja teenuste ostukorvi hindade üldtaseme muutus",
+   "miks": "Selgitab ostujõu ja ettevõtete kulusurve muutusi ning aitab tõlgendada reaalpalka, nõudlust ja majanduse nominaalseid kasvunäitajaid"
+  },
+  "10": {
+   "valdkond": "Energia ja kulud",
+   "peamine": true,
+   "nimi": "Ettevõtete elektrienergia hind",
+   "kirjeldus": "Mittekodutarbijate elektri keskmine hind eurodes kilovatt-tunni kohta (€/kWh) Eurostati standardiseeritud tarbimisrühma ja maksukäsitluse alusel",
+   "miks": "Energiakulu mõjutab Eesti ettevõtete konkurentsivõimet ja investeeringuotsuseid, eriti tööstuses; võimaldab võrrelda hinnasurvet teiste EL riikidega"
+  },
+  "11": {
+   "valdkond": "Tööturg ja palgad",
+   "peamine": true,
+   "nimi": "Keskmine brutokuupalk",
+   "kirjeldus": "Keskmine brutokuupalk näitab töötajate keskmist maksueelset kuupalka täistööajale taandatuna",
+   "miks": "Iseloomustab tööjõukulude ja leibkondade sissetuleku muutust; koos tootlikkusega annab hinnangu kulukonkurentsile ja palgakasvu jätkusuutlikkusele"
+  },
+  "12": {
+   "valdkond": "Tööturg ja palgad",
+   "peamine": false,
+   "nimi": "Brutokuupalga mediaan",
+   "kirjeldus": "Brutokuupalga jaotuse keskpunkt: pooled palgasaajad teenivad sellest vähem ja pooled rohkem; kajastab nn tüüpilise töötaja brutotasu",
+   "miks": "Aitab eristada palgatõusu mõju tüüpilisele töötajale kõrgete palkade mõjust keskmisele; oluline sissetulekute ja tööjõukulude analüüsis"
+  },
+  "13": {
+   "valdkond": "Kindlustunne ja ootused",
+   "peamine": true,
+   "nimi": "Majandususaldusindeks",
+   "kirjeldus": "Euroopa Komisjoni kaalutud majandususalduse koondnäitaja tööstuse, teeninduse, tarbijate, jaekaubanduse ja ehituse küsitluste põhjal",
+   "miks": "Varajane ettevaatav indikaator ettevõtjate ja tarbijate ootuste kohta; aitab SKP, tootmise ja investeeringute pöördeid enne ametlikku statistikat märgata"
+  },
+  "14": {
+   "valdkond": "Tööturg ja palgad",
+   "peamine": true,
+   "nimi": "Töötuse määr",
+   "kirjeldus": "Töötute osakaal 15–74-aastasest tööjõust",
+   "miks": "Näitab tööturu nõrkust ja kasutamata tööjõupotentsiaali; koos vabade ametikohtade määraga eristab tööjõunõudluse vähenemist oskuste mittevastavusest"
+  },
+  "15": {
+   "valdkond": "Riigi rahandus",
+   "peamine": false,
+   "nimi": "Valitsemissektori konsolideeritud võlg suhtena SKP-sse",
+   "kirjeldus": "Valitsemissektori konsolideeritud nominaalvõla suhe sama aasta SKP-sse; mõõdab avaliku sektori võlakoormust",
+   "miks": "Näitab riigi eelarveruumi ja pikaajalise majanduspoliitika jätkusuutlikkust; aitab hinnata, millised on avalike investeeringute ja kriisimeetmete võimalused"
+  },
+  "16": {
+   "valdkond": "Tööturg ja palgad",
+   "peamine": true,
+   "nimi": "Vabade ametikohtade määr",
+   "kirjeldus": "Vabade ametikohtade osakaal kõigist ametikohtadest; täiendavalt vabade ametikohtade absoluutarv",
+   "miks": "Näitab tööjõunõudlust ja värbamisraskuste ulatust. Koos töötuse määraga aitab aru saada, kas tööturg on pingeline või on probleem nõudluses ja oskuste sobivuses"
+  },
+  "17": {
+   "valdkond": "Tootlikkus ja kulud",
+   "peamine": false,
+   "nimi": "Tööjõu ühikukulu muutus – nominaalne ja reaalne",
+   "kirjeldus": "Nominaalne tööjõu ühikukulu näitab tööjõukulu ühe reaalse toodanguühiku kohta, võrreldes tööjõukulu kasvu reaalse tootlikkuse kasvuga. Reaalne tööjõu ühikukulu näitab tööjõukulu suhet jooksevhindades loodud lisandväärtusesse ning peegeldab tööjõukulude osakaalu muutumist majanduses",
+   "miks": "Võimaldab hinnata Eesti kulupõhise konkurentsivõime ja tööjõukulude surve arengut. Nominaalne näitaja aitab mõista, kas tööjõukulud kasvavad tootlikkusest kiiremini, reaalne näitaja aga seda, kas tööjõukulude osakaal loodud väärtuses suureneb või väheneb. Koos aitavad need hinnata palgakasvu, tootlikkuse ja hinnamuutuste mõju Eesti majandusele"
+  },
+  "18": {
+   "valdkond": "Investeeringud ja kapital",
+   "peamine": true,
+   "nimi": "Kapitali kogumahutus põhivarasse suhtena SKP-sse",
+   "kirjeldus": "Majanduses tehtud põhivarainvesteeringute (ehitised, masinad, seadmed, intellektuaalomanditooted jt) kogumaht suhtena SKP-sse samal perioodil",
+   "miks": "Näitab, kui suure osa majanduse ressurssidest suunatakse tulevase tootmisvõime, tehnoloogia ja taristu arendamisse; Arenguseire ja Eesti Panga hinnangul kasvu kriitiline eeldus"
+  },
+  "19": {
+   "valdkond": "Teadmised ja tehnoloogia",
+   "peamine": false,
+   "nimi": "Tehisintellekti kasutavate ettevõtete osakaal",
+   "kirjeldus": "Eurostati ettevõtete IKT-kasutuse uuringu järgi vähemalt üht tehisintellekti tehnoloogiat kasutavate vähemalt 10 hõivatuga ettevõtete osakaal uuringu tegevusalade hulgas",
+   "miks": "Näitab uute tehnoloogiate tegelikku kasutuselevõttu, mis võib toetada protsesside ümberkujundamist ja tulevast tootlikkust"
+  },
+  "20": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": false,
+   "nimi": "Jaekaubanduse ja mootorsõidukikaubanduse mahuindeks",
+   "kirjeldus": "Näitab jaekaubanduse ning mootorsõidukite müügi ja remondi mahu muutust püsivhindades. Ühel graafikul kuvatakse kolm aegrida: tegevusalad G45 ja G47 kokku, G45 eraldi ning G47 eraldi",
+   "miks": "Võimaldab jälgida Eesti sisetarbimise ja kaubandusaktiivsuse arengut ning eristada jaekaubanduse muutusi mootorsõidukite müügi ja remondi suurematest kõikumistest"
+  },
+  "21": {
+   "valdkond": "Tööturg ja palgad",
+   "peamine": false,
+   "nimi": "Tööhõive määr",
+   "kirjeldus": "Hõivatute osakaal sama vanuserühma kogu rahvastikust (mitte tööjõust)",
+   "miks": "Näitab, kui suurt osa tööealisest rahvastikust rakendatakse tööturul. Täiendab töötuse määra, sest hõivemäär arvestab ka neid, kes ei kuulu tööjõu hulka; aitab hinnata tööjõupakkumist ja kasvupotentsiaali"
+  },
+  "22": {
+   "valdkond": "Tööturg ja palgad",
+   "peamine": false,
+   "nimi": "Mitteaktiivsuse määr",
+   "kirjeldus": "Majanduslikult mitteaktiivsete inimeste osakaal valitud vanuserühma rahvastikus. Mitteaktiivseteks loetakse inimesed, kes ei ole tööturu-uuringu määratluse kohaselt ei hõivatud ega töötud",
+   "miks": "Näitab kasutamata või tööturult eemal olevat potentsiaalset tööjõuressurssi. Koos hõive- ja töötuse määraga aitab eristada tööjõunappust, heitumist, õpingutest või hooldusest tulenevat mitteosalemist ning tööjõupakkumise struktuurseid probleeme"
+  },
+  "23": {
+   "valdkond": "Hinnad ja ostujõud",
+   "peamine": true,
+   "nimi": "Tööstustoodangu tootjahinnaindeks",
+   "kirjeldus": "Tööstusettevõtete toodangu müügihindade muutus tootja tasandil; hõlmab Eestis valmistatud tööstustoodete ja müüdud tööstuslike teenuste hindade muutust",
+   "miks": "Näitab tootmisahela hinnasurvet ja tööstuse müügihindade arengut enne tarbijaturgu. Aitab tõlgendada tööstustoodangu, ekspordikäibe, ettevõtete marginaalide ning tarbijahindade võimalikke muutusi"
+  },
+  "24": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": true,
+   "nimi": "Tegevusalade panus Eesti SKP kvartalikasvu",
+   "kirjeldus": "Eesti tegevusalade (nt töötlev tööstus, kaubandus, ehitus, transport, info ja side, avalikud teenused) panus reaalse SKP muutusesse. Panus väljendatakse protsendipunktides, et näidata, millised tegevusalad kiirendavad või pidurdavad majanduskasvu",
+   "miks": "Aitab selgitada SKP kasvu taga olevaid tegelikke vedajaid ja pidureid. Ühe koondkasvu arvu asemel näitab, kas Eesti majanduse taastumine või langus põhineb laial tegevusalade ringil või üksikul sektoril"
+  },
+  "26": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": false,
+   "nimi": "Kodumajapidamiste säästumäär",
+   "kirjeldus": "Kodumajapidamiste ja neid teenindavate kasumitaotluseta institutsioonide kogusäästu suhe kasutatavasse kogutulusse, mida korrigeeritakse pensioniõiguste muutusega; kajastab tarbimata jäänud osa jooksva perioodi tulust",
+   "miks": "Aitab hinnata tarbimisvõime ja säästmise tasakaalu: säästumäära kasv võib viidata suuremale ettevaatussäästmisele või tulude kasvule; madal säästumäär võib toetada hetketarbimist, kuid piirata puhvreid. Täiendab jaemüügi, palga ja tarbijakindluse näitajaid"
+  },
+  "27": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": false,
+   "nimi": "Ehitusloa saanud eluruumide arv",
+   "kirjeldus": "Uute eluruumide arv, mille ehitamiseks on väljastatud ehitusluba. Näitaja kajastab kavandatavat elamuehitust",
+   "miks": "Näitab elamuehituse tulevast aktiivsust ja võimalikku eluasemete pakkumise kasvu. Aitab hinnata eluasemeturu ja ehitusinvesteeringute arengusuundi ning täiendab eluaseme hinnaindeksit. Aitab hinnata, kas eluasemete pakkumine reageerib nõudlusele"
+  },
+  "28": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": false,
+   "nimi": "Maanteekaubaveo maht",
+   "kirjeldus": "Eesti registreeritud veoautodega maanteel veetud kaubakogus tonnides. Täiendav näitaja veosekäive (tonn-kilomeetrid) kajastab veetud kauba koguse ja vahemaa kombinatsiooni; eristada riigisisest ja rahvusvahelist vedu",
+   "miks": "Annab täiendava signaali kaupade liikumise ja tootmis-/logistikaaktiivsuse kohta. Koos tööstustoodangu, impordi ja ekspordiga aitab märgata reaalmajanduse aktiivsuse muutusi"
+  },
+  "29": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": false,
+   "nimi": "Eluaseme hinnaindeksi muutus",
+   "kirjeldus": "Eesti kodumajapidamiste ostetud eluasemete tehinguhindade muutus, sh uued ja olemasolevad eluasemed",
+   "miks": "Näitab eluasemeturul toimuvat hinnasurvet ja varahindade tsüklit. Aitab analüüsida taskukohasust ja elamuehituse pakkumist"
+  },
+  "30": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": false,
+   "nimi": "Registreeritud uued sõidukid",
+   "kirjeldus": "Eestis esimest korda registreeritud uute M1- ja MIG-kategooria sõiduautode arv",
+   "miks": "Võimalik kiire tarbimise ja kestvuskaupade nõudluse signaal. Võib näidata leibkondade ja ettevõtete ostuotsuste muutusi; täiendab jaekaubandust ja tarbijakindlust"
+  },
+  "31": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": false,
+   "nimi": "Kogurahvatulu (KRT)",
+   "kirjeldus": "Riigi residentide teenitud esmaste tulude kogusumma: SKP pluss välismaalt saadud esmased tulud miinus välismaale makstud esmased tulud (näiteks töötajate hüvitised ja omanditulu). KRT = SKP + välismaalt saadud esmased tulud - välismaale makstud esmased tulud",
+   "miks": "Aitab eristada Eestis toodetud väärtust Eesti residentidele tegelikult laekuvast esmasest tulust. Oluline rahvusvahelise kapitali, välismaale makstavate kasumite ja piiriüleste töötasude mõju mõistmiseks; täiendab SKP ja välismaiste otseinvesteeringute näitajaid"
+  }
+ }
+}
