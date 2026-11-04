@@ -5,7 +5,7 @@ Avalik näidikulaud nelja vaatega:
 1. **Majandusplaani näitajad**: majandusplaaniindeks ja selle 8 alamnäitajat (tasemed, muutused, soojuskaart, andmetabel).
 2. **Eesti majanduse graafikud**: 30 näitajat (neist 15 põhinäitajat) kuu-, kvartali- ja aastavaatega.
 3. **Eesti positsioon indeksites**: 6 rahvusvahelist edetabelit.
-4. **Rahvusvaheline võrdlus**: Eurostati näitajad (majandususaldus, otseinvesteeringud % SKP-st, elektri hind, säästumäär, tehisintellekti kasutus) Eesti, Läti, Leedu, Soome ja Rootsi kohta.
+4. **Rahvusvaheline võrdlus**: 24 näitajat Eurostati andmetel Eesti, Läti, Leedu, Soome ja Rootsi kohta. Need on vahekaardi 2 näitajad, millel on Eurostatis võrreldav vaste (sh Statistikaameti näitajate vasted, nt ühtlustatud THI, tööjõukulu indeks).
 
 Andmed uuendatakse automaatselt tööpäeviti GitHub Actionsiga. Leht on staatiline: HTML, JavaScript ja JSON-failid, ilma serverita. Graafikud on tehtud ECharts'iga (Apache 2.0).
 

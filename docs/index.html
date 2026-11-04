@@ -228,7 +228,7 @@ footer a { color: var(--muted); }
         <span class="tnum">03</span><span class="tname">Eesti positsioon indeksites</span><span class="tdesc">6 rahvusvahelist edetabelit</span>
       </button>
       <button class="tab" role="tab" id="tab-vordlus" aria-controls="p-vordlus" aria-selected="false" data-key="vordlus">
-        <span class="tnum">04</span><span class="tname">Rahvusvaheline võrdlus</span><span class="tdesc">Eesti, Läti, Leedu, Soome ja Rootsi</span>
+        <span class="tnum">04</span><span class="tname">Rahvusvaheline võrdlus</span><span class="tdesc">Eesti, Läti, Leedu, Soome ja Rootsi Eurostati andmetel</span>
       </button>
     </div>
   </div>
@@ -311,6 +311,9 @@ const lastIdx = (a) => { for (let i = a.length - 1; i >= 0; i--) if (a[i] != nul
 // Siin teisendatakse need kuu-, kvartali- ja aastavaateks.
 let GROUPS = [];
 let INDEXES = [];
+// Valdkonnad indikaatorite tabeli järjekorras (mõlemal graafikute vahekaardil)
+const VALDKONNAD = ['Majanduskasv, tootmine ja tarbimine', 'Väliskaubandus', 'Investeeringud ja kapital', 'Teadmised ja tehnoloogia',
+  'Tootlikkus ja kulud', 'Hinnad ja ostujõud', 'Energia ja kulud', 'Tööturg ja palgad', 'Kindlustunne ja ootused', 'Riigi rahandus'];
 let VGROUPS = null; // rahvusvaheline võrdlus; null = andmeid ei õnnestunud laadida
 
 const r1 = (v) => (v == null ? null : Math.round(v * 10) / 10);
@@ -558,8 +561,6 @@ function koostaGrupid(D, META) {
   ];
 
   // Rühmitamine valdkondade kaupa (järjekord nagu indikaatorite tabelis)
-  const VALDKONNAD = ['Majanduskasv, tootmine ja tarbimine', 'Väliskaubandus', 'Investeeringud ja kapital', 'Teadmised ja tehnoloogia',
-    'Tootlikkus ja kulud', 'Hinnad ja ostujõud', 'Energia ja kulud', 'Tööturg ja palgad', 'Kindlustunne ja ootused', 'Riigi rahandus'];
   const out = VALDKONNAD.map((v) => ({ name: v, desc: '', items: [] }));
   items.forEach((it) => {
     const m = META[it.nr] || {};
@@ -664,7 +665,7 @@ function headline(it) {
     const per = 'Eesti, ' + ({ Q: it.x[i] + ' kv', H: it.x[i] + ' poolaasta' }[it.freq] || it.x[i]);
     const vals = it.series.filter((s) => s.riik).map((s) => s.y[i]).filter((x) => x != null);
     const koht = vals.filter((x) => x > v).length + 1;
-    return { big: fmt(v), unit: it.unit.trim(), per, delta: vals.length > 1 ? `kõrguselt ${koht}. ${vals.length} riigi seas` : null };
+    return { big: it.pm ? sgn(v, fmt) : fmt(v), unit: it.unit.trim(), per, delta: vals.length > 1 ? `kõrguselt ${koht}. ${vals.length} riigi seas` : null };
   }
   const i = lastIdx(it.y);
   const v = it.y[i];
@@ -843,9 +844,37 @@ function koostaVordlus(V, META) {
     return { periods: per, values: val };
   };
   const q4 = (s) => ({ periods: s.periods.filter((p) => p.endsWith('Q4')).map(aKey), values: s.values.filter((_, i) => s.periods[i].endsWith('Q4')) });
+  // Kuuindeks -> aastamuutused kuu, kvartali (kuude keskmine) ja aasta (12 kuu keskmine) kaupa
+  const indeksF = (k) => ({
+    M: riigid((g) => alates(muutus(S(k + g), 12), ALGUS)),
+    Q: riigid((g) => alates(muutus(koonda(S(k + g), kvKey, 3, mean), 4), ALGUS), { note: 'Kvartalimuutus kuuindeksite keskmisest.' }),
+    A: riigid((g) => muutus(koonda(S(k + g), aKey, 12, mean), 1), { note: 'Aastamuutus kuuindeksite keskmisest.' }) });
+  // Kvartalisumma (mln €) -> nominaalmuutus
+  const kvAasta = (s) => koonda(s, aKey, 4, sum);
+  const nomF = (k) => ({ Q: riigid((g) => alates(muutus(S(k + g), 4), ALGUS)), A: riigid((g) => muutus(kvAasta(S(k + g)), 1), { note: 'Aasta väärtus on kvartalite summa.' }) });
+  // Kvartali tase -> aasta keskmine
+  const qKesk = (s) => koonda(s, aKey, 4, (v) => r1(mean(v)));
+  const suhe = (a, b) => { const per = a.periods.filter((p) => b.periods.includes(p)); return { periods: per, values: per.map((p) => r1(a.values[a.periods.indexOf(p)] / b.values[b.periods.indexOf(p)] * 100)) }; };
   const elH = (g) => kaart(S('elekter_h_' + g), (v) => r2(v * 100));
 
-  const items = [
+  const items = [ // võrdluse kaardid
+    { nr: '1', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'vrd', pm: true,
+      F: { Q: riigid((g) => alates(S('skp_kasv_q_' + g), ALGUS), { note: 'Muutus aasta varem, sesoonselt ja kalendaarselt korrigeeritud.' }), A: riigid((g) => S('skp_kasv_a_' + g)) },
+      src: 'Eurostat namq_10_gdp / nama_10_gdp', url: EUSTAT('namq_10_gdp'), note: 'Aheldatud mahu muutus.' },
+    { nr: '2', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true, F: indeksF('too_m_'),
+      src: 'Eurostat sts_inpr_m', url: EUSTAT('sts_inpr_m'), note: 'Tööstus kokku (B–D), kalendaarselt korrigeeritud.' },
+    { nr: '20', nimi: 'Jaekaubanduse mahuindeks', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true, F: indeksF('jae_m_'),
+      src: 'Eurostat sts_trtu_m', url: EUSTAT('sts_trtu_m'), note: 'Jaekaubandus ilma mootorsõidukiteta (G47), püsivhindades, kalendaarselt korrigeeritud.' },
+    { nr: '29', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true,
+      F: { Q: riigid((g) => alates(S('hpi_q_' + g), ALGUS)), A: riigid((g) => S('hpi_a_' + g)) },
+      src: 'Eurostat prc_hpi_q / prc_hpi_a', url: EUSTAT('prc_hpi_q'), note: 'Kõik eluasemed (uued ja olemasolevad).' },
+    { nr: '3', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'vrd', pm: true,
+      F: { Q: riigid((g) => alates(S('eksp_kasv_q_' + g), ALGUS), { note: 'Muutus aasta varem, sesoonselt ja kalendaarselt korrigeeritud.' }), A: riigid((g) => S('eksp_kasv_a_' + g)) },
+      src: 'Eurostat namq_10_gdp / nama_10_gdp', url: EUSTAT('namq_10_gdp'), note: 'Kaupade ja teenuste eksport, aheldatud mahu muutus.' },
+    { nr: '4', unitChip: 'nominaalmuutus, %', kind: 'lines', unit: '%', head: 'vrd', pm: true, F: nomF('ekspK_q_'),
+      src: 'Eurostat namq_10_gdp', url: EUSTAT('namq_10_gdp'), note: 'Jooksevhindades (sisaldab hinnamuutust), muutus aasta varem.' },
+    { nr: '5', unitChip: 'nominaalmuutus, %', kind: 'lines', unit: '%', head: 'vrd', pm: true, F: nomF('ekspT_q_'),
+      src: 'Eurostat namq_10_gdp', url: EUSTAT('namq_10_gdp'), note: 'Jooksevhindades (sisaldab hinnamuutust), muutus aasta varem.' },
     { nr: '13', unitChip: 'punkti', extraChip: 'pikaajaline keskmine = 100', kind: 'lines', unit: '', head: 'vrd', scale: true, ref: 100,
       F: { M: riigid((g) => alates(S('esi_m_' + g), ALGUS)),
            Q: riigid((g) => alates(koonda(S('esi_m_' + g), kvKey, 3, (v) => r1(mean(v))), ALGUS), { note: 'Kvartali kuude keskmine.' }),
@@ -865,15 +894,52 @@ function koostaVordlus(V, META) {
     { nr: '19', unitChip: '% ettevõtetest', kind: 'lines', unit: '%', head: 'vrd',
       F: { A: riigid((g) => S('ai_a_' + g), {}, [{ name: 'EL-27', c: '--peer', s: S('ai_a_EU27_2020') }]) },
       src: 'Eurostat isoc_eb_ai', url: 'https://ec.europa.eu/eurostat/databrowser/product/page/isoc_eb_ai', note: 'Vähemalt 10 hõivatuga ettevõtted, mis kasutavad vähemalt üht tehisintellekti tehnoloogiat. Hall joon: EL-27.' },
+    { nr: '18', unitChip: '% SKP-st', kind: 'lines', unit: '%', head: 'vrd',
+      F: { Q: riigid((g) => alates(suhe(S('inv_q_' + g), S('skp_q_' + g)), ALGUS), { note: 'Sesoonselt korrigeerimata.' }),
+           A: riigid((g) => suhe(kvAasta(S('inv_q_' + g)), kvAasta(S('skp_q_' + g)))) },
+      src: 'Eurostat namq_10_gdp', url: EUSTAT('namq_10_gdp'), note: 'Kapitali kogumahutus põhivarasse jooksevhindades.' },
+    { nr: '7', unitChip: '% SKP-st', kind: 'lines', unit: '%', dec: 2, head: 'vrd', F: { A: riigid((g) => S('berd_a_' + g)) },
+      src: 'Eurostat rd_e_gerdtot', url: EUSTAT('rd_e_gerdtot') },
+    { nr: '8', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'vrd', pm: true,
+      F: { Q: riigid((g) => alates(S('tootl_q_' + g), ALGUS), { note: 'Muutus aasta varem, sesoonselt korrigeeritud.' }), A: riigid((g) => S('tootl_a_' + g)) },
+      src: 'Eurostat namq_10_lp_ulc / nama_10_lp_ulc', url: EUSTAT('namq_10_lp_ulc') },
+    { nr: '17', nimi: 'Nominaalse tööjõu ühikukulu muutus', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true,
+      F: { Q: riigid((g) => alates(S('ulc_q_' + g), ALGUS), { note: 'Sesoonselt korrigeeritud.' }), A: riigid((g) => S('ulc_a_' + g)) },
+      src: 'Eurostat namq_10_lp_ulc / nama_10_lp_ulc', url: EUSTAT('namq_10_lp_ulc'), note: 'Töötatud tundide põhjal.' },
+    { nr: '9', nimi: 'Tarbijahinnad (ühtlustatud THI)', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true, F: indeksF('hicp_m_'),
+      src: 'Eurostat prc_hicp_minr', url: EUSTAT('prc_hicp_minr'), note: 'Ühtlustatud tarbijahinnaindeks (HICP). Erineb veidi Statistikaameti tarbijahinnaindeksist, mis on Eesti vaates.' },
+    { nr: '23', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true, F: indeksF('ppi_m_'),
+      src: 'Eurostat sts_inpp_m', url: EUSTAT('sts_inpp_m'), note: 'Tööstus kokku (B–E36), kogu turg.' },
+    { nr: '11', nimi: 'Palgakulu muutus', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true,
+      F: { Q: riigid((g) => alates(S('lci_q_' + g), ALGUS)), A: riigid((g) => qKesk(S('lci_q_' + g)), { note: 'Kvartalimuutuste keskmine.' }) },
+      src: 'Eurostat lc_lci_r2_q', url: EUSTAT('lc_lci_r2_q'), note: 'Tööjõukulu indeksi palgaosa tunni kohta, tegevusalad B–S, sesoonselt korrigeeritud. Keskmise brutokuupalga võrreldavat kvartalirida Eurostat ei avalda.' },
+    { nr: '14', unitChip: '% tööjõust', extraChip: '15–74', kind: 'lines', unit: '%', head: 'vrd',
+      F: { M: riigid((g) => alates(S('tootus_m_' + g), ALGUS), { note: 'Sesoonselt korrigeeritud.' }),
+           Q: riigid((g) => alates(koonda(S('tootus_m_' + g), kvKey, 3, (v) => r1(mean(v))), ALGUS), { note: 'Sesoonselt korrigeeritud, kvartali kuude keskmine.' }),
+           A: riigid((g) => S('tootus_a_' + g)) },
+      src: 'Eurostat une_rt_m / une_rt_a', url: EUSTAT('une_rt_m') },
+    { nr: '16', unitChip: '% ametikohtadest', kind: 'lines', unit: '%', head: 'vrd',
+      F: { Q: riigid((g) => alates(S('vab_q_' + g), ALGUS)), A: riigid((g) => qKesk(S('vab_q_' + g)), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
+      src: 'Eurostat jvs_q_nace2', url: EUSTAT('jvs_q_nace2'), note: 'Tegevusalad B–S, sesoonselt korrigeerimata.' },
+    { nr: '21', unitChip: '% rahvastikust', extraChip: '20–64', kind: 'lines', unit: '%', head: 'vrd',
+      F: { Q: riigid((g) => alates(S('hoive_q_' + g), ALGUS), { note: 'Sesoonselt korrigeeritud.' }), A: riigid((g) => qKesk(S('hoive_q_' + g)), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
+      src: 'Eurostat lfsi_emp_q', url: EUSTAT('lfsi_emp_q'), note: 'Vanuserühm 20–64 (ELi tööhõive eesmärgi alus).' },
+    { nr: '22', unitChip: '% rahvastikust', extraChip: '15–74', kind: 'lines', unit: '%', head: 'vrd',
+      F: { Q: riigid((g) => alates(kaart(S('akt_q_' + g), (v) => r1(100 - v)), ALGUS), { note: 'Sesoonselt korrigeeritud.' }),
+           A: riigid((g) => qKesk(kaart(S('akt_q_' + g), (v) => 100 - v)), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
+      src: 'Eurostat lfsi_emp_q', url: EUSTAT('lfsi_emp_q'), note: 'Arvutatud: 100 − aktiivsuse määr.' },
+    { nr: '15', unitChip: '% SKP-st', kind: 'lines', unit: '%', head: 'vrd', F: { A: riigid((g) => S('volg_a_' + g)) },
+      src: 'Eurostat gov_10dd_edpt1', url: EUSTAT('gov_10dd_edpt1'), note: 'Konsolideeritud võlg (Maastrichti võlg).' },
   ];
-  const out = [];
+  const out = VALDKONNAD.map((v) => ({ name: v, items: [] }));
   items.forEach((it) => {
     const m = META[it.nr] || {};
     it.title = it.nimi || m.nimi || ('Näitaja ' + it.nr);
     it.kirjeldus = m.kirjeldus || ''; it.miks = m.miks || '';
-    if (Object.values(it.F).some((d) => d && d.x && d.x.length)) out.push(it);
+    if (!Object.values(it.F).some((d) => d && d.x && d.x.length)) return;
+    (out.find((g) => g.name === m.valdkond) || out[0]).items.push(it);
   });
-  return [{ name: 'Eurostati näitajad', desc: '', items: out }];
+  return out.filter((g) => g.items.length);
 }
 
 function buildVordlus() {
@@ -885,7 +951,7 @@ function buildVordlus() {
   const bar = el('div', 'freqbar');
   bar.innerHTML = `<span class="fl" id="vfreq-l">Sagedus</span><div class="seg" role="radiogroup" aria-labelledby="vfreq-l">` +
     [['M', 'Kuu'], ['Q', 'Kvartal'], ['A', 'Aasta']].map(([k, n]) => `<button type="button" role="radio" data-f="${k}" aria-checked="${k === vrdFreq}" tabindex="${k === vrdFreq ? 0 : -1}">${n}</button>`).join('') +
-    `</div><span class="fnote">Kõik näitajad on Eurostatist, et riigid oleksid võrreldavad. Pealkirjas Eesti viimane väärtus ja koht samal perioodil.</span>`;
+    `</div><span class="fnote">Eesti, Läti, Leedu, Soome ja Rootsi. Kõik andmed on Eurostatist, et riigid oleksid võrreldavad, seetõttu võivad Eesti väärtused veidi erineda Statistikaameti omadest. Pealkirjas on Eesti viimane väärtus ja koht samal perioodil.</span>`;
   root.append(bar);
   const btns = [...bar.querySelectorAll('button[data-f]')];
   const vali = (f) => { vrdFreq = f; try { localStorage.setItem('vrdFreq', f); } catch (e) {} buildVordlus(); renderPanel('vordlus'); const b = root.querySelector(`button[data-f="${f}"]`); if (b) b.focus(); };
@@ -896,7 +962,7 @@ function buildVordlus() {
   VGROUPS.forEach((g) => {
     if (!g.items.length) return;
     const sec = el('div', 'group');
-    sec.append(el('div', 'group-h', `<h2>Eesti, Läti, Leedu, Soome ja Rootsi</h2><span>${g.items.length} näitajat</span>`));
+    sec.append(el('div', 'group-h', `<h2>${esc(g.name)}</h2><span>${g.items.length} ${g.items.length === 1 ? 'näitaja' : 'näitajat'}</span>`));
     const grid = el('div', 'grid');
     g.items.forEach((def) => grid.append(buildCard(resolveItem(def, vrdFreq), 'vordlus')));
     sec.append(grid);
