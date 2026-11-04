@@ -62,7 +62,8 @@ body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font
 .eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
 h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(28px, 4.2vw, 44px); line-height: 1.05; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
 .lead { color: var(--band-muted); margin: 0; max-width: 68ch; }
-.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+@media (max-width: 1100px) { .tabs { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 760px) { .tabs { grid-template-columns: 1fr; } }
 .tab {
   text-align: left; cursor: pointer; font: inherit; color: var(--band-fg);
@@ -214,7 +215,7 @@ footer a { color: var(--muted); }
     <div class="top">
       <span class="eyebrow">MKM majandusanalüüs · <span id="seis">andmed laadimisel</span></span>
       <h1>Eesti majandus numbrites</h1>
-      <p class="lead">Kolm vaadet Eesti majandusele: majandusplaaniindeks, põhilised majandusnäitajad ja Eesti koht rahvusvahelistes võrdlustes.</p>
+      <p class="lead">Neli vaadet Eesti majandusele: majandusplaaniindeks, põhilised majandusnäitajad, Eesti koht rahvusvahelistes edetabelites ja võrdlus naaberriikidega.</p>
     </div>
     <div class="tabs" role="tablist" aria-label="Vaated">
       <button class="tab" role="tab" id="tab-majandusplaan" aria-controls="p-majandusplaan" aria-selected="false" data-key="majandusplaan">
@@ -225,6 +226,9 @@ footer a { color: var(--muted); }
       </button>
       <button class="tab" role="tab" id="tab-indeksid" aria-controls="p-indeksid" aria-selected="false" data-key="indeksid">
         <span class="tnum">03</span><span class="tname">Eesti positsioon indeksites</span><span class="tdesc">6 rahvusvahelist edetabelit</span>
+      </button>
+      <button class="tab" role="tab" id="tab-vordlus" aria-controls="p-vordlus" aria-selected="false" data-key="vordlus">
+        <span class="tnum">04</span><span class="tname">Rahvusvaheline võrdlus</span><span class="tdesc">Eesti, Läti, Leedu, Soome ja Rootsi</span>
       </button>
     </div>
   </div>
@@ -274,6 +278,8 @@ footer a { color: var(--muted); }
     <section class="panel" id="p-majandus" role="tabpanel" aria-labelledby="tab-majandus"></section>
 
     <section class="panel" id="p-indeksid" role="tabpanel" aria-labelledby="tab-indeksid" hidden></section>
+
+    <section class="panel" id="p-vordlus" role="tabpanel" aria-labelledby="tab-vordlus" hidden></section>
   </div>
 </main>
 
@@ -305,6 +311,7 @@ const lastIdx = (a) => { for (let i = a.length - 1; i >= 0; i--) if (a[i] != nul
 // Siin teisendatakse need kuu-, kvartali- ja aastavaateks.
 let GROUPS = [];
 let INDEXES = [];
+let VGROUPS = null; // rahvusvaheline võrdlus; null = andmeid ei õnnestunud laadida
 
 const r1 = (v) => (v == null ? null : Math.round(v * 10) / 10);
 const r2 = (v) => (v == null ? null : Math.round(v * 100) / 100);
@@ -597,7 +604,7 @@ function T() {
 function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-const charts = { majandus: [], indeksid: [] };
+const charts = { majandus: [], indeksid: [], vordlus: [] };
 
 function buildEconomy() {
   const root = document.getElementById('p-majandus');
@@ -651,6 +658,14 @@ function headline(it) {
   const dec = it.dec ?? 1;
   const fmt = nf(dec).format;
   if (it.head === 'custom') return { big: it.big, unit: it.bigUnit, per: it.per, delta: it.deltaTxt };
+  if (it.head === 'vrd') {
+    // Eesti viimane väärtus ja koht võrdlusriikide seas samal perioodil
+    const i = lastIdx(it.y), v = it.y[i];
+    const per = 'Eesti, ' + ({ Q: it.x[i] + ' kv', H: it.x[i] + ' poolaasta' }[it.freq] || it.x[i]);
+    const vals = it.series.filter((s) => s.riik).map((s) => s.y[i]).filter((x) => x != null);
+    const koht = vals.filter((x) => x > v).length + 1;
+    return { big: fmt(v), unit: it.unit.trim(), per, delta: vals.length > 1 ? `kõrguselt ${koht}. ${vals.length} riigi seas` : null };
+  }
   const i = lastIdx(it.y);
   const v = it.y[i];
   const per = it.per || (it.freq === 'Q' ? it.x[i] + ' kv' : it.x[i]);
@@ -661,7 +676,7 @@ function headline(it) {
   return { big: (it.head === 'yoy' ? sgn(v, fmt) : fmt(v)), unit: it.unit.trim(), per, delta };
 }
 
-function buildCard(it) {
+function buildCard(it, key = 'majandus') {
   const c = el('article', 'card');
   const h = headline(it);
   const head = el('div', 'card-head');
@@ -683,7 +698,7 @@ function buildCard(it) {
   foot.append(el('span', '', `Allikas: <a href="${it.url}" target="_blank" rel="noopener">${esc(it.src)}</a>`));
   foot.append(buildTable(it));
   c.append(foot);
-  charts.majandus.push({ dom: ch, opt: () => economyOption(it), inst: null });
+  charts[key].push({ dom: ch, opt: () => economyOption(it), inst: null });
   return c;
 }
 
@@ -729,7 +744,7 @@ function economyOption(it) {
     tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.line, textStyle: { color: t.fg, fontSize: 12 },
       valueFormatter: fmt, axisPointer: { type: it.kind === 'bar' || it.kind === 'col' ? 'shadow' : 'line', lineStyle: { color: t.muted }, shadowStyle: { color: 'rgba(128,140,160,.12)' } } },
     xAxis: xAxisFor(it, t),
-    yAxis: { type: 'value', scale: it.kind === 'line' && !it.ref && it.unit !== '%', splitLine: { lineStyle: { color: t.grid } },
+    yAxis: { type: 'value', scale: it.scale || (it.kind === 'line' && !it.ref && it.unit !== '%'), splitLine: { lineStyle: { color: t.grid } },
       axisLabel: { color: t.muted, fontSize: 11, formatter: (v) => nf(Number.isInteger(v) ? 0 : 1).format(v) } },
   };
   const legend = { top: 0, left: 0, right: 0, itemWidth: 14, itemHeight: 2, icon: 'rect', itemGap: 12, textStyle: { color: t.muted, fontSize: 12 } };
@@ -760,6 +775,7 @@ function economyOption(it) {
   } else if (it.kind === 'lines') {
     base.legend = legend;
     base.series = it.series.map((s) => ({ type: 'line', name: s.name, data: s.y, showSymbol: false, lineStyle: { width: 2, color: t.get(s.c) }, itemStyle: { color: t.get(s.c) } }));
+    if (it.ref != null) base.series[0].markLine = { silent: true, symbol: 'none', label: { show: false }, lineStyle: { color: t.muted, type: 'dashed' }, data: [{ yAxis: it.ref }] };
   }
   return base;
 }
@@ -792,6 +808,100 @@ function buildIndexes() {
   });
   sec.append(grid);
   root.append(sec);
+}
+
+// ===================== Rahvusvaheline võrdlus =====================
+const RIIGID = [['EE', 'Eesti', '--s1'], ['LV', 'Läti', '--s2'], ['LT', 'Leedu', '--s3'], ['FI', 'Soome', '--s4'], ['SE', 'Rootsi', '--s5']];
+const EUSTAT = (id) => `https://ec.europa.eu/eurostat/databrowser/view/${id}/default/table`;
+let vrdFreq = 'Q';
+try { const s = localStorage.getItem('vrdFreq'); if (['M', 'Q', 'A'].includes(s)) vrdFreq = s; } catch (e) {}
+
+function koostaVordlus(V, META) {
+  const S = (k) => V.seeriad[k] || { periods: [], values: [] };
+  const joonda = (per, s) => per.map((p) => { const i = s.periods.indexOf(p); return i < 0 ? null : s.values[i]; });
+  const kaart = (s, f) => ({ periods: s.periods, values: s.values.map(f) });
+  // f(riik) -> seeria; tulemuseks mitme joonega graafik, y = Eesti (pealkirja jaoks)
+  const riigid = (f, extra = {}, lisa = []) => {
+    const rows = RIIGID.map(([g, name, c]) => ({ g, name, c, s: f(g) })).filter((r) => r.s.periods.length);
+    if (!rows.length || rows[0].g !== 'EE') return { x: [], y: [] };
+    const per = [...new Set(rows.flatMap((r) => r.s.periods).concat(lisa.flatMap((r) => r.s.periods)))].sort();
+    const series = rows.map((r) => ({ name: r.name, y: joonda(per, r.s), c: r.c, riik: true }))
+      .concat(lisa.filter((r) => r.s.periods.length).map((r) => ({ name: r.name, y: joonda(per, r.s), c: r.c })));
+    return { x: per.map(silt), y: series[0].y, series, ...extra };
+  };
+  // Otseinvesteeringute positsioon % nelja viimase kvartali SKP-st
+  const fdiSkp = (g) => {
+    const f = S('fdi_q_' + g), y = S('skp_q_' + g);
+    const per = [], val = [];
+    f.periods.forEach((p, i) => {
+      const j = y.periods.indexOf(p);
+      if (j < 3) return;
+      const s4 = y.values.slice(j - 3, j + 1).reduce((a, b) => a + b, 0);
+      if (y.periods[j - 3] !== `${+p.slice(0, 4) - (+p.slice(5) === 4 ? 0 : 1)}Q${(+p.slice(5)) % 4 + 1}`) return; // 4 järjestikust kvartalit
+      per.push(p); val.push(r1(f.values[i] / s4 * 100));
+    });
+    return { periods: per, values: val };
+  };
+  const q4 = (s) => ({ periods: s.periods.filter((p) => p.endsWith('Q4')).map(aKey), values: s.values.filter((_, i) => s.periods[i].endsWith('Q4')) });
+  const elH = (g) => kaart(S('elekter_h_' + g), (v) => r2(v * 100));
+
+  const items = [
+    { nr: '13', unitChip: 'punkti', extraChip: 'pikaajaline keskmine = 100', kind: 'lines', unit: '', head: 'vrd', scale: true, ref: 100,
+      F: { M: riigid((g) => alates(S('esi_m_' + g), ALGUS)),
+           Q: riigid((g) => alates(koonda(S('esi_m_' + g), kvKey, 3, (v) => r1(mean(v))), ALGUS), { note: 'Kvartali kuude keskmine.' }),
+           A: riigid((g) => koonda(S('esi_m_' + g), aKey, 12, (v) => r1(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
+      src: 'Eurostat ei_bssi_m_r2', url: EUSTAT('ei_bssi_m_r2'),
+      note: 'Sesoonselt korrigeeritud. Iga riigi indikaator on mõõdetud tema enda pikaajalise keskmise suhtes. Eesti kohta on siin ainult Eurostati ametlikud andmed, hilisemate kuude hinnang on vaates „Eesti majanduse graafikud“.' },
+    { nr: '6', nimi: 'Välismaiste otseinvesteeringute positsioon', unitChip: '% SKP-st', kind: 'lines', unit: '%', head: 'vrd',
+      F: { Q: riigid((g) => alates(fdiSkp(g), ALGUS)), A: riigid((g) => q4(fdiSkp(g)), { note: 'IV kvartali lõpu positsioon.' }) },
+      src: 'Eurostat bop_iip6_q, namq_10_gdp', url: EUSTAT('bop_iip6_q'),
+      note: 'Otseinvesteeringute kohustiste positsioon perioodi lõpus, protsendina nelja viimase kvartali nominaalsest SKP-st.' },
+    { nr: '10', unitChip: 'senti/kWh', kind: 'lines', unit: ' s/kWh', dec: 2, head: 'vrd',
+      F: { H: riigid((g) => elH(g)), A: riigid((g) => koonda(elH(g), aKey, 2, (v) => r2(mean(v))), { note: 'Aasta väärtus on kahe poolaasta keskmine.' }) },
+      src: 'Eurostat nrg_pc_205', url: 'https://doi.org/10.2908/NRG_PC_205', note: 'Mittekodutarbijad, kõik tarbimisgrupid, ilma maksude ja tasudeta.' },
+    { nr: '26', unitChip: '% kasutatavast tulust', kind: 'lines', unit: '%', head: 'vrd',
+      F: { Q: riigid((g) => alates(S('saast_q_' + g), ALGUS), { note: 'Sesoonselt korrigeerimata.' }), A: riigid((g) => S('saast_a_' + g)) },
+      src: 'Eurostat nasq_10_ki / nasa_10_ki', url: 'https://doi.org/10.2908/TEINA500', note: 'Kodumajapidamiste brutosäästu määr.' },
+    { nr: '19', unitChip: '% ettevõtetest', kind: 'lines', unit: '%', head: 'vrd',
+      F: { A: riigid((g) => S('ai_a_' + g), {}, [{ name: 'EL-27', c: '--peer', s: S('ai_a_EU27_2020') }]) },
+      src: 'Eurostat isoc_eb_ai', url: 'https://ec.europa.eu/eurostat/databrowser/product/page/isoc_eb_ai', note: 'Vähemalt 10 hõivatuga ettevõtted, mis kasutavad vähemalt üht tehisintellekti tehnoloogiat. Hall joon: EL-27.' },
+  ];
+  const out = [];
+  items.forEach((it) => {
+    const m = META[it.nr] || {};
+    it.title = it.nimi || m.nimi || ('Näitaja ' + it.nr);
+    it.kirjeldus = m.kirjeldus || ''; it.miks = m.miks || '';
+    if (Object.values(it.F).some((d) => d && d.x && d.x.length)) out.push(it);
+  });
+  return [{ name: 'Eurostati näitajad', desc: '', items: out }];
+}
+
+function buildVordlus() {
+  const root = document.getElementById('p-vordlus');
+  charts.vordlus.forEach((c) => c.inst && c.inst.dispose());
+  charts.vordlus = [];
+  root.innerHTML = '';
+  if (!VGROUPS) { root.innerHTML = '<p class="loadfail" role="alert">Võrdlusandmeid ei õnnestunud laadida. Proovi lehte hiljem uuesti avada.</p>'; return; }
+  const bar = el('div', 'freqbar');
+  bar.innerHTML = `<span class="fl" id="vfreq-l">Sagedus</span><div class="seg" role="radiogroup" aria-labelledby="vfreq-l">` +
+    [['M', 'Kuu'], ['Q', 'Kvartal'], ['A', 'Aasta']].map(([k, n]) => `<button type="button" role="radio" data-f="${k}" aria-checked="${k === vrdFreq}" tabindex="${k === vrdFreq ? 0 : -1}">${n}</button>`).join('') +
+    `</div><span class="fnote">Kõik näitajad on Eurostatist, et riigid oleksid võrreldavad. Pealkirjas Eesti viimane väärtus ja koht samal perioodil.</span>`;
+  root.append(bar);
+  const btns = [...bar.querySelectorAll('button[data-f]')];
+  const vali = (f) => { vrdFreq = f; try { localStorage.setItem('vrdFreq', f); } catch (e) {} buildVordlus(); renderPanel('vordlus'); const b = root.querySelector(`button[data-f="${f}"]`); if (b) b.focus(); };
+  btns.forEach((b, i) => {
+    b.addEventListener('click', () => vali(b.dataset.f));
+    b.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { vali(btns[(i + (e.key === 'ArrowRight' ? 1 : btns.length - 1)) % btns.length].dataset.f); e.preventDefault(); } });
+  });
+  VGROUPS.forEach((g) => {
+    if (!g.items.length) return;
+    const sec = el('div', 'group');
+    sec.append(el('div', 'group-h', `<h2>Eesti, Läti, Leedu, Soome ja Rootsi</h2><span>${g.items.length} näitajat</span>`));
+    const grid = el('div', 'grid');
+    g.items.forEach((def) => grid.append(buildCard(resolveItem(def, vrdFreq), 'vordlus')));
+    sec.append(grid);
+    root.append(sec);
+  });
 }
 
 // ===================== Vahekaardid =====================
@@ -1080,7 +1190,9 @@ const laeJson = (f) => fetch(f, { cache: 'no-cache' }).then((r) => { if (!r.ok) 
 
 async function kaivita() {
   try {
-    const [nait, mp, ix, meta] = await Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json')]);
+    const [nait, mp, ix, meta, vrd] = await Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json'),
+      laeJson('data/vordlus.json').catch((e) => { console.error(e); return null; })]);
+    if (vrd) VGROUPS = koostaVordlus(vrd, meta.naitajad);
     GROUPS = koostaGrupid(nait, meta.naitajad);
     INDEXES = ix.indeksid;
     MP = mp; mpPrepare();
@@ -1095,7 +1207,8 @@ async function kaivita() {
   buildEconomy();
   mpInitControls();
   buildIndexes();
-  show(['majandusplaan', 'majandus', 'indeksid'].includes(start) ? start : 'majandus');
+  buildVordlus();
+  show(['majandusplaan', 'majandus', 'indeksid', 'vordlus'].includes(start) ? start : 'majandus');
 }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(kaivita); else kaivita();
 
