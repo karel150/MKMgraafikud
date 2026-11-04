@@ -15,6 +15,7 @@ if (!file.exists("R/uuenda.R")) stop("Käivita skript repo juurkaustast: Rscript
 source("R/abi.R", encoding = "UTF-8")
 source("R/naitajad.R", encoding = "UTF-8")
 source("R/indeksid.R", encoding = "UTF-8")
+source("R/vordlus.R", encoding = "UTF-8")
 
 # ---- 1. Majandusplaaniindeks (sinu metoodika, sh ESI hinnang) ----------------
 message("== Majandusplaaniindeks ==")
@@ -37,6 +38,11 @@ kirjuta_json(naitajad, "naitajad.json")
 message("== Edetabelid ==")
 tryCatch(kirjuta_json(koosta_indeksid(), "indeksid.json"),
          error = function(e) hoiata("Edetabelid: ", conditionMessage(e), ". Jäetakse alles eelmine versioon."))
+
+# ---- 4. Rahvusvaheline võrdlus (Eurostat) ---------------------------------------
+message("== Rahvusvaheline võrdlus ==")
+tryCatch(kirjuta_json(koosta_vordlus(), "vordlus.json"),
+         error = function(e) hoiata("Rahvusvaheline võrdlus: ", conditionMessage(e), ". Jäetakse alles eelmine versioon."))
 
 # ---- Kokkuvõte --------------------------------------------------------------
 if (length(hoiatused)) {

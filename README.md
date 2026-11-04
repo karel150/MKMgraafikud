@@ -1,10 +1,11 @@
 # Eesti majandus numbrites
 
-Avalik näidikulaud kolme vaatega:
+Avalik näidikulaud nelja vaatega:
 
 1. **Majandusplaani näitajad**: majandusplaaniindeks ja selle 8 alamnäitajat (tasemed, muutused, soojuskaart, andmetabel).
 2. **Eesti majanduse graafikud**: 30 näitajat (neist 15 põhinäitajat) kuu-, kvartali- ja aastavaatega.
 3. **Eesti positsioon indeksites**: 6 rahvusvahelist edetabelit.
+4. **Rahvusvaheline võrdlus**: 24 näitajat Eurostati andmetel Eesti, Läti, Leedu, Soome ja Rootsi kohta. Need on vahekaardi 2 näitajad, millel on Eurostatis võrreldav vaste (sh Statistikaameti näitajate vasted, nt ühtlustatud THI, tööjõukulu indeks).
 
 Andmed uuendatakse automaatselt tööpäeviti GitHub Actionsiga. Leht on staatiline: HTML, JavaScript ja JSON-failid, ilma serverita. Graafikud on tehtud ECharts'iga (Apache 2.0).
 
@@ -28,6 +29,7 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `R/naitajad.R` | 15 majandusnäitaja päringud (Statistikaamet PXWeb, Eurostat). |
 | `R/majandusplaaniindeks_sca.R` | Majandusplaaniindeksi arvutus. Sinu skript, ainus muudatus on lõpus: Exceli, RDS-i ja jooniste asemel kirjutatakse JSON. |
 | `R/esi_eesti.R` | Majandususalduse indikaator EK metoodikaga (muutmata). |
+| `R/vordlus.R` | Rahvusvahelise võrdluse andmed Eurostatist (`docs/data/vordlus.json`). Riike saab muuta muutujas `VORDLUS_RIIGID`. |
 | `R/indeksid.R` | Teeb edetabelite CSV-failidest JSON-i. |
 | `R/abi.R` | Ühised abifunktsioonid: päringud, kontrollid, JSON-i kirjutamine. |
 | `andmed/indeksid.csv` | Edetabelid, üks rida edetabeli kohta. **Uuendatakse käsitsi.** |
