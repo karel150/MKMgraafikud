@@ -460,7 +460,7 @@ function koostaGrupid(D, META) {
       F: { Q: xy(Q('jae_q_G47'), { series: [{ name: 'Jaekaubandus (G47)', y: Q('jae_q_G47').values, c: '--s1' }, { name: 'Mootorsõidukid (G45)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45')), c: '--s2' }, { name: 'Kokku (G45+G47)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45_47')), c: '--s3' }] }) },
       src: 'Statistikaamet KM0102', url: SA('KM0102'), note: 'Püsivhindades. Pealkirjas jaekaubandus ilma mootorsõidukiteta (G47).' },
     { nr: '26', unitChip: '% kasutatavast tulust', kind: 'line', unit: '%', head: 'level',
-      F: { Q: xy(Q('saast_q'), { note: 'Sesoonselt korrigeerimata (Eurostat ei avalda Eesti kohta korrigeeritud rida).' }), A: xy(S('saast_a')) },
+      F: { A: xy(S('saast_a')) },
       src: 'Eurostat nasq_10_ki / nasa_10_ki', url: 'https://doi.org/10.2908/TEINA500', note: 'Kodumajapidamiste brutosäästu määr.' },
     { nr: '27', unitChip: 'eluruumide arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
       F: { Q: xy(alates(ehQ, ALGUS)), A: xy(ehA) },
@@ -741,7 +741,7 @@ function economyOption(it) {
   const base = {
     animation: false,
     textStyle: { fontFamily: t.font },
-    grid: { left: 8, right: 14, top: it.kind === 'stack' ? 74 : it.kind === 'lines' ? (it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
+    grid: { left: 8, right: it.kind === 'riigid' ? 56 : 14, top: it.kind === 'riigid' ? 6 : it.kind === 'stack' ? 74 : it.kind === 'lines' ? (it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
     tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.line, textStyle: { color: t.fg, fontSize: 12 },
       valueFormatter: fmt, axisPointer: { type: it.kind === 'bar' || it.kind === 'col' ? 'shadow' : 'line', lineStyle: { color: t.muted }, shadowStyle: { color: 'rgba(128,140,160,.12)' } } },
     xAxis: xAxisFor(it, t),
@@ -773,6 +773,27 @@ function economyOption(it) {
       ...it.series.map((s) => ({ type: 'bar', name: s.name, stack: 'panus', data: s.y, barCategoryGap: '25%', itemStyle: { color: t.get(s.c), borderColor: t.surface, borderWidth: 0.5 } })),
       { type: 'line', name: 'SKP kasv kokku, %', data: it.y, showSymbol: true, symbol: 'circle', symbolSize: 5, lineStyle: { color: t.fg, width: 1.5 }, itemStyle: { color: t.fg }, z: 5 },
     ];
+  } else if (it.kind === 'riigid') {
+    // Iga riigi väärtus Eesti viimasel perioodil; kui riigil see puudub, tema viimane periood (sulgudes)
+    const perS = (j) => ({ Q: it.x[j] + ' kv', H: it.x[j] + ' pa' }[it.freq] || it.x[j]);
+    const i = lastIdx(it.y);
+    const rows = it.series.map((s) => {
+      let j = i, v = s.y[i];
+      if (v == null) { j = lastIdx(s.y); v = j < 0 ? null : s.y[j]; }
+      return { name: s.name + (j !== i && j >= 0 ? ` (${perS(j)})` : ''), v, ee: s.name === 'Eesti', riik: !!s.riik };
+    }).filter((r) => r.v != null).sort((a, b) => b.v - a.v);
+    const ref = it.ref ?? 0;
+    const sgnFmt = (v) => (it.pm ? sgn(v, nf(dec).format) : nf(dec).format(v)) + (it.unit === '%' ? ' %' : it.unit);
+    base.tooltip = { trigger: 'item', backgroundColor: t.surface, borderColor: t.line, textStyle: { color: t.fg, fontSize: 12 },
+      formatter: (p) => `${esc(rows[p.dataIndex].name)}: <b>${sgnFmt(rows[p.dataIndex].v)}</b>` };
+    base.xAxis = { type: 'value', min: (v) => (v.min < 0 ? Math.floor(v.min - (v.max - v.min) * 0.28) : 0), splitLine: { lineStyle: { color: t.grid } },
+      axisLabel: { color: t.muted, fontSize: 11, hideOverlap: true, formatter: (v) => nf(Number.isInteger(v + ref) ? 0 : 1).format(v + ref) } };
+    base.yAxis = { type: 'category', inverse: true, data: rows.map((r) => r.name), axisTick: { show: false }, axisLine: { lineStyle: { color: t.line } },
+      axisLabel: { color: t.muted, fontSize: 12, formatter: (v) => (v.startsWith('Eesti') ? `{ee|${v}}` : v), rich: { ee: { color: t.fg, fontWeight: 700, fontSize: 12 } } } };
+    base.series = [{ type: 'bar', barWidth: '58%',
+      data: rows.map((r) => ({ value: r.v - ref, label: r.v - ref < 0 ? { position: 'left' } : undefined, itemStyle: { color: r.ee ? t.s1 : r.riik ? t.peer : 'transparent', borderColor: r.riik ? undefined : t.muted, borderWidth: r.riik ? 0 : 1.5, borderType: 'dashed' } })),
+      label: { show: true, position: 'right', distance: 6, color: t.fg, fontSize: 12, formatter: (p) => sgnFmt(rows[p.dataIndex].v) },
+      markLine: it.ref != null ? { silent: true, symbol: 'none', label: { show: false }, lineStyle: { color: t.muted, type: 'dashed' }, data: [{ xAxis: 0 }] } : undefined }];
   } else if (it.kind === 'lines') {
     base.legend = legend;
     base.series = it.series.map((s) => ({ type: 'line', name: s.name, data: s.y, showSymbol: false, lineStyle: { width: 2, color: t.get(s.c) }, itemStyle: { color: t.get(s.c) } }));
@@ -893,7 +914,7 @@ function koostaVordlus(V, META) {
       src: 'Eurostat nasq_10_ki / nasa_10_ki', url: 'https://doi.org/10.2908/TEINA500', note: 'Kodumajapidamiste brutosäästu määr.' },
     { nr: '19', unitChip: '% ettevõtetest', kind: 'lines', unit: '%', head: 'vrd',
       F: { A: riigid((g) => S('ai_a_' + g), {}, [{ name: 'EL-27', c: '--peer', s: S('ai_a_EU27_2020') }]) },
-      src: 'Eurostat isoc_eb_ai', url: 'https://ec.europa.eu/eurostat/databrowser/product/page/isoc_eb_ai', note: 'Vähemalt 10 hõivatuga ettevõtted, mis kasutavad vähemalt üht tehisintellekti tehnoloogiat. Hall joon: EL-27.' },
+      src: 'Eurostat isoc_eb_ai', url: 'https://ec.europa.eu/eurostat/databrowser/product/page/isoc_eb_ai', note: 'Vähemalt 10 hõivatuga ettevõtted, mis kasutavad vähemalt üht tehisintellekti tehnoloogiat. Katkendjoonega tulp: EL-27.' },
     { nr: '18', unitChip: '% SKP-st', kind: 'lines', unit: '%', head: 'vrd',
       F: { Q: riigid((g) => alates(suhe(S('inv_q_' + g), S('skp_q_' + g)), ALGUS), { note: 'Sesoonselt korrigeerimata.' }),
            A: riigid((g) => suhe(kvAasta(S('inv_q_' + g)), kvAasta(S('skp_q_' + g)))) },
@@ -936,6 +957,7 @@ function koostaVordlus(V, META) {
     const m = META[it.nr] || {};
     it.title = it.nimi || m.nimi || ('Näitaja ' + it.nr);
     it.kirjeldus = m.kirjeldus || ''; it.miks = m.miks || '';
+    it.kind = 'riigid'; // tulbad: iga riigi viimase perioodi väärtus; aegrida on kaardi tabelis
     if (!Object.values(it.F).some((d) => d && d.x && d.x.length)) return;
     (out.find((g) => g.name === m.valdkond) || out[0]).items.push(it);
   });
@@ -951,7 +973,7 @@ function buildVordlus() {
   const bar = el('div', 'freqbar');
   bar.innerHTML = `<span class="fl" id="vfreq-l">Sagedus</span><div class="seg" role="radiogroup" aria-labelledby="vfreq-l">` +
     [['M', 'Kuu'], ['Q', 'Kvartal'], ['A', 'Aasta']].map(([k, n]) => `<button type="button" role="radio" data-f="${k}" aria-checked="${k === vrdFreq}" tabindex="${k === vrdFreq ? 0 : -1}">${n}</button>`).join('') +
-    `</div><span class="fnote">Eesti, Läti, Leedu, Soome ja Rootsi. Kõik andmed on Eurostatist, et riigid oleksid võrreldavad, seetõttu võivad Eesti väärtused veidi erineda Statistikaameti omadest. Pealkirjas on Eesti viimane väärtus ja koht samal perioodil.</span>`;
+    `</div><span class="fnote">Tulbad näitavad iga riigi väärtust viimasel perioodil, mille kohta on Eesti andmed. Kui riigil selle perioodi andmed puuduvad, on näidatud tema viimane periood (sulgudes). Aegrea leiad kaardi tabelist. Kõik andmed on Eurostatist, seetõttu võivad Eesti väärtused veidi erineda Statistikaameti omadest.</span>`;
   root.append(bar);
   const btns = [...bar.querySelectorAll('button[data-f]')];
   const vali = (f) => { vrdFreq = f; try { localStorage.setItem('vrdFreq', f); } catch (e) {} buildVordlus(); renderPanel('vordlus'); const b = root.querySelector(`button[data-f="${f}"]`); if (b) b.focus(); };

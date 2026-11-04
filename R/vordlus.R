@@ -117,7 +117,7 @@ koosta_vordlus <- function() {
   # 15 valitsemissektori võlg, % SKP-st
   andmestik("volg_a", "gov_10dd_edpt1", A_(na_item = "GD", sector = "S13", unit = "PC_GDP"), c(0, 250))
   # 16 vabade ametikohtade määr (B-S)
-  andmestik("vab_q", "jvs_q_nace2", Q_(indic_em = "JOBRATE", nace_r2 = "B-S", sizeclas = "TOTAL", s_adj = "NSA", unit = "PC"), c(0, 20))
+  andmestik("vab_q", "jvs_q_nace2", Q_(indic_em = "JOBRATE", nace_r2 = "B-S", sizeclas = "TOTAL", s_adj = "NSA"), c(0, 20))
   # 21 tööhõive määr 20-64, 22 aktiivsuse määr 15-74 (mitteaktiivsus = 100 - aktiivsus)
   andmestik("hoive_q", "lfsi_emp_q", Q_(indic_em = "EMP_LFS", age = "Y20-64", sex = "T", unit = "PC_POP", s_adj = "SA"), c(0, 100))
   andmestik("akt_q",   "lfsi_emp_q", Q_(indic_em = "ACT",     age = "Y15-74", sex = "T", unit = "PC_POP", s_adj = "SA"), c(0, 100))
