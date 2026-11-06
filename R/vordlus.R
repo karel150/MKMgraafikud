@@ -28,6 +28,50 @@ eurostat_riigid <- function(id, filters, geos = VORDLUS_RIIGID, vali = NULL) {
   out
 }
 
+# Vabade ametikohtade määr (B-S, kõik suurusklassid, NSA). Eurostat vahetas 2026. aastal
+# andmestiku (NACE Rev. 2 -> 2.1), seega otsitakse kõik jvs_q_nace* andmestikud ja
+# liidetakse: uuem andmestik on eelistatud, puuduvad varasemad kvartalid tulevad vanast.
+jvs_riigid <- function(geos = VORDLUS_RIIGID) {
+  ids <- tryCatch({
+    s <- eurostat::search_eurostat("job vacancy", type = "dataset")
+    unique(s$code[grepl("^jvs_q_nace", s$code)])
+  }, error = function(e) character())
+  ids <- unique(c(ids, "jvs_q_nace21", "jvs_q_nace2_1", "jvs_q_nace2"))
+  ids <- ids[order(!grepl("21|2_1|2\\.1", ids))]          # NACE Rev. 2.1 enne
+  eelista <- c("B-S", "B-T", "B-U", "A-S", "A-T", "A-U", "TOTAL")
+  tul <- setNames(vector("list", length(geos)), geos)
+  for (id in ids) {
+    df <- tryCatch(eurostat::get_eurostat(id, filters = list(geo = geos, indic_em = "JOBRATE", freq = "Q"),
+                                          time_format = "raw", cache = FALSE), error = function(e) NULL)
+    if (is.null(df) || !nrow(df)) next
+    df <- df[!is.na(df$values), ]
+    if ("s_adj" %in% names(df))    df <- df[df$s_adj == "NSA", ]
+    if ("sizeclas" %in% names(df)) df <- df[df$sizeclas == "TOTAL", ]
+    if ("unit" %in% names(df) && "PC" %in% df$unit) df <- df[df$unit == "PC", ]
+    nc <- grep("^nace", names(df), value = TRUE)[1]
+    kood <- NA
+    if (!is.na(nc)) {
+      kood <- intersect(eelista, unique(df[[nc]][df$geo == "EE"]))[1]
+      if (is.na(kood)) next
+      df <- df[df[[nc]] == kood, ]
+    }
+    if (!nrow(df)) next
+    message("Vabad ametikohad: ", id, if (!is.na(nc)) paste0(" (", nc, " = ", kood, ")"), ", kuni ", max(as.character(df[[intersect(c("time", "TIME_PERIOD"), names(df))[1]]])))
+    tcol <- intersect(c("time", "TIME_PERIOD"), names(df))[1]
+    for (g in geos) {
+      d <- df[df$geo == g, ]
+      if (!nrow(d)) next
+      p <- norm_periood(as.character(d[[tcol]]))
+      if (anyDuplicated(p)) next
+      uus <- data.frame(p = p, v = d$values)
+      vana <- tul[[g]]
+      tul[[g]] <- if (is.null(vana)) uus else rbind(vana, uus[!uus$p %in% vana$p, ])
+    }
+  }
+  if (all(vapply(tul, is.null, logical(1)))) stop("vabade ametikohtade andmestikku ei leitud (proovitud: ", paste(ids, collapse = ", "), ")")
+  lapply(tul, function(d) if (is.null(d)) NULL else { d <- d[order(d$p), ]; seeria(d$p, d$v) })
+}
+
 koosta_vordlus <- function() {
   vana <- loe_json("vordlus.json")$seeriad
   tul  <- list()
@@ -37,12 +81,13 @@ koosta_vordlus <- function() {
   # kehtib tavaline kontroll ja hoiatus.
   # varu: list(list(id =, filters =), ...) proovitakse järjest, kui põhipäring ebaõnnestub
   # (nt Eurostat muutis andmestiku koodi või klassifikaatorit).
-  andmestik <- function(nimi, id, filters, vahemik, geos = VORDLUS_RIIGID, vali = NULL, varu = list()) {
+  andmestik <- function(nimi, id, filters, vahemik, geos = VORDLUS_RIIGID, vali = NULL, varu = list(), fn = NULL) {
+    if (!is.null(fn)) varu <- c(list(list(fn = fn)), varu)
     cache <- NULL; viga <- NULL
     lae <- function() {
       if (is.null(cache) && is.null(viga)) {
-        for (a in c(list(list(id = id, filters = filters)), varu)) {
-          cache <<- tryCatch(eurostat_riigid(a$id, a$filters, geos, vali), error = function(e) { viga <<- e; NULL })
+        for (a in if (is.null(fn)) c(list(list(id = id, filters = filters)), varu) else varu) {
+          cache <<- tryCatch(if (!is.null(a$fn)) a$fn(geos) else eurostat_riigid(a$id, a$filters, geos, vali), error = function(e) { viga <<- e; NULL })
           if (!is.null(cache)) { viga <<- NULL; break }
         }
       }
@@ -117,7 +162,9 @@ koosta_vordlus <- function() {
   # 15 valitsemissektori võlg, % SKP-st
   andmestik("volg_a", "gov_10dd_edpt1", A_(na_item = "GD", sector = "S13", unit = "PC_GDP"), c(0, 250))
   # 16 vabade ametikohtade määr (B-S)
-  andmestik("vab_q", "jvs_q_nace2", Q_(indic_em = "JOBRATE", nace_r2 = "B-S", sizeclas = "TOTAL", s_adj = "NSA"), c(0, 20))
+  # Alates 2026 I kv avaldab Eurostat vabade ametikohtade andmed NACE Rev. 2.1 järgi uues andmestikus;
+  # jvs_riigid otsib andmestiku ise ja liidab vana (NACE Rev. 2) rea uue ette.
+  andmestik("vab_q", "jvs", list(), c(0, 20), varu = list(), fn = jvs_riigid)
   # 21 tööhõive määr 20-64, 22 aktiivsuse määr 15-74 (mitteaktiivsus = 100 - aktiivsus)
   andmestik("hoive_q", "lfsi_emp_q", Q_(indic_em = "EMP_LFS", age = "Y20-64", sex = "T", unit = "PC_POP", s_adj = "SA"), c(0, 100))
   andmestik("akt_q",   "lfsi_emp_q", Q_(indic_em = "ACT",     age = "Y15-74", sex = "T", unit = "PC_POP", s_adj = "SA"), c(0, 100))

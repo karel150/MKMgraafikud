@@ -941,7 +941,7 @@ function koostaVordlus(V, META) {
       src: 'Eurostat une_rt_m / une_rt_a', url: EUSTAT('une_rt_m') },
     { nr: '16', unitChip: '% ametikohtadest', kind: 'lines', unit: '%', head: 'vrd',
       F: { Q: riigid((g) => alates(S('vab_q_' + g), ALGUS)), A: riigid((g) => qKesk(S('vab_q_' + g)), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
-      src: 'Eurostat jvs_q_nace2', url: EUSTAT('jvs_q_nace2'), note: 'Tegevusalad B–S, sesoonselt korrigeerimata.' },
+      src: 'Eurostat, vabade ametikohtade statistika', url: 'https://ec.europa.eu/eurostat/web/labour-market/database', note: 'Tegevusalad B–S, sesoonselt korrigeerimata. Alates 2026. aasta I kvartalist on andmed NACE Rev. 2.1 järgi, seega võib aegreas olla väike murdekoht.' },
     { nr: '21', unitChip: '% rahvastikust', extraChip: '20–64', kind: 'lines', unit: '%', head: 'vrd',
       F: { Q: riigid((g) => alates(S('hoive_q_' + g), ALGUS), { note: 'Sesoonselt korrigeeritud.' }), A: riigid((g) => qKesk(S('hoive_q_' + g)), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
       src: 'Eurostat lfsi_emp_q', url: EUSTAT('lfsi_emp_q'), note: 'Vanuserühm 20–64 (ELi tööhõive eesmärgi alus).' },
