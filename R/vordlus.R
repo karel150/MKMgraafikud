@@ -43,14 +43,20 @@ jvs_riigid <- function(geos = VORDLUS_RIIGID) {
   logi <- character()
   for (id in ids) {
     # Kõigepealt kitsa päringuga; kui dimensiooni nimi on muutunud, siis ainult riigi ja sagedusega
-    df <- tryCatch(eurostat::get_eurostat(id, filters = list(geo = geos, indic_em = "JOBRATE", freq = "Q"),
+    df <- tryCatch(eurostat::get_eurostat(id, filters = list(geo = geos, indic_em = c("JOBRATE", "JVR"), freq = "Q"),
                                           time_format = "raw", cache = FALSE), error = function(e) NULL)
     if (is.null(df) || !nrow(df))
       df <- tryCatch(eurostat::get_eurostat(id, filters = list(geo = geos, freq = "Q"), time_format = "raw", cache = FALSE),
                      error = function(e) { logi <<- c(logi, paste0(id, ": ", conditionMessage(e))); NULL })
     if (is.null(df) || !nrow(df)) { logi <- c(logi, paste0(id, ": andmeid pole")); next }
     df <- df[!is.na(df$values), ]
-    for (v in setdiff(grep("^indic", names(df), value = TRUE), character())) if ("JOBRATE" %in% df[[v]]) df <- df[df[[v]] == "JOBRATE", ]
+    # Vabade ametikohtade määra kood: varem JOBRATE, uutes tabelites JVR
+    for (v in grep("^indic", names(df), value = TRUE)) {
+      k <- intersect(c("JOBRATE", "JVR"), unique(df[[v]]))[1]
+      if (is.na(k)) { logi <- c(logi, paste0(id, ": määra koodi pole (", v, ": ", paste(head(unique(df[[v]]), 10), collapse = ", "), ")")); df <- df[0, ]; break }
+      df <- df[df[[v]] == k, ]
+    }
+    if (!nrow(df)) next
     if ("s_adj" %in% names(df))    df <- df[df$s_adj == "NSA", ]
     if ("sizeclas" %in% names(df)) df <- df[df$sizeclas == "TOTAL", ]
     if ("unit" %in% names(df) && "PC" %in% df$unit) df <- df[df$unit == "PC", ]
