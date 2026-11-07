@@ -29,46 +29,64 @@ eurostat_riigid <- function(id, filters, geos = VORDLUS_RIIGID, vali = NULL) {
 }
 
 # Vabade ametikohtade määr (B-S, kõik suurusklassid, NSA). Eurostat vahetas 2026. aastal
-# andmestiku (NACE Rev. 2 -> 2.1), seega otsitakse kõik jvs_q_nace* andmestikud ja
-# liidetakse: uuem andmestik on eelistatud, puuduvad varasemad kvartalid tulevad vanast.
+# andmestiku (NACE Rev. 2 jvs_q_nace2 -> NACE Rev. 2.1 jvs_q_r21). Proovitakse uut, siis
+# teisi leitud jvs_q_* andmestikke; uuem on eelistatud, puuduvad kvartalid tulevad vanast.
 jvs_riigid <- function(geos = VORDLUS_RIIGID) {
   ids <- tryCatch({
     s <- eurostat::search_eurostat("job vacancy", type = "dataset")
-    unique(s$code[grepl("^jvs_q_nace", s$code)])
+    unique(s$code[grepl("^jvs_q_(nace|r2)", s$code)])
   }, error = function(e) character())
-  ids <- unique(c(ids, "jvs_q_nace21", "jvs_q_nace2_1", "jvs_q_nace2"))
-  ids <- ids[order(!grepl("21|2_1|2\\.1", ids))]          # NACE Rev. 2.1 enne
+  # jvs_q_r21 = NACE Rev. 2.1 (andmed alates 2001), jvs_q_nace2 = vana NACE Rev. 2 tabel
+  ids <- unique(c("jvs_q_r21", ids, "jvs_q_nace2"))
   eelista <- c("B-S", "B-T", "B-U", "A-S", "A-T", "A-U", "TOTAL")
   tul <- setNames(vector("list", length(geos)), geos)
+  logi <- character()
   for (id in ids) {
-    df <- tryCatch(eurostat::get_eurostat(id, filters = list(geo = geos, indic_em = "JOBRATE", freq = "Q"),
+    # Kõigepealt kitsa päringuga; kui dimensiooni nimi on muutunud, siis ainult riigi ja sagedusega
+    df <- tryCatch(eurostat::get_eurostat(id, filters = list(geo = geos, indic_em = c("JOBRATE", "JVR"), freq = "Q"),
                                           time_format = "raw", cache = FALSE), error = function(e) NULL)
-    if (is.null(df) || !nrow(df)) next
+    if (is.null(df) || !nrow(df))
+      df <- tryCatch(eurostat::get_eurostat(id, filters = list(geo = geos, freq = "Q"), time_format = "raw", cache = FALSE),
+                     error = function(e) { logi <<- c(logi, paste0(id, ": ", conditionMessage(e))); NULL })
+    if (is.null(df) || !nrow(df)) { logi <- c(logi, paste0(id, ": andmeid pole")); next }
     df <- df[!is.na(df$values), ]
+    # Vabade ametikohtade määra kood: varem JOBRATE, uutes tabelites JVR
+    for (v in grep("^indic", names(df), value = TRUE)) {
+      k <- intersect(c("JOBRATE", "JVR"), unique(df[[v]]))[1]
+      if (is.na(k)) { logi <- c(logi, paste0(id, ": määra koodi pole (", v, ": ", paste(head(unique(df[[v]]), 10), collapse = ", "), ")")); df <- df[0, ]; break }
+      df <- df[df[[v]] == k, ]
+    }
+    if (!nrow(df)) next
     if ("s_adj" %in% names(df))    df <- df[df$s_adj == "NSA", ]
     if ("sizeclas" %in% names(df)) df <- df[df$sizeclas == "TOTAL", ]
     if ("unit" %in% names(df) && "PC" %in% df$unit) df <- df[df$unit == "PC", ]
     nc <- grep("^nace", names(df), value = TRUE)[1]
     kood <- NA
     if (!is.na(nc)) {
-      kood <- intersect(eelista, unique(df[[nc]][df$geo == "EE"]))[1]
-      if (is.na(kood)) next
+      koodid <- unique(df[[nc]][df$geo == "EE"])
+      kood <- c(intersect(eelista, koodid), sort(grep("^B-", koodid, value = TRUE), decreasing = TRUE),
+                sort(grep("^A-", koodid, value = TRUE), decreasing = TRUE))[1]
+      if (is.na(kood)) { logi <- c(logi, paste0(id, ": sobivat tegevusala pole (", paste(head(koodid, 15), collapse = ", "), ")")); next }
       df <- df[df[[nc]] == kood, ]
     }
-    if (!nrow(df)) next
+    if (!nrow(df)) { logi <- c(logi, paste0(id, ": filtrite järel andmeid pole")); next }
     message("Vabad ametikohad: ", id, if (!is.na(nc)) paste0(" (", nc, " = ", kood, ")"), ", kuni ", max(as.character(df[[intersect(c("time", "TIME_PERIOD"), names(df))[1]]])))
     tcol <- intersect(c("time", "TIME_PERIOD"), names(df))[1]
     for (g in geos) {
       d <- df[df$geo == g, ]
       if (!nrow(d)) next
       p <- norm_periood(as.character(d[[tcol]]))
-      if (anyDuplicated(p)) next
+      if (anyDuplicated(p)) {
+        mitu <- names(d)[vapply(d, function(x) length(unique(x)) > 1, logical(1))]
+        logi <- c(logi, paste0(id, " ", g, ": mitu rida perioodi kohta (erinevad: ", paste(setdiff(mitu, c(tcol, "values")), collapse = ", "), ")"))
+        next
+      }
       uus <- data.frame(p = p, v = d$values)
       vana <- tul[[g]]
       tul[[g]] <- if (is.null(vana)) uus else rbind(vana, uus[!uus$p %in% vana$p, ])
     }
   }
-  if (all(vapply(tul, is.null, logical(1)))) stop("vabade ametikohtade andmestikku ei leitud (proovitud: ", paste(ids, collapse = ", "), ")")
+  if (all(vapply(tul, is.null, logical(1)))) stop("vabade ametikohtade andmeid ei leitud: ", paste(substr(logi, 1, 200), collapse = " | "))
   lapply(tul, function(d) if (is.null(d)) NULL else { d <- d[order(d$p), ]; seeria(d$p, d$v) })
 }
 
