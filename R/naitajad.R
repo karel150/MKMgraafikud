@@ -65,27 +65,54 @@ koosta_naitajad <- function(esi_kuu = NULL) {
   lisa("jaem_m_idx", function() { d <- km20(); d <- d[d[[NAITAJA]] == "TOVV", ]; seeria(d$Vaatlusperiood, d$value) }, c(1, 1000))
   lisa("jaem_m_eur", function() { d <- km20(); d <- d[d[[NAITAJA]] == "TOVT", ]; seeria(d$Vaatlusperiood, d$value) }, c(10, 1e5))
 
-  # ---- Registreeritud töötud (Töötukassa avaandmed, andmed.eesti.ee) -----------
-  # Kuu lõpu seis. Fail "Töötud kuu lõpu seisuga viimase töökogemuse tegevusala järgi"
-  # summeeritakse kuude kaupa. Faili aadress leitakse andmestiku kirjeldusest.
-  lisa("regtootud_m", function() {
-    ds_url <- "https://andmed.eesti.ee/api/datasets/e7ce24f2-7c77-403a-8559-12e9fd75b249"
-    ds <- fromJSON(content(stop_for_status(GET(ds_url, timeout(60))), as = "text", encoding = "UTF-8"), simplifyVector = FALSE)
-    jaot <- Filter(function(x) grepl("tegevusala", x$titleEt, ignore.case = TRUE), ds$distributions)
-    if (!length(jaot) || !length(jaot[[1]]$accessUrls)) stop("Töötukassa failist puudub allalaadimise link.")
+  # ---- Töötukassa avaandmed (andmed.eesti.ee) ----------------------------------
+  # Faili link leitakse andmestiku kirjeldusest pealkirja järgi, nii et Töötukassa
+  # faili uuendamisel muutuv aadress päringut ei murra.
+  tk_fail <- function(ds_id, muster) {
+    ds <- fromJSON(content(stop_for_status(GET(paste0("https://andmed.eesti.ee/api/datasets/", ds_id), timeout(60))),
+                           as = "text", encoding = "UTF-8"), simplifyVector = FALSE)
+    jaot <- Filter(function(x) grepl(muster, x$titleEt, ignore.case = TRUE), ds$distributions)
+    if (!length(jaot) || !length(jaot[[1]]$accessUrls)) stop("Töötukassa failist puudub allalaadimise link (", muster, ").")
     tmp <- tempfile(fileext = ".xlsx")
     stop_for_status(GET(jaot[[1]]$accessUrls[[1]], write_disk(tmp, overwrite = TRUE), timeout(180)))
+    tmp
+  }
+  # Loeb kõik lehed, kus esimene veerg on kuupäev; tagastab p (YYYYMmm) + valitud veerud
+  tk_lehed <- function(tmp) {
     osad <- lapply(readxl::excel_sheets(tmp), function(leht) {
       y <- readxl::read_excel(tmp, sheet = leht)
-      v <- grep("arv", names(y), value = TRUE, ignore.case = TRUE)
-      if (!length(v) || !inherits(y[[1]], c("POSIXct", "Date"))) return(NULL)
-      data.frame(p = format(as.Date(y[[1]]), "%YM%m"), v = as.numeric(y[[v[1]]]))
+      if (!nrow(y) || !inherits(y[[1]], c("POSIXct", "Date"))) return(NULL)
+      y$p <- format(as.Date(y[[1]]), "%YM%m")
+      y
     })
-    x <- do.call(rbind, osad)
-    if (is.null(x) || !nrow(x)) stop("Töötukassa failist ei leitud andmeid.")
-    a <- aggregate(v ~ p, x, sum, na.rm = TRUE)
-    seeria(a$p, a$v)
+    x <- dplyr::bind_rows(osad)
+    if (!nrow(x)) stop("Töötukassa failist ei leitud andmeid.")
+    x
+  }
+  kuusumma <- function(p, v) { a <- aggregate(v ~ p, data.frame(p = p, v = as.numeric(v)), sum, na.rm = TRUE); seeria(a$p, a$v) }
+
+  # Registreeritud töötud, kuu lõpu seis (fail "... viimase töökogemuse tegevusala järgi")
+  lisa("regtootud_m", function() {
+    x <- tk_lehed(tk_fail("e7ce24f2-7c77-403a-8559-12e9fd75b249", "tegevusala"))
+    v <- grep("arv", names(x), value = TRUE, ignore.case = TRUE)[1]
+    kuusumma(x$p, x[[v]])
   }, c(5000, 200000))
+
+  # Töötukassa vahendatud vabad töökohad Eestis, kuu lõpu seis: kokku ja töötlev tööstus (C).
+  # Välja jäetakse maakond "Välismaa" (EURES-e kaudu vahendatavad välismaa töökohad).
+  vk <- mitu(function() {
+    x <- tk_lehed(tk_fail("e5707aaa-a6cc-4cd9-a3e6-fb9df309ac76", "tegevusala"))
+    mk <- grep("^MAAKOND$", names(x), value = TRUE, ignore.case = TRUE)[1]
+    if (is.na(mk)) stop("Töötukassa vabade töökohtade failis puudub veerg MAAKOND.")
+    x[!grepl("^V\u00e4lismaa", x[[mk]], ignore.case = TRUE), ]
+  })
+  vk_veerg <- function(x) grep("kuu l\u00f5pu seisuga", names(x), value = TRUE, ignore.case = TRUE)[1]
+  lisa("tk_vabad_m", function() { x <- vk(); kuusumma(x$p, x[[vk_veerg(x)]]) }, c(100, 100000))
+  lisa("tk_vabad_c_m", function() {
+    x <- vk(); tt <- x[grepl("^T\u00f6\u00f6tlev t\u00f6\u00f6stus", x[[3]]), ]
+    if (!nrow(tt)) stop("Töötleva tööstuse rida puudub.")
+    kuusumma(tt$p, tt[[vk_veerg(tt)]])
+  }, c(10, 50000))
 
   # ---- Kaupade eksport kuude kaupa (VKK10, uus andmebaas statsql) ------------
   # EXP = kaupade eksport kokku, EXP_EE = Eesti päritolu kaupade eksport; eurodes -> mln €

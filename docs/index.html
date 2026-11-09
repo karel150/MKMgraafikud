@@ -240,7 +240,7 @@ footer a { color: var(--muted); }
         <span class="tnum">01</span><span class="tname">Majandusplaani näitajad</span><span class="tdesc">Koondindeks ja 8 alamnäitajat</span>
       </button>
       <button class="tab" role="tab" id="tab-majandus" aria-controls="p-majandus" aria-selected="true" data-key="majandus">
-        <span class="tnum">02</span><span class="tname">Eesti majanduse graafikud</span><span class="tdesc">33 näitajat, neist 17 põhinäitajat</span>
+        <span class="tnum">02</span><span class="tname">Eesti majanduse graafikud</span><span class="tdesc">35 näitajat, neist 19 põhinäitajat</span>
       </button>
       <button class="tab" role="tab" id="tab-indeksid" aria-controls="p-indeksid" aria-selected="false" data-key="indeksid">
         <span class="tnum">03</span><span class="tname">Eesti positsioon indeksites</span><span class="tdesc">13 rahvusvahelist indeksit</span>
@@ -587,6 +587,18 @@ function koostaGrupid(D, META) {
     { nr: '14', unitChip: '% tööjõust', extraChip: '15–74', kind: 'line', unit: '%', head: 'level',
       F: { Q: xy(Q('tootus_q')), A: xy(koonda(S('tootus_q'), aKey, 4, (v) => r1(mean(v))), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
       src: 'Statistikaamet TT0160', url: SA('TT0160') },
+    { nr: '16b', unitChip: 'töökohta, kuu lõpus', kind: 'line', unit: '', dec: 0, head: 'levelpct',
+      F: { M: xy(alates(S('tk_vabad_m'), ALGUS)),
+           Q: xy(alates(koonda(S('tk_vabad_m'), kvKey, 3, (v) => Math.round(mean(v))), ALGUS), { note: 'Kvartali väärtus on kuude keskmine.' }),
+           A: xy(koonda(S('tk_vabad_m'), aKey, 12, (v) => Math.round(mean(v))), { note: 'Aasta väärtus on kuude keskmine.' }) },
+      src: 'Eesti Töötukassa', url: 'https://www.tootukassa.ee/et/statistika-ja-uuringud/peamised-statistilised-naitajad/vabad-tookohad',
+      note: 'Töötukassa avaandmed (andmed.eesti.ee). Eestis asuvad töökohad (välismaa töökohad on välja jäetud). Ainult töötukassale vahendamiseks esitatud töökohad, mitte kõik vabad ametikohad majanduses.' },
+    { nr: '16c', unitChip: 'töökohta, kuu lõpus', kind: 'line', unit: '', dec: 0, head: 'levelpct',
+      F: { M: xy(alates(S('tk_vabad_c_m'), ALGUS)),
+           Q: xy(alates(koonda(S('tk_vabad_c_m'), kvKey, 3, (v) => Math.round(mean(v))), ALGUS), { note: 'Kvartali väärtus on kuude keskmine.' }),
+           A: xy(koonda(S('tk_vabad_c_m'), aKey, 12, (v) => Math.round(mean(v))), { note: 'Aasta väärtus on kuude keskmine.' }) },
+      src: 'Eesti Töötukassa', url: 'https://www.tootukassa.ee/et/statistika-ja-uuringud/peamised-statistilised-naitajad/vabad-tookohad',
+      note: 'Töötukassa avaandmed (andmed.eesti.ee). Töötleva tööstuse (EMTAK C) ettevõtted, Eestis asuvad töökohad. Väikeste arvude tõttu kõigub kuude lõikes.' },
     { nr: '16', unitChip: '% ametikohtadest', kind: 'line', unit: '%', head: 'custom',
       F: { Q: xy(Q('vab_maar_q'), pais(f1(viimane(vabM).v), '%', `${silt(viimane(vabM).p || '')} kv · ${f0(viimane(vabA).v)} vaba kohta`, '')),
            A: xy(koonda(S('vab_maar_q'), aKey, 4, (v) => r1(mean(v))), { ...pais(f1(viimane(koonda(S('vab_maar_q'), aKey, 4, (v) => r1(mean(v)))).v), '%', `${viimane(koonda(S('vab_maar_q'), aKey, 4, mean)).p || ''} · ${f0(viimane(koonda(vabA, aKey, 4, mean)).v)} vaba kohta (keskmine)`, ''), note: 'Aasta väärtus on kvartalite keskmine.' }) },
