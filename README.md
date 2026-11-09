@@ -4,7 +4,7 @@ Avalik näidikulaud viie vaatega:
 
 1. **Majandusplaani näitajad**: majandusplaaniindeks ja selle 8 alamnäitajat (tasemed, muutused, soojuskaart, andmetabel).
 2. **Eesti majanduse graafikud**: 30 näitajat (neist 15 põhinäitajat) kuu-, kvartali- ja aastavaatega.
-3. **Eesti positsioon indeksites**: 6 rahvusvahelist edetabelit.
+3. **Eesti positsioon indeksites**: 13 rahvusvahelist indeksit (MAPO to-do faili leht „2.1 Indeksid“), jaotatud põhi- ja täiendavateks.
 4. **Rahvusvaheline võrdlus**: 24 näitajat Eurostati andmetel Eesti, Läti, Leedu, Soome ja Rootsi kohta. Need on vahekaardi 2 näitajad, millel on Eurostatis võrreldav vaste (sh Statistikaameti näitajate vasted, nt ühtlustatud THI, tööjõukulu indeks).
 5. **Teiste asutuste ülevaated**: lingid teiste asutuste majandusnäitajatele, prognoosidele ja analüüsidele.
 
@@ -123,8 +123,15 @@ Kui ilmub uus väljaanne, muuda faile `andmed/indeksid.csv` ja `andmed/indeksid_
 | Euroopa innovatsiooni tulemustabel (EIS) | juuni–juuli |
 | Ülemaailmne innovatsiooniindeks (GII) | september |
 | Maksukonkurentsivõime indeks | oktoober |
+| Euroopa iduettevõtete tulemustabel (ESSS) | mai |
+| IKT arengu indeks (ITU IDI) | juuni |
+| IMD talentide edetabel | september |
+| Ülemaailmsed valitsemise indikaatorid (WGI) | september |
+| Maailmapanga B-READY | sügis |
+| IMD digitaalse konkurentsivõime edetabel | november |
+| Talentide konkurentsivõime indeks (GTCI) | november |
 
-`indeksid.csv` veerud: `koht` = Eesti koht; `riike` = riikide arv (tühi, kui pole teada); `silt` = lühike lisainfo kaardil; `vordlus_aasta` ja `vordlus_riike` = mis väljaandest võrdlusriikide kohad pärinevad.
+`indeksid.csv` veerud on kirjeldatud failis `R/indeksid.R`. Olulisemad: `koht` ja `riike` = Eesti koht ja riikide arv (tühi, kui edetabelit pole); `skoor`/`skaala`, kui indeks avaldab ainult skoori; `ruhm` ja `ruhmad` (eraldaja `|`), kui indeks jagab riigid tulemusrühmadesse; `silt` = lühike lisainfo kaardil; `prioriteet` 1 või 2; `pikk`, `piirang`, `koosseis` = tekstid kaardi lisainfos. `indeksid_vordlus.csv`: võrdlusriikide `koht` või `skoor`.
 
 ## Näitajate muutmine
 
