@@ -1,0 +1,24 @@
+name: Uuri tabelit (ajutine)
+on:
+  push:
+    branches: [uuri-vkk10]
+permissions:
+  contents: write
+jobs:
+  uuri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lae metaandmed
+        run: |
+          mkdir -p uuri
+          for db in statsql stat; do
+            curl -s -o uuri/VKK10_$db.json -w "$db %{http_code}\n" "https://andmed.stat.ee/api/v1/et/$db/VKK10" || true
+          done
+          curl -s -o uuri/statsql_root.json "https://andmed.stat.ee/api/v1/et/statsql" || true
+          ls -la uuri
+      - name: Salvesta
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uuri && git commit -m "Metaandmed" && git push
