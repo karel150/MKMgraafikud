@@ -12,13 +12,16 @@ jobs:
       - name: Lae
         run: |
           mkdir -p uuri
-          curl -sL -o uuri/s1.json "https://andmed.eesti.ee/api/datasets?search=t%C3%B6%C3%B6tud&limit=75" || true
-          curl -sL -o uuri/s2.json "https://andmed.eesti.ee/api/datasets?search=p%C3%A4evane&limit=75" || true
-          curl -sL -o uuri/s3.json "https://andmed.eesti.ee/api/datasets?search=t%C3%B6%C3%B6tuse%20m%C3%A4%C3%A4r%20registreeritud&limit=75" || true
-          rm -f uuri/kuu.xlsx uuri/mk.xlsx uuri/tk.html uuri/ds_slug.json
+          rm -f uuri/s1.json uuri/s2.json uuri/s3.json uuri/search.json uuri/org*.json
+          curl -sL -o uuri/paev.json "https://andmed.eesti.ee/api/datasets/bf985ae0-d29f-4401-b7b9-69193c685797" || true
+          for id in $(python3 -c "import json;d=json.load(open('uuri/paev.json'));print(' '.join(x['id'] for x in d['distributions']))"); do
+            curl -sL -o uuri/paev_$id.xlsx "https://andmed.eesti.ee/api/v2/datasets/bf985ae0-d29f-4401-b7b9-69193c685797/distribution/$id/file" || true
+          done
+          KOV=$(python3 -c "import json;d=json.load(open('uuri/ds.json'));print([x['id'] for x in d['distributions'] if 'kohaliku omavalitsuse' in x['titleEt']][0])")
+          curl -sL -o uuri/kov.xlsx "https://andmed.eesti.ee/api/v2/datasets/e7ce24f2-7c77-403a-8559-12e9fd75b249/distribution/$KOV/file" || true
           ls -la uuri
       - name: Salvesta
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A uuri && git commit -m "Uurimistulemus 3" && git push
+          git add -A uuri && git commit -m "Uurimistulemus 4" && git push
