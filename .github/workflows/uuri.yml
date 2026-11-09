@@ -12,13 +12,14 @@ jobs:
       - name: Lae
         run: |
           mkdir -p uuri
-          rm -f uuri/f_*.xlsx uuri/paev.json
-          for q in "t%C3%B6%C3%B6kohad" "t%C3%B6%C3%B6pakkumised" "vabad" "t%C3%B6%C3%B6tukassa%20t%C3%B6%C3%B6kohad"; do
-            curl -sL -o "uuri/q_$q.json" "https://andmed.eesti.ee/api/datasets?search=$q&limit=75" || true
-          done
+          rm -f uuri/q_*.json
+          DS=e5707aaa-a6cc-4cd9-a3e6-fb9df309ac76
+          curl -sL -o uuri/vk.json "https://andmed.eesti.ee/api/datasets/$DS"
+          python3 -c "import json;d=json.load(open('uuri/vk.json'));[print(x['id'],x['accessUrls'][0] if x['accessUrls'] else '',sep='\t') for x in d['distributions']]" > uuri/vk_list.tsv
+          n=0; while IFS=$'\t' read id url; do n=$((n+1)); [ -n "$url" ] && curl -sL -o "uuri/vk_$n.xlsx" "$url"; done < uuri/vk_list.tsv
           ls -la uuri
       - name: Salvesta
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A uuri && git commit -m "Uurimistulemus 6" && git push
+          git add -A uuri && git commit -m "Uurimistulemus 7" && git push
