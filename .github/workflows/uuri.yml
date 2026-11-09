@@ -1,0 +1,24 @@
+name: Uuri allikat (ajutine)
+on:
+  push:
+    branches: [uuri-tootukassa]
+permissions:
+  contents: write
+jobs:
+  uuri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lae
+        run: |
+          mkdir -p uuri
+          curl -sL -o uuri/ds.json -w "ds %{http_code}\n" "https://andmed.eesti.ee/api/datasets/e7ce24f2-7c77-403a-8559-12e9fd75b249" || true
+          curl -sL -o uuri/ds_slug.json -w "slug %{http_code}\n" "https://andmed.eesti.ee/api/datasets/slug/registreeritud-tootud" || true
+          curl -sL -o uuri/search.json -w "search %{http_code}\n" "https://andmed.eesti.ee/api/datasets?search=t%C3%B6%C3%B6tuse%20m%C3%A4%C3%A4r&limit=20" || true
+          curl -sL -o uuri/tk.html -w "tk %{http_code}\n" "https://www.tootukassa.ee/et/statistika-ja-uuringud/peamised-statistilised-naitajad/registreeritud-tootud" || true
+          ls -la uuri
+      - name: Salvesta
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uuri && git commit -m "Uurimistulemus" && git push
