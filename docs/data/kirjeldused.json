@@ -231,6 +231,20 @@
    "nimi": "Registreeritud töötud",
    "kirjeldus": "Töötukassas töötuna arvel olevate inimeste arv kuu lõpu seisuga. Registreeritud töötu on vähemalt 16-aastane, kuid mitte pensioniealine inimene, kes ei tööta, on töötukassas arvele võetud ja otsib tööd.",
    "miks": "Igakuine registriandmestik näitab tööturu muutusi kiiremini kui kvartaalne tööjõu-uuring. Registreeritud töötute arvu mõjutavad lisaks majandusolukorrale ka seadusemuudatused ja tööturumeetmete korraldus, seega ei ole see üks-ühele võrreldav tööjõu-uuringu töötute arvuga."
+  },
+  "16b": {
+   "valdkond": "Tööturg ja palgad",
+   "peamine": true,
+   "nimi": "Töötukassa vahendatud vabad töökohad",
+   "kirjeldus": "Töötukassa kaudu pakutavate vabade töökohtade arv kuu lõpu seisuga. Hõlmab ainult töökohti, mille tööandjad on töötukassale vahendamiseks esitanud, mitte kõiki vabu ametikohti majanduses.",
+   "miks": "Igakuine näitaja tööjõunõudluse muutusest. Koos registreeritud töötute arvuga näitab, kui palju on töötuid ühe pakutava töökoha kohta."
+  },
+  "16c": {
+   "valdkond": "Tööturg ja palgad",
+   "peamine": true,
+   "nimi": "Vabad töökohad töötlevas tööstuses",
+   "kirjeldus": "Töötukassa kaudu pakutavad vabad töökohad töötleva tööstuse ettevõtetes (EMTAK C), kuu lõpu seisuga.",
+   "miks": "Näitab tööstusettevõtete töötajate otsimise aktiivsust ja aitab märgata tööstuse nõudluse pöördeid varem kui toodangu- või hõiveandmed."
   }
  }
 }
