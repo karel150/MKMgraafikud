@@ -240,7 +240,7 @@ footer a { color: var(--muted); }
         <span class="tnum">01</span><span class="tname">Majandusplaani näitajad</span><span class="tdesc">Koondindeks ja 8 alamnäitajat</span>
       </button>
       <button class="tab" role="tab" id="tab-majandus" aria-controls="p-majandus" aria-selected="true" data-key="majandus">
-        <span class="tnum">02</span><span class="tname">Eesti majanduse graafikud</span><span class="tdesc">32 näitajat, neist 16 põhinäitajat</span>
+        <span class="tnum">02</span><span class="tname">Eesti majanduse graafikud</span><span class="tdesc">33 näitajat, neist 17 põhinäitajat</span>
       </button>
       <button class="tab" role="tab" id="tab-indeksid" aria-controls="p-indeksid" aria-selected="false" data-key="indeksid">
         <span class="tnum">03</span><span class="tname">Eesti positsioon indeksites</span><span class="tdesc">13 rahvusvahelist indeksit</span>
@@ -578,6 +578,12 @@ function koostaGrupid(D, META) {
       F: { Q: xy(medQ, pais(f0(lm.v), '€', `mediaanpalk, ${silt(lm.p || '')} kv`, sgn(medQ.values.at(-1)) + ' % aastaga')),
            A: xy(medA, { ...pais(f0(medAL.values.at(-1)), '€', `mediaanpalk, ${medAL.periods.at(-1)}`, sgn(medA.values.at(-1)) + ' % aastaga'), src: ametlikA ? 'Statistikaamet PA101' : undefined, url: ametlikA ? SA('PA101') : undefined, note: ametlikA ? '' : 'Aasta väärtus on kvartalimediaanide keskmine.' }) },
       src: 'Statistikaamet PA115', url: SA('PA115'), note: 'Muutus arvutatud mediaani tasemest.' },
+    { nr: '14b', unitChip: 'inimest, kuu lõpus', kind: 'line', unit: '', dec: 0, head: 'levelpct',
+      F: { M: xy(alates(S('regtootud_m'), ALGUS)),
+           Q: xy(alates(koonda(S('regtootud_m'), kvKey, 3, (v) => Math.round(mean(v))), ALGUS), { note: 'Kvartali väärtus on kuude keskmine.' }),
+           A: xy(koonda(S('regtootud_m'), aKey, 12, (v) => Math.round(mean(v))), { note: 'Aasta väärtus on kuude keskmine.' }) },
+      src: 'Eesti Töötukassa', url: 'https://www.tootukassa.ee/et/statistika-ja-uuringud/peamised-statistilised-naitajad/registreeritud-tootud',
+      note: 'Töötukassa avaandmed (andmed.eesti.ee). Registreeritud töötuse määr lisandub, kui see on masinloetaval kujul saadaval.' },
     { nr: '14', unitChip: '% tööjõust', extraChip: '15–74', kind: 'line', unit: '%', head: 'level',
       F: { Q: xy(Q('tootus_q')), A: xy(koonda(S('tootus_q'), aKey, 4, (v) => r1(mean(v))), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
       src: 'Statistikaamet TT0160', url: SA('TT0160') },
