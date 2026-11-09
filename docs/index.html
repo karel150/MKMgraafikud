@@ -392,6 +392,12 @@ function koostaGrupid(D, META) {
   // ---- 3–5: eksport -------------------------------------------------------------
   const ekspNom = (k) => ({ Q: alates(muutus(S(k + '_q_cur'), 4), ALGUS), A: muutus(S(k + '_a_cur'), 1) });
   const kaupN = ekspNom('ekspK'), teenN = ekspNom('ekspT');
+  // Kaupade eksport kuude kaupa (VKK10, mln €): pealkirjas tase, tulpadel aastamuutus
+  const kaupF = (k) => {
+    const m = S(k), q = koonda(m, kvKey, 3, sum), a = koonda(m, aKey, 12, sum);
+    const mY = alates(muutus(m, 12), ALGUS), qY = alates(muutus(q, 4), ALGUS), aY = muutus(a, 1);
+    return { M: xy(mY, lvlPais(m, mY, f0s, 'mln €', '', false)), Q: xy(qY, lvlPais(q, qY, f0s, 'mln €', '', true)), A: xy(aY, lvlPais(a, aY, f0s, 'mln €', '', false)) };
+  };
   // ---- 6: otseinvesteeringud ----------------------------------------------------
   const fdi = S('fdi_q');
   const fdiQ = alates(muutus(fdi, 4), ALGUS);
@@ -504,9 +510,10 @@ function koostaGrupid(D, META) {
       F: { Q: xy(Q('eksp_q'), { series: [{ name: 'Kokku', y: Q('eksp_q').values, c: '--s1' }, { name: 'Kaubad', y: Q('ekspK_q').values, c: '--s2' }, { name: 'Teenused', y: Q('ekspT_q').values, c: '--s3' }] }),
            A: xy(S('eksp_a'), { series: [{ name: 'Kokku', y: S('eksp_a').values, c: '--s1' }, { name: 'Kaubad', y: S('ekspK_a').values, c: '--s2' }, { name: 'Teenused', y: S('ekspT_a').values, c: '--s3' }] }) },
       src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Pealkirjas kogu eksport. Aheldatud väärtuse muutus.' },
-    { nr: '4', unitChip: 'nominaalmuutus, %', kind: 'bar', unit: '%', head: 'custom',
-      F: { Q: xy(kaupN.Q, lvlPais(S('ekspK_q_cur'), kaupN.Q, f0s, 'mln €', '', true)), A: xy(kaupN.A, lvlPais(S('ekspK_a_cur'), kaupN.A, f0s, 'mln €', '', false)) },
-      src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Jooksevhindades (sisaldab hinnamuutust). Kuuandmed (VKK12) lisanduvad, kui Statistikaameti uue andmebaasi API on kasutusel.' },
+    { nr: '4', unitChip: 'muutus aasta varem, %', kind: 'bar', unit: '%', head: 'custom', F: kaupF('kaup_m'),
+      src: 'Statistikaamet VKK10', url: 'https://andmed.stat.ee/et/statsql/VKK10', note: 'Väliskaubandusstatistika, jooksevhindades. Kvartal ja aasta on kuude summa. Viimased kuud on esialgsed ja võivad muutuda.' },
+    { nr: '4b', unitChip: 'muutus aasta varem, %', kind: 'bar', unit: '%', head: 'custom', F: kaupF('kaupEE_m'),
+      src: 'Statistikaamet VKK10', url: 'https://andmed.stat.ee/et/statsql/VKK10', note: 'Eesti päritolu kaubad, jooksevhindades. Kvartal ja aasta on kuude summa. Viimased kuud on esialgsed ja võivad muutuda.' },
     { nr: '5', unitChip: 'nominaalmuutus, %', kind: 'bar', unit: '%', head: 'custom',
       F: { Q: xy(teenN.Q, lvlPais(S('ekspT_q_cur'), teenN.Q, f0s, 'mln €', '', true)), A: xy(teenN.A, lvlPais(S('ekspT_a_cur'), teenN.A, f0s, 'mln €', '', false)) },
       src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Jooksevhindades. Väliskaubandusstatistika tabelid (VKT21/VKT41) lisanduvad, kui Statistikaameti uue andmebaasi API on kasutusel.' },

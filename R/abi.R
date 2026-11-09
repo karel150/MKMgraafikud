@@ -13,6 +13,7 @@ suppressPackageStartupMessages({
 })
 
 PX_API   <- "https://andmed.stat.ee/api/v1/et/stat/"
+PX_SQL   <- "https://andmed.stat.ee/api/v1/et/statsql/"   # Statistikaameti uus andmebaas (nt VKK10)
 DATA_DIR <- "docs/data"
 ALGUS    <- 2015   # aegridade algusaasta JSON-failides
 
@@ -31,12 +32,12 @@ valik <- function(code, values, filter = if (identical(values, "*")) "all" else 
 }
 
 # Tagastab data.frame'i: üks veerg iga dimensiooni koodiga + veerg value.
-px_paring <- function(tabel, ..., katseid = 3) {
+px_paring <- function(tabel, ..., katseid = 3, api = PX_API) {
   keha <- list(query = list(...), response = list(format = "json"))
   vastus <- NULL
   for (k in seq_len(katseid)) {
     vastus <- tryCatch(
-      POST(paste0(PX_API, tabel), body = toJSON(keha, auto_unbox = TRUE),
+      POST(paste0(api, tabel), body = toJSON(keha, auto_unbox = TRUE),
            content_type_json(), encode = "raw", timeout(90)),
       error = function(e) e
     )
