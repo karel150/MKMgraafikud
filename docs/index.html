@@ -240,7 +240,7 @@ footer a { color: var(--muted); }
         <span class="tnum">01</span><span class="tname">Majandusplaani näitajad</span><span class="tdesc">Koondindeks ja 8 alamnäitajat</span>
       </button>
       <button class="tab" role="tab" id="tab-majandus" aria-controls="p-majandus" aria-selected="true" data-key="majandus">
-        <span class="tnum">02</span><span class="tname">Eesti majanduse graafikud</span><span class="tdesc">31 näitajat, neist 16 põhinäitajat</span>
+        <span class="tnum">02</span><span class="tname">Eesti majanduse graafikud</span><span class="tdesc">32 näitajat, neist 16 põhinäitajat</span>
       </button>
       <button class="tab" role="tab" id="tab-indeksid" aria-controls="p-indeksid" aria-selected="false" data-key="indeksid">
         <span class="tnum">03</span><span class="tname">Eesti positsioon indeksites</span><span class="tdesc">13 rahvusvahelist indeksit</span>
@@ -392,6 +392,18 @@ function koostaGrupid(D, META) {
   // ---- 3–5: eksport -------------------------------------------------------------
   const ekspNom = (k) => ({ Q: alates(muutus(S(k + '_q_cur'), 4), ALGUS), A: muutus(S(k + '_a_cur'), 1) });
   const kaupN = ekspNom('ekspK'), teenN = ekspNom('ekspT');
+  // Jaemüük (KM020, G47): mahuindeksi aastamuutus, pealkirjas lisaks müügitulu mln €
+  const jaemF = (() => {
+    const ix = S('jaem_m_idx'), eur = S('jaem_m_eur');
+    const tee = (y, lvl, kv) => {
+      const l = viimane(lvl), c = y.values.length ? y.values.at(-1) : null;
+      return xy(y, pais(c == null ? '–' : sgn(c), '%', kv ? silt(y.periods.at(-1)) + ' kv' : silt(y.periods.at(-1) || ''), l.v == null ? '' : `müügitulu ${f0(l.v)} mln €`));
+    };
+    const mY = alates(muutus(ix, 12), ALGUS);
+    const qY = alates(muutus(koonda(ix, kvKey, 3, mean), 4), ALGUS);
+    const aY = muutus(koonda(ix, aKey, 12, mean), 1);
+    return { M: tee(mY, eur, false), Q: tee(qY, koonda(eur, kvKey, 3, sum), true), A: tee(aY, koonda(eur, aKey, 12, sum), false) };
+  })();
   // Kaupade eksport kuude kaupa (VKK10, mln €): pealkirjas tase, tulpadel aastamuutus
   const kaupF = (k) => {
     const m = S(k), q = koonda(m, kvKey, 3, sum), a = koonda(m, aKey, 12, sum);
@@ -486,6 +498,8 @@ function koostaGrupid(D, META) {
     { nr: '2', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'yoy',
       F: { M: xy(Q('too_m_yoy')), Q: xy(tooQ), A: xy(tooA) },
       src: 'Statistikaamet TO0053', url: SA('TO0053'), note: 'Kõik sektorid (B–D), kalendaarselt korrigeeritud. Kvartali- ja aastamuutus on arvutatud mahuindeksi perioodikeskmistest.' },
+    { nr: '20b', unitChip: 'mahu muutus aasta varem, %', kind: 'bar', unit: '%', head: 'custom', F: jaemF,
+      src: 'Statistikaamet KM020', url: SA('KM020'), note: 'Jaekaubandus v.a mootorsõidukid (G47), mahuindeks püsivhindades. Kvartali ja aasta muutus on arvutatud kuuindeksite keskmisest. Sesoonselt korrigeerimata.' },
     { nr: '20', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'yoy',
       F: { Q: xy(Q('jae_q_G47'), { series: [{ name: 'Jaekaubandus (G47)', y: Q('jae_q_G47').values, c: '--s1' }, { name: 'Mootorsõidukid (G45)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45')), c: '--s2' }, { name: 'Kokku (G45+G47)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45_47')), c: '--s3' }] }) },
       src: 'Statistikaamet KM0102', url: SA('KM0102'), note: 'Püsivhindades. Pealkirjas jaekaubandus ilma mootorsõidukiteta (G47).' },

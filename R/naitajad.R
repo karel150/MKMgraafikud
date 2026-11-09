@@ -58,6 +58,13 @@ koosta_naitajad <- function(esi_kuu = NULL) {
   lisa("kapital_q_yoy", function() { d <- kv(komp("4", "4")); seeria(per_q(d$Aasta, d$Kvartal), d$value) }, YOY)
   lisa("kapital_a_yoy", function() { d <- aa(komp("4", "4")); seeria(d$Aasta, d$value) }, YOY)
 
+  # ---- Jaemüük kuude kaupa (KM020): jaekaubandus v.a mootorsõidukid (G47) -----
+  # TOVV = müügitulu mahuindeks (2021 = 100), TOVT = müügitulu, mln €
+  km20 <- mitu(function() px_paring("KM020",
+    valik(NAITAJA, c("TOVV", "TOVT")), valik("Tegevusala", "G47"), valik("Vaatlusperiood", "*")))
+  lisa("jaem_m_idx", function() { d <- km20(); d <- d[d[[NAITAJA]] == "TOVV", ]; seeria(d$Vaatlusperiood, d$value) }, c(1, 1000))
+  lisa("jaem_m_eur", function() { d <- km20(); d <- d[d[[NAITAJA]] == "TOVT", ]; seeria(d$Vaatlusperiood, d$value) }, c(10, 1e5))
+
   # ---- Kaupade eksport kuude kaupa (VKK10, uus andmebaas statsql) ------------
   # EXP = kaupade eksport kokku, EXP_EE = Eesti päritolu kaupade eksport; eurodes -> mln €
   vkk <- mitu(function() px_paring("VKK10",
