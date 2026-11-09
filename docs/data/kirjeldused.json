@@ -164,7 +164,7 @@
   },
   "24": {
    "valdkond": "Majanduskasv, tootmine ja tarbimine",
-   "peamine": true,
+   "peamine": false,
    "nimi": "Tegevusalade panus Eesti SKP kvartalikasvu",
    "kirjeldus": "Eesti tegevusalade (nt töötlev tööstus, kaubandus, ehitus, transport, info ja side, avalikud teenused) panus reaalse SKP muutusesse. Panus väljendatakse protsendipunktides, et näidata, millised tegevusalad kiirendavad või pidurdavad majanduskasvu",
    "miks": "Aitab selgitada SKP kasvu taga olevaid tegelikke vedajaid ja pidureid. Ühe koondkasvu arvu asemel näitab, kas Eesti majanduse taastumine või langus põhineb laial tegevusalade ringil või üksikul sektoril"
@@ -217,6 +217,13 @@
    "nimi": "Eesti päritolu kaupade eksport",
    "kirjeldus": "Eestis toodetud või Eestis olulisel määral töödeldud kaupade eksport jooksevhindades (väliskaubandusstatistika). Ei sisalda reeksporti ehk mujalt toodud ja edasi müüdud kaupu.",
    "miks": "Näitab Eesti enda tootjate välisturgude käekäiku paremini kui kogu kaupade eksport, mida mõjutab ka transiit- ja vahenduskaubandus."
+  },
+  "20b": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": true,
+   "nimi": "Jaemüük",
+   "kirjeldus": "Jaekaubandusettevõtete (v.a mootorsõidukid ja mootorrattad, EMTAK G47) müügitulu mahuindeksi muutus püsivhindades võrreldes eelmise aasta sama perioodiga. Pealkirjas on lisaks müügitulu jooksevhindades.",
+   "miks": "Kuine jaemüük on üks kiiremaid sisetarbimise näitajaid ja aitab märgata kodumajapidamiste kulutuste pöördeid enne kvartaalseid rahvamajanduse arvepidamise andmeid."
   }
  }
 }
