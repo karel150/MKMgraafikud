@@ -44,6 +44,15 @@ message("== Rahvusvaheline võrdlus ==")
 tryCatch(kirjuta_json(koosta_vordlus(), "vordlus.json"),
          error = function(e) hoiata("Rahvusvaheline võrdlus: ", conditionMessage(e), ". Jäetakse alles eelmine versioon."))
 
+# ---- 5. Teiste asutuste ülevaated (käsitsi uuendatav nimekiri) -----------------
+tryCatch({
+  u <- read.csv("andmed/ulevaated.csv", encoding = "UTF-8", stringsAsFactors = FALSE)
+  if (!all(c("grupp", "pealkiri", "url") %in% names(u))) stop("puuduvad veerud grupp, pealkiri, url")
+  u <- u[nzchar(trimws(u$pealkiri)) & nzchar(trimws(u$url)), c("grupp", "pealkiri", "url")]
+  if (!all(grepl("^https?://", u$url))) stop("mõni link ei alga http(s)://")
+  kirjuta_json(list(ulevaated = u), "ulevaated.json")
+}, error = function(e) hoiata("Ülevaadete nimekiri (andmed/ulevaated.csv): ", conditionMessage(e), ". Jäetakse alles eelmine versioon."))
+
 # ---- Kokkuvõte --------------------------------------------------------------
 if (length(hoiatused)) {
   writeLines(hoiatused, "hoiatused.txt", useBytes = TRUE)
