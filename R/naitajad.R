@@ -65,6 +65,28 @@ koosta_naitajad <- function(esi_kuu = NULL) {
   lisa("jaem_m_idx", function() { d <- km20(); d <- d[d[[NAITAJA]] == "TOVV", ]; seeria(d$Vaatlusperiood, d$value) }, c(1, 1000))
   lisa("jaem_m_eur", function() { d <- km20(); d <- d[d[[NAITAJA]] == "TOVT", ]; seeria(d$Vaatlusperiood, d$value) }, c(10, 1e5))
 
+  # ---- Registreeritud töötud (Töötukassa avaandmed, andmed.eesti.ee) -----------
+  # Kuu lõpu seis. Fail "Töötud kuu lõpu seisuga viimase töökogemuse tegevusala järgi"
+  # summeeritakse kuude kaupa. Faili aadress leitakse andmestiku kirjeldusest.
+  lisa("regtootud_m", function() {
+    ds_url <- "https://andmed.eesti.ee/api/datasets/e7ce24f2-7c77-403a-8559-12e9fd75b249"
+    ds <- fromJSON(content(stop_for_status(GET(ds_url, timeout(60))), as = "text", encoding = "UTF-8"), simplifyVector = FALSE)
+    jaot <- Filter(function(x) grepl("tegevusala", x$titleEt, ignore.case = TRUE), ds$distributions)
+    if (!length(jaot) || !length(jaot[[1]]$accessUrls)) stop("Töötukassa failist puudub allalaadimise link.")
+    tmp <- tempfile(fileext = ".xlsx")
+    stop_for_status(GET(jaot[[1]]$accessUrls[[1]], write_disk(tmp, overwrite = TRUE), timeout(180)))
+    osad <- lapply(readxl::excel_sheets(tmp), function(leht) {
+      y <- readxl::read_excel(tmp, sheet = leht)
+      v <- grep("arv", names(y), value = TRUE, ignore.case = TRUE)
+      if (!length(v) || !inherits(y[[1]], c("POSIXct", "Date"))) return(NULL)
+      data.frame(p = format(as.Date(y[[1]]), "%YM%m"), v = as.numeric(y[[v[1]]]))
+    })
+    x <- do.call(rbind, osad)
+    if (is.null(x) || !nrow(x)) stop("Töötukassa failist ei leitud andmeid.")
+    a <- aggregate(v ~ p, x, sum, na.rm = TRUE)
+    seeria(a$p, a$v)
+  }, c(5000, 200000))
+
   # ---- Kaupade eksport kuude kaupa (VKK10, uus andmebaas statsql) ------------
   # EXP = kaupade eksport kokku, EXP_EE = Eesti päritolu kaupade eksport; eurodes -> mln €
   vkk <- mitu(function() px_paring("VKK10",

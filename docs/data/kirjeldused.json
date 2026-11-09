@@ -224,6 +224,13 @@
    "nimi": "Jaemüük",
    "kirjeldus": "Jaekaubandusettevõtete (v.a mootorsõidukid ja mootorrattad, EMTAK G47) müügitulu mahuindeksi muutus püsivhindades võrreldes eelmise aasta sama perioodiga. Pealkirjas on lisaks müügitulu jooksevhindades.",
    "miks": "Kuine jaemüük on üks kiiremaid sisetarbimise näitajaid ja aitab märgata kodumajapidamiste kulutuste pöördeid enne kvartaalseid rahvamajanduse arvepidamise andmeid."
+  },
+  "14b": {
+   "valdkond": "Tööturg ja palgad",
+   "peamine": true,
+   "nimi": "Registreeritud töötud",
+   "kirjeldus": "Töötukassas töötuna arvel olevate inimeste arv kuu lõpu seisuga. Registreeritud töötu on vähemalt 16-aastane, kuid mitte pensioniealine inimene, kes ei tööta, on töötukassas arvele võetud ja otsib tööd.",
+   "miks": "Igakuine registriandmestik näitab tööturu muutusi kiiremini kui kvartaalne tööjõu-uuring. Registreeritud töötute arvu mõjutavad lisaks majandusolukorrale ka seadusemuudatused ja tööturumeetmete korraldus, seega ei ole see üks-ühele võrreldav tööjõu-uuringu töötute arvuga."
   }
  }
 }
