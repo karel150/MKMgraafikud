@@ -133,6 +133,12 @@ details.tbl summary:focus-visible { outline: 2px solid var(--accent); }
 .rnum { text-align: right; font-variant-numeric: tabular-nums; }
 .rrow.axis { font-family: var(--f-mono); font-size: 11px; }
 .ends { display: flex; justify-content: space-between; }
+.rank .big.grp { font-size: 26px; font-family: var(--f-display); font-weight: 800; }
+.ladder { list-style: none; margin: 0; padding: 4px 16px 12px 48px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); counter-reset: none; }
+.ladder li { padding: 4px 10px; border-left: 3px solid var(--line); }
+.ladder li.on { color: var(--fg); font-weight: 700; border-left-color: var(--s1); background: color-mix(in srgb, var(--s1) 10%, transparent); }
+.ladder .ee { font-weight: 600; color: var(--s1); }
+.pnote { padding: 0 16px 10px 48px; }
 .badge { font-size: 12.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg); }
 
 /* Majandusplaan tühi olek */
@@ -237,7 +243,7 @@ footer a { color: var(--muted); }
         <span class="tnum">02</span><span class="tname">Eesti majanduse graafikud</span><span class="tdesc">30 näitajat, neist 15 põhinäitajat</span>
       </button>
       <button class="tab" role="tab" id="tab-indeksid" aria-controls="p-indeksid" aria-selected="false" data-key="indeksid">
-        <span class="tnum">03</span><span class="tname">Eesti positsioon indeksites</span><span class="tdesc">6 rahvusvahelist edetabelit</span>
+        <span class="tnum">03</span><span class="tname">Eesti positsioon indeksites</span><span class="tdesc">13 rahvusvahelist indeksit</span>
       </button>
       <button class="tab" role="tab" id="tab-vordlus" aria-controls="p-vordlus" aria-selected="false" data-key="vordlus">
         <span class="tnum">04</span><span class="tname">Rahvusvaheline võrdlus</span><span class="tdesc">Eesti, Läti, Leedu, Soome ja Rootsi Eurostati andmetel</span>
@@ -823,31 +829,89 @@ function economyOption(it) {
 // ===================== Indeksid =====================
 function buildIndexes() {
   const root = document.getElementById('p-indeksid');
-  const sec = el('div', 'group');
-  sec.append(el('div', 'group-h', '<h2>Eesti koht rahvusvahelistes edetabelites</h2><span>Väiksem koht on parem. Võrdlus Soome ja Balti riikidega, kus andmed olemas.</span>'));
-  const grid = el('div', 'grid');
-  INDEXES.forEach((ix) => {
-    const c = el('article', 'card');
-    const head = el('div', 'card-head');
-    head.append(el('div', 'card-title', `<span class="nr">${ix.year}</span><h3>${esc(ix.title)}</h3>`));
-    head.append(el('div', 'rank', `<span class="big">${ix.rank}.</span><span class="of">${ix.of ? `koht ${ix.of} seast` : 'koht maailmas'}</span>${ix.badge ? `<span class="badge">${esc(ix.badge)}</span>` : ''}`));
-    head.append(el('p', 'note', esc(ix.desc)));
-    c.append(head);
-    const of = ix.peers ? ix.peersOf : ix.of;
-    const pts = (ix.peers || [['Eesti', ix.rank]]).slice().sort((a, b) => a[1] - b[1]);
-    const st = el('div', 'ranks');
-    st.innerHTML = pts.map((p) => {
-      const pos = of > 1 ? ((p[1] - 1) / (of - 1)) * 100 : 0;
-      const ee = p[0].startsWith('Eesti');
-      return `<div class="rrow${ee ? ' ee' : ''}"><span class="rname">${esc(p[0])}</span><span class="track"><span class="dot" style="left:${pos.toFixed(1)}%"></span></span><span class="rnum">${p[1]}.</span></div>`;
-    }).join('') + `<div class="rrow axis"><span></span><span class="ends"><span>1. (parim)</span><span>${of}.</span></span><span></span></div>`;
-    c.append(st);
-    if (ix.peers && ix.peersYear !== ix.year) c.append(el('div', 'note', `Võrdlusriigid ${ix.peersYear}. aasta väljaandest (${ix.peersOf} riiki).`));
-    c.append(el('div', 'card-foot', `<span>Allikas: <a href="${ix.url}" target="_blank" rel="noopener">${esc(ix.src)}</a></span>`));
-    grid.append(c);
+  root.innerHTML = '';
+  const nf1 = (v) => v.toLocaleString('et-EE', { maximumFractionDigits: 1 });
+  const osad = [[1, 'Põhiindeksid', 'Väiksem koht on parem. Võrdlus Soome ja Balti riikidega, kus andmed olemas.'],
+                [2, 'Täiendavad indeksid', 'Digitaalne areng, valitsemine ja talendid.']];
+  osad.forEach(([prio, nimi, alam]) => {
+    const list = INDEXES.filter((ix) => (ix.prio || 1) === prio);
+    if (!list.length) return;
+    const sec = el('div', 'group');
+    sec.append(el('div', 'group-h', `<h2>${nimi}</h2><span>${alam}</span>`));
+    const grid = el('div', 'grid');
+    list.forEach((ix) => grid.append(indeksiKaart(ix, nf1)));
+    sec.append(grid);
+    root.append(sec);
   });
-  sec.append(grid);
-  root.append(sec);
+}
+
+function indeksiKaart(ix, nf1) {
+  const c = el('article', 'card');
+  const head = el('div', 'card-head');
+  head.append(el('div', 'card-title', `<span class="nr">${ix.year || '–'}</span><h3>${esc(ix.title)}</h3>`));
+  const badge = ix.badge ? `<span class="badge">${esc(ix.badge)}</span>` : '';
+  if (ix.rank) {
+    head.append(el('div', 'rank', `<span class="big">${ix.rank}.</span><span class="of">${ix.of ? `koht ${ix.of} seast` : 'koht maailmas'}</span>${badge}`));
+  } else if (ix.score != null) {
+    head.append(el('div', 'rank', `<span class="big">${nf1(ix.score)}</span><span class="of">punkti${ix.scale ? ` ${ix.scale}-st` : ''}</span>${badge}`));
+  } else if (ix.group) {
+    head.append(el('div', 'rank', `<span class="big grp">${esc(ix.group)}</span>${badge}`));
+  } else {
+    head.append(el('div', 'rank', `${badge || '<span class="of">Tulemus on allika lehel.</span>'}`));
+  }
+  if (ix.desc) head.append(el('p', 'note', esc(ix.desc)));
+  c.append(head);
+
+  // Tulemusrühmad (nt EIS, ESSS, B-READY): kõik rühmad, Eesti oma esile tõstetud
+  if (ix.groups && ix.groups.length) {
+    const ul = el('ol', 'ladder');
+    ul.setAttribute('aria-label', 'Tulemusrühmad');
+    ul.innerHTML = ix.groups.map((g) => {
+      const on = ix.group && (g === ix.group || g.startsWith(ix.group));
+      return `<li class="${on ? 'on' : ''}">${esc(g)}${on ? ' <span class="ee">← Eesti</span>' : ''}</li>`;
+    }).join('');
+    c.append(ul);
+  }
+
+  // Võrdlusriigid kohtade järgi
+  const peersR = (ix.peers || []).filter((p) => p[1] != null);
+  const peersS = (ix.peers || []).filter((p) => p[1] == null && p[2] != null);
+  if (ix.rank && (peersR.length || ix.of)) {
+    const of = peersR.length ? (ix.peersOf || ix.of) : ix.of;
+    const pts = (peersR.length ? peersR : [['Eesti', ix.rank]]).slice().sort((a, b) => a[1] - b[1]);
+    if (of) {
+      const st = el('div', 'ranks');
+      st.innerHTML = pts.map((p) => {
+        const pos = of > 1 ? ((p[1] - 1) / (of - 1)) * 100 : 0;
+        const ee = p[0].startsWith('Eesti');
+        return `<div class="rrow${ee ? ' ee' : ''}"><span class="rname">${esc(p[0])}</span><span class="track"><span class="dot" style="left:${pos.toFixed(1)}%"></span></span><span class="rnum">${p[1]}.</span></div>`;
+      }).join('') + `<div class="rrow axis"><span></span><span class="ends"><span>1. (parim)</span><span>${of}.</span></span><span></span></div>`;
+      c.append(st);
+      if (peersR.length && ix.peersYear && ix.peersYear !== ix.year) c.append(el('div', 'note pnote', `Võrdlusriigid ${ix.peersYear}. aasta väljaandest (${ix.peersOf} riiki).`));
+    }
+  } else if (peersS.length) {
+    const sc = ix.scale || 100;
+    const st = el('div', 'ranks');
+    st.innerHTML = peersS.slice().sort((a, b) => b[2] - a[2]).map((p) => {
+      const ee = p[0].startsWith('Eesti');
+      return `<div class="rrow${ee ? ' ee' : ''}"><span class="rname">${esc(p[0])}</span><span class="track"><span class="dot" style="left:${Math.min(100, p[2] / sc * 100).toFixed(1)}%"></span></span><span class="rnum">${nf1(p[2])}</span></div>`;
+    }).join('') + `<div class="rrow axis"><span></span><span class="ends"><span>0</span><span>${sc}</span></span><span></span></div>`;
+    c.append(st);
+  }
+
+  // Lisainfo lehelt "2.1 Indeksid"
+  if (ix.long || ix.limits || ix.parts) {
+    const d = el('details', 'kirj');
+    d.innerHTML = '<summary>Mida see näitab?</summary>' +
+      (ix.long ? `<p>${esc(ix.long)}</p>` : '') +
+      (ix.limits ? `<p><b>Piirangud:</b> ${esc(ix.limits)}</p>` : '') +
+      (ix.parts ? `<p><b>Koosseis:</b> ${esc(ix.parts)}</p>` : '') +
+      ((ix.org || ix.rhythm) ? `<p><b>Koostaja:</b> ${esc(ix.org || '–')}${ix.rhythm ? ` · <b>Ilmub:</b> ${esc(ix.rhythm.toLowerCase())}` : ''}</p>` : '');
+    c.append(d);
+  }
+  const lisa = ix.url2 ? ` · <a href="${esc(ix.url2)}" target="_blank" rel="noopener">indeksi koduleht</a>` : '';
+  c.append(el('div', 'card-foot', `<span>Allikas: <a href="${esc(ix.url)}" target="_blank" rel="noopener">${esc(ix.src)}</a>${lisa}</span>`));
+  return c;
 }
 
 // ===================== Rahvusvaheline võrdlus =====================
