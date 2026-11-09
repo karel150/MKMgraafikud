@@ -58,6 +58,14 @@ koosta_naitajad <- function(esi_kuu = NULL) {
   lisa("kapital_q_yoy", function() { d <- kv(komp("4", "4")); seeria(per_q(d$Aasta, d$Kvartal), d$value) }, YOY)
   lisa("kapital_a_yoy", function() { d <- aa(komp("4", "4")); seeria(d$Aasta, d$value) }, YOY)
 
+  # ---- Kaupade eksport kuude kaupa (VKK10, uus andmebaas statsql) ------------
+  # EXP = kaupade eksport kokku, EXP_EE = Eesti päritolu kaupade eksport; eurodes -> mln €
+  vkk <- mitu(function() px_paring("VKK10",
+    valik("FLOW", c("EXP", "EXP_EE")), valik("CN_PRODUCT", "TOTAL"), valik("PART_COUNTRY", "TOTAL"),
+    valik("ContentsCode", "TRD_VAL"), valik("TIME", "*"), api = PX_SQL))
+  lisa("kaup_m",   function() { d <- vkk(); d <- d[d$FLOW == "EXP", ];    seeria(d$TIME, d$value / 1e6) }, c(10, 1e5))
+  lisa("kaupEE_m", function() { d <- vkk(); d <- d[d$FLOW == "EXP_EE", ]; seeria(d$TIME, d$value / 1e6) }, c(10, 1e5))
+
   # ---- Tootlikkus ja tööjõu ühikukulu (RAL0013) ------------------------------
   # Suhtarv: 2 = tootlikkus töötatud tunni kohta, 3 = tööjõu ühikukulu
   # Näitaja: 2 = nominaal, 6 = reaal (aasta varem); 4 = nominaal SA, 8 = reaal SA

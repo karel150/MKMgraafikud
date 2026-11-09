@@ -210,6 +210,13 @@
    "nimi": "Kogurahvatulu (KRT)",
    "kirjeldus": "Riigi residentide teenitud esmaste tulude kogusumma: SKP pluss välismaalt saadud esmased tulud miinus välismaale makstud esmased tulud (näiteks töötajate hüvitised ja omanditulu). KRT = SKP + välismaalt saadud esmased tulud - välismaale makstud esmased tulud",
    "miks": "Aitab eristada Eestis toodetud väärtust Eesti residentidele tegelikult laekuvast esmasest tulust. Oluline rahvusvahelise kapitali, välismaale makstavate kasumite ja piiriüleste töötasude mõju mõistmiseks; täiendab SKP ja välismaiste otseinvesteeringute näitajaid"
+  },
+  "4b": {
+   "valdkond": "Väliskaubandus",
+   "peamine": true,
+   "nimi": "Eesti päritolu kaupade eksport",
+   "kirjeldus": "Eestis toodetud või Eestis olulisel määral töödeldud kaupade eksport jooksevhindades (väliskaubandusstatistika). Ei sisalda reeksporti ehk mujalt toodud ja edasi müüdud kaupu.",
+   "miks": "Näitab Eesti enda tootjate välisturgude käekäiku paremini kui kogu kaupade eksport, mida mõjutab ka transiit- ja vahenduskaubandus."
   }
  }
 }
