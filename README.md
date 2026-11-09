@@ -35,6 +35,7 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `R/abi.R` | Ühised abifunktsioonid: päringud, kontrollid, JSON-i kirjutamine. |
 | `andmed/indeksid.csv` | Edetabelid, üks rida edetabeli kohta. **Uuendatakse käsitsi.** |
 | `andmed/indeksid_vordlus.csv` | Võrdlusriikide kohad edetabelites. **Uuendatakse käsitsi.** |
+| `docs/data/kokkuvote.json` | Majanduse graafikute lehe sissejuhatav lõik. Kui väli `tekst` on tühi, koostab leht lõigu automaatselt viimastest andmetest; täidetuna näidatakse analüütiku teksti (lisaks `autor`, `kuupaev`). **Muudetakse käsitsi.** |
 | `andmed/ulevaated.csv` | Teiste asutuste ülevaadete lingid (veerud `grupp`, `pealkiri`, `url`). **Uuendatakse käsitsi**, ka GitHubi veebis. Read on lehel samas järjekorras. |
 | `docs/index.html` | Veebileht. |
 | `docs/data/` | Andmefailid. Neid kirjutab robot, käsitsi ei muuda (v.a `kirjeldused.json`). |

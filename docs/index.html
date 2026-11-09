@@ -214,6 +214,10 @@ footer a { color: var(--muted); }
 .mp-meth summary { cursor: pointer; font-weight: 600; color: var(--fg); }
 .mp-meth p { max-width: 80ch; }
 
+.kokkuvote { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--s1); border-radius: 8px; padding: 16px 20px; }
+.kokkuvote h2 { font-family: var(--f-display); font-size: 18px; margin: 0 0 8px; }
+.kokkuvote p { margin: 0; line-height: 1.6; max-width: 95ch; }
+.kokkuvote .kv-meta { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
 .freqbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .freqbar .fl { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .seg { display: inline-flex; background: var(--chip); border-radius: 8px; padding: 3px; gap: 2px; }
@@ -343,6 +347,7 @@ const lastIdx = (a) => { for (let i = a.length - 1; i >= 0; i--) if (a[i] != nul
 // R-skript (R/uuenda.R) kirjutab toored aegread kujul { periods: ["2019Q1", ...], values: [...] }.
 // Siin teisendatakse need kuu-, kvartali- ja aastavaateks.
 let GROUPS = [];
+let KOKKUVOTE = null; // { tekst, meta } majanduse graafikute lehe sissejuhatav lõik
 let INDEXES = [];
 // Valdkonnad indikaatorite tabeli järjekorras (mõlemal graafikute vahekaardil)
 const VALDKONNAD = ['Majanduskasv, tootmine ja tarbimine', 'Väliskaubandus', 'Investeeringud ja kapital', 'Teadmised ja tehnoloogia',
@@ -685,6 +690,12 @@ function buildEconomy() {
   charts.majandus.forEach((c) => c.inst && c.inst.dispose());
   charts.majandus = [];
   root.innerHTML = '';
+  if (KOKKUVOTE) {
+    const k = el('section', 'kokkuvote');
+    k.setAttribute('aria-labelledby', 'kv-h');
+    k.innerHTML = `<h2 id="kv-h">Eesti majandus praegu</h2><p>${KOKKUVOTE.tekst}</p><p class="kv-meta">${KOKKUVOTE.meta}</p>`;
+    root.append(k);
+  }
   const bar = el('div', 'freqbar');
   bar.innerHTML = `<span class="fl" id="freq-l">Sagedus</span><div class="seg" role="radiogroup" aria-labelledby="freq-l">` +
     [['M', 'Kuu'], ['Q', 'Kvartal'], ['A', 'Aasta']].map(([k, n]) => `<button type="button" role="radio" data-f="${k}" aria-checked="${k === econFreq}" tabindex="${k === econFreq ? 0 : -1}">${n}</button>`).join('') +
@@ -1178,6 +1189,89 @@ function buildUlevaated(U) {
   });
 }
 
+
+// ===================== Kokkuvõte (majanduse graafikute lehe algus) =====================
+// Kui failis data/kokkuvote.json on analüütiku kirjutatud tekst, näidatakse seda.
+// Muidu koostatakse lõik automaatselt viimastest andmetest reeglite põhjal.
+const KUUD_ESS = ['jaanuaris', 'veebruaris', 'märtsis', 'aprillis', 'mais', 'juunis', 'juulis', 'augustis', 'septembris', 'oktoobris', 'novembris', 'detsembris'];
+const KUUD_GEN = ['jaanuari', 'veebruari', 'märtsi', 'aprilli', 'mai', 'juuni', 'juuli', 'augusti', 'septembri', 'oktoobri', 'novembri', 'detsembri'];
+function koostaKokkuvote(D, kasitsi) {
+  if (kasitsi && kasitsi.tekst && kasitsi.tekst.trim()) {
+    return { tekst: esc(kasitsi.tekst.trim()), meta: `Analüütiku kokkuvõte${kasitsi.autor ? ', ' + esc(kasitsi.autor) : ''}${kasitsi.kuupaev ? ', ' + esc(kasitsi.kuupaev) : ''}.` };
+  }
+  const S = (k) => D.seeriad[k] || { periods: [], values: [] };
+  const last = (s, n = 1) => { const i = s.values.length - n; return i >= 0 ? { p: s.periods[i], v: s.values[i] } : null; };
+  const yoyM = (s) => { const n = s.values.length; return n > 12 && s.values[n - 13] ? { p: s.periods[n - 1], v: (s.values[n - 1] / s.values[n - 13] - 1) * 100 } : null; };
+  const pr = (v, d = 1) => v.toLocaleString('et-EE', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const kuu = (p) => KUUD_ESS[+p.slice(5) - 1];
+  const kuuG = (p) => KUUD_GEN[+p.slice(5) - 1];
+  const kv = (p) => ['I', 'II', 'III', 'IV'][+p.slice(5) - 1] + ' kvartalis';
+  const muutus = (v, kasv, langus) => (v >= 0.05 ? `${kasv} ${pr(v)} %` : v <= -0.05 ? `${langus} ${pr(-v)} %` : 'püsis samal tasemel');
+  const laused = [];
+  let skoor = 0, n = 0;
+
+  // SKP ja hinnang
+  const skp = last(S('skp_q')), skp0 = last(S('skp_q'), 2);
+  if (skp) {
+    const g = skp.v;
+    const hinnang = g < 0 ? 'Eesti majandus on languses' : g < 1.5 ? 'Eesti majandus kasvab aeglaselt' : g < 3 ? 'Eesti majandus kasvab mõõdukalt' : 'Eesti majandus kasvab kiiresti';
+    const kiir = skp0 && g > skp0.v + 0.3, aegl = skp0 && g < skp0.v - 0.3;
+    const trend = g < 0 ? (kiir ? ', kuid langus on aeglustunud' : aegl ? ' ja langus on süvenenud' : '')
+                        : (kiir ? (g < 1.5 ? ', kuigi kasv on kiirenenud' : ' ja kasv on kiirenenud') : aegl ? ' ja kasv on aeglustunud' : '');
+    laused.push(`${hinnang}${trend}: sisemajanduse koguprodukt oli ${skp.p.slice(0, 4)}. aasta ${kv(skp.p)} ${pr(Math.abs(g))} % ${g >= 0 ? 'suurem' : 'väiksem'} kui aasta varem${skp0 ? ` (eelmises kvartalis ${pr(skp0.v)} %)` : ''}.`);
+    skoor += g < 0 ? -1 : g >= 1.5 ? 1 : 0; n++;
+  }
+  // Kuunäitajad: tööstus, eksport, jaemüük
+  const too = last(S('too_m_yoy')), eks = yoyM(S('kaup_m')), jae = yoyM(S('jaem_m_idx'));
+  const loetelu = (a) => (a.length > 1 ? a.slice(0, -1).join(', ') + ' ja ' + a.at(-1) : a[0]);
+  const kuuN = [[too, 'tööstustoodang', 'kasvas', 'vähenes'], [eks, 'kaupade eksport', 'kasvas', 'vähenes'], [jae, 'jaemüügi maht', 'suurenes', 'vähenes']].filter((x) => x[0]);
+  kuuN.forEach(([x]) => { skoor += Math.sign(Math.round(x.v)); n++; });
+  if (kuuN.length) {
+    const samaKuu = kuuN.every(([x]) => x.p === kuuN[0][0].p);
+    const osad = kuuN.map(([x, nimi]) => `${nimi}${samaKuu ? '' : ` (${kuu(x.p)})`} ${pr(Math.abs(x.v))} % ${x.v >= 0 ? 'suurem' : 'väiksem'}`);
+    laused.push(`${samaKuu ? kuu(kuuN[0][0].p).replace(/^./, (c) => c.toUpperCase()) : 'Värskemate kuuandmete järgi'} oli ${loetelu(osad)} kui aasta varem.`);
+  }
+  // Tööturg
+  const reg = last(S('regtootud_m')), regY = yoyM(S('regtootud_m')), tt = last(S('tootus_q'));
+  if (reg || tt) {
+    const osad = [];
+    if (reg) osad.push(`${kuuG(reg.p)} lõpus oli töötuna registreeritud ${pr(reg.v, 0)} inimest${regY ? `, ${pr(Math.abs(regY.v))} % ${regY.v < 0 ? 'vähem' : 'rohkem'} kui aasta varem` : ''}`);
+    if (tt) osad.push(`tööjõu-uuringu töötuse määr oli ${kv(tt.p)} ${pr(tt.v)} %`);
+    const hinne = regY ? (regY.v < -3 ? 'Tööturu olukord paraneb' : regY.v > 3 ? 'Tööturu olukord halveneb' : 'Tööturg on stabiilne') : 'Tööturg';
+    laused.push(`${hinne}: ${osad.join(', ning ')}.`);
+    if (regY) { skoor += regY.v < -3 ? 1 : regY.v > 3 ? -1 : 0; n++; }
+  }
+  // Hinnad ja palgad
+  const thi = last(S('thi_m')), thi0 = last(S('thi_m'), 2), palk = last(S('palk_q_yoy'));
+  if (thi) {
+    let l = `Tarbijahinnad ${thi.v >= 0 ? 'tõusid' : 'langesid'} ${kuu(thi.p)} aastaga ${pr(Math.abs(thi.v))} %` + (thi0 && thi.v > thi0.v + 0.3 ? ' ja hinnatõus on kiirenenud' : thi0 && thi.v < thi0.v - 0.3 ? ' ja hinnatõus on aeglustunud' : '');
+    laused.push(l + '.');
+    if (palk) {
+      // ostujõud: palga kasv võrreldes sama kvartali keskmise hinnatõusuga
+      const y = palk.p.slice(0, 4), q = +palk.p.slice(5);
+      const kk = [1, 2, 3].map((m) => `${y}M${String((q - 1) * 3 + m).padStart(2, '0')}`);
+      const t = S('thi_m'), tv = kk.map((p) => t.values[t.periods.indexOf(p)]).filter((v) => v != null);
+      const real = palk.v - (tv.length === 3 ? tv.reduce((a, b) => a + b, 0) / 3 : thi.v);
+      laused.push(`Keskmine brutopalk kasvas ${kv(palk.p)} ${pr(palk.v)} %` + (real < 0 ? ', seega palkade ostujõud on vähenenud.' : real < 1.5 ? ', seega palkade ostujõud kasvab aeglaselt.' : '.'));
+    }
+    if (thi.v > 4) { skoor -= 1; n++; }
+  }
+  // Kindlustunne
+  const esiA = last(S('esi_m')), esiH = last(S('esi_m_hinnang'));
+  const esi = esiH && (!esiA || esiH.p > esiA.p) ? esiH : esiA;
+  if (esi) {
+    laused.push(`Majandususaldus on ${esi.v < 97 ? 'endiselt selgelt alla pikaajalise keskmise' : esi.v < 100 ? 'pikaajalisest keskmisest veidi madalam' : esi.v < 103 ? 'pikaajalise keskmise lähedal' : 'pikaajalisest keskmisest kõrgem'} (${kuu(esi.p)} ${pr(esi.v)} punkti${esi === esiH ? ', hinnang' : ''}).`);
+    skoor += esi.v < 97 ? -1 : esi.v >= 100 ? 1 : 0; n++;
+  }
+  // Üldhinnang signaalide põhjal
+  if (n >= 3) {
+    const r = skoor / n;
+    laused.push(r >= 0.4 ? 'Kokkuvõttes viitab enamik näitajaid majanduse paranemisele.' : r <= -0.4 ? 'Kokkuvõttes viitab enamik näitajaid majanduse nõrgenemisele.' : 'Kokkuvõttes on pilt kirju: osa näitajaid paraneb, osa on veel nõrgad.');
+  }
+  if (!laused.length) return null;
+  return { tekst: laused.join(' '), meta: 'Automaatne kokkuvõte viimastest andmetest, uueneb koos andmetega. Hinnang põhineb lihtsatel reeglitel ega asenda analüütiku hinnangut.' };
+}
+
 // ===================== Vahekaardid =====================
 const tabs = [...document.querySelectorAll('.tab')];
 function renderPanel(key) {
@@ -1464,11 +1558,13 @@ const laeJson = (f) => fetch(f, { cache: 'no-cache' }).then((r) => { if (!r.ok) 
 
 async function kaivita() {
   try {
-    const [nait, mp, ix, meta, vrd, ulv] = await Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json'),
-      laeJson('data/vordlus.json').catch((e) => { console.error(e); return null; }), laeJson('data/ulevaated.json').catch((e) => { console.error(e); return null; })]);
+    const [nait, mp, ix, meta, vrd, ulv, kv] = await Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json'),
+      laeJson('data/vordlus.json').catch((e) => { console.error(e); return null; }), laeJson('data/ulevaated.json').catch((e) => { console.error(e); return null; }),
+      laeJson('data/kokkuvote.json').catch(() => null)]);
     ULEVAATED = ulv ? ulv.ulevaated : null;
     if (vrd) VGROUPS = koostaVordlus(vrd, meta.naitajad);
     GROUPS = koostaGrupid(nait, meta.naitajad);
+    KOKKUVOTE = koostaKokkuvote(nait, kv);
     INDEXES = ix.indeksid;
     MP = mp; mpPrepare();
     const d = new Date(nait.uuendatud);
