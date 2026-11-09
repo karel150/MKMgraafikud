@@ -392,6 +392,14 @@ const ALGUS = 2019; // kuu- ja kvartalivaadete algusaasta
 function koostaGrupid(D, META) {
   const S = (k) => D.seeriad[k] || { periods: [], values: [] };
   const Q = (k) => alates(S(k), ALGUS);
+  // SKP kvartalikasv: lõplik (korrigeeritud) hinnang, millele lisatakse kiirhinnang kvartalite kohta,
+  // mille lõplikku hinnangut veel pole. n = kiirhinnanguga kvartalite arv rea lõpus.
+  const skpK = (() => {
+    const f = S('skp_q_sa').periods.length ? S('skp_q_sa') : S('skp_q'), k = S('skp_q_kiir');
+    const lastF = f.periods.at(-1) || '';
+    const lisa = k.periods.map((p, i) => [p, k.values[i]]).filter(([p, v]) => p > lastF && v != null);
+    return { s: alates({ periods: f.periods.concat(lisa.map((x) => x[0])), values: f.values.concat(lisa.map((x) => x[1])) }, ALGUS), n: lisa.length };
+  })();
   const sumS = (a, b) => ({ periods: a.periods.filter((p) => b.periods.includes(p)), values: a.periods.filter((p) => b.periods.includes(p)).map((p) => { const x = a.values[a.periods.indexOf(p)], y = b.values[b.periods.indexOf(p)]; return x == null || y == null ? null : x + y; }) });
   // joondab mitu seeriat sama perioodide loendi peale
   const joonda = (per, s) => per.map((p) => { const i = s.periods.indexOf(p); return i < 0 ? null : s.values[i]; });
@@ -500,9 +508,11 @@ function koostaGrupid(D, META) {
   const VED = (v) => f0(v);
 
   const items = [
-    { nr: '1', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'yoy',
-      F: { Q: xy(Q('skp_q')), A: xy(S('skp_a')) },
-      src: 'Statistikaamet RAA0012', url: SA('RAA0012'), note: 'Sesoonselt ja tööpäevade arvuga korrigeerimata.' },
+    { nr: '1', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'custom',
+      F: { Q: xy(skpK.s, { estN: skpK.n, ...pais(sgn(viimane(skpK.s).v), '%', `${silt(viimane(skpK.s).p || '')} kv${skpK.n ? ' · kiirhinnang' : ''}`, ''),
+             note: skpK.n ? 'Sesoonselt ja tööpäevade arvuga korrigeeritud. Oranž tulp: kiirhinnang (RAA0015), mis asendub lõpliku hinnanguga, kui see avaldatakse.' : 'Sesoonselt ja tööpäevade arvuga korrigeeritud.' }),
+           A: xy(S('skp_a'), { note: 'Aastakasv, korrigeerimata.' }) },
+      src: 'Statistikaamet RAA0012, RAA0015', url: SA('RAA0012') },
     { nr: '24', unitChip: 'panus, protsendipunkti', kind: 'stack', unit: '%', head: 'yoy',
       F: { Q: panus('q'), A: panus('a') },
       src: 'Statistikaamet RAA0042', url: SA('RAA0042'), note: 'Tulbad: tegevusalade panus SKP aastakasvu. Joon: SKP reaalkasv kokku, %.' },
@@ -834,8 +844,10 @@ function economyOption(it) {
   };
   const legend = { top: 0, left: 0, right: 0, itemWidth: 14, itemHeight: 2, icon: 'rect', itemGap: 12, textStyle: { color: t.muted, fontSize: 12 } };
   if (it.kind === 'bar') {
-    base.series = [{ type: 'bar', data: it.y, barCategoryGap: it.monthly ? '20%' : '28%',
+    const est0 = it.y.length - (it.estN || 0);
+    base.series = [{ type: 'bar', data: it.y.map((v, i) => (i >= est0 ? { value: v, itemStyle: { color: t.s2 } } : v)), barCategoryGap: it.monthly ? '20%' : '28%',
       itemStyle: { color: (p) => (p.value < 0 ? t.neg : t.s1), borderRadius: 0 } }];
+    if (it.estN) base.tooltip.formatter = (ps) => { const p = ps[0]; return `${esc(p.name)}<br><b>${fmt(p.value)}</b>${p.dataIndex >= est0 ? ' (kiirhinnang)' : ''}`; };
   } else if (it.kind === 'col') {
     base.series = [{ type: 'bar', data: it.y.map((v, i) => ({ value: v, itemStyle: { color: i === it.y.length - 1 ? t.s1 : t.get('--peer') } })), barCategoryGap: '28%',
       itemStyle: { borderRadius: [3, 3, 0, 0] } }];
@@ -1211,14 +1223,17 @@ function koostaKokkuvote(D, kasitsi) {
   let skoor = 0, n = 0;
 
   // SKP ja hinnang
-  const skp = last(S('skp_q')), skp0 = last(S('skp_q'), 2);
+  // SKP: korrigeeritud lõplik rida + kiirhinnang, kui see on uuem
+  const skpF = S('skp_q_sa').periods.length ? S('skp_q_sa') : S('skp_q'), skpKh = last(S('skp_q_kiir'));
+  const kiir = skpKh && skpKh.v != null && skpKh.p > (skpF.periods.at(-1) || '');
+  const skp = kiir ? skpKh : last(skpF), skp0 = kiir ? last(skpF) : last(skpF, 2);
   if (skp) {
     const g = skp.v;
     const hinnang = g < 0 ? 'Eesti majandus on languses' : g < 1.5 ? 'Eesti majandus kasvab aeglaselt' : g < 3 ? 'Eesti majandus kasvab mõõdukalt' : 'Eesti majandus kasvab kiiresti';
     const kiir = skp0 && g > skp0.v + 0.3, aegl = skp0 && g < skp0.v - 0.3;
     const trend = g < 0 ? (kiir ? ', kuid langus on aeglustunud' : aegl ? ' ja langus on süvenenud' : '')
                         : (kiir ? (g < 1.5 ? ', kuigi kasv on kiirenenud' : ' ja kasv on kiirenenud') : aegl ? ' ja kasv on aeglustunud' : '');
-    laused.push(`${hinnang}${trend}: sisemajanduse koguprodukt oli ${skp.p.slice(0, 4)}. aasta ${kv(skp.p)} ${pr(Math.abs(g))} % ${g >= 0 ? 'suurem' : 'väiksem'} kui aasta varem${skp0 ? ` (eelmises kvartalis ${pr(skp0.v)} %)` : ''}.`);
+    laused.push(`${hinnang}${trend}: sisemajanduse koguprodukt oli ${kiir ? 'kiirhinnangu järgi ' : ''}${skp.p.slice(0, 4)}. aasta ${kv(skp.p)} ${pr(Math.abs(g))} % ${g >= 0 ? 'suurem' : 'väiksem'} kui aasta varem${skp0 ? ` (eelmises kvartalis ${pr(skp0.v)} %)` : ''}.`);
     skoor += g < 0 ? -1 : g >= 1.5 ? 1 : 0; n++;
   }
   // Kuunäitajad: tööstus, eksport, jaemüük

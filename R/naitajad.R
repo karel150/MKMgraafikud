@@ -32,6 +32,18 @@ koosta_naitajad <- function(esi_kuu = NULL) {
   osa <- function(d, kood) d[d[[NAITAJA]] == kood, ]
   lisa("skp_q", function() { d <- kv(osa(skp(), "5")); seeria(per_q(d$Aasta, d$Kvartal), d$value) }, YOY)
   lisa("skp_a", function() { d <- aa(osa(skp(), "5")); seeria(d$Aasta, d$value) }, YOY)
+  # Sesoonselt ja tööpäevade arvuga korrigeeritud kvartalikasv (2) ja SKP kiirhinnang (RAA0015).
+  # Kiirhinnang on ainult korrigeeritud kujul, seega kasutab SKP kaart korrigeeritud rida.
+  lisa("skp_q_sa", function() {
+    d <- px_paring("RAA0012", valik("Aasta", "*"), valik("Kvartal", RN),
+                   valik("Sesoonne korrigeerimine", "2"), valik(NAITAJA, "5"))
+    seeria(per_q(d$Aasta, d$Kvartal), d$value)
+  }, YOY)
+  lisa("skp_q_kiir", function() {
+    d <- px_paring("RAA0015", valik("Aasta", "*"), valik("Kvartal", c("I", "II", "III", "IV")),
+                   valik("Sesoonne korrigeerimine", "1"), valik(NAITAJA, "1"))
+    seeria(paste0(d$Aasta, "Q", match(d$Kvartal, c("I", "II", "III", "IV"))), d$value)
+  }, YOY)
   lisa("skp_q_cur", function() { d <- kv(osa(skp(), "1")); seeria(per_q(d$Aasta, d$Kvartal), d$value) }, c(100, 1e6))
   lisa("skp_a_cur", function() { d <- aa(osa(skp(), "1")); seeria(d$Aasta, d$value) }, c(100, 1e6))
   lisa("krt_q_cur", function() { d <- kv(osa(skp(), "6")); seeria(per_q(d$Aasta, d$Kvartal), d$value) }, c(100, 1e6))
