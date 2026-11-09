@@ -35,7 +35,15 @@ jobs:
           TZ: Europe/Tallinn
           LANG: C.UTF-8
         run: Rscript R/uuenda.R
+      # Andmed salvestatakse ainult main-harusse. Teistes harudes (testkäivitused)
+      # kirjutatakse viimased perioodid logisse, et vältida andmefailide konflikte.
+      - name: Testharu kokkuvõte
+        if: github.ref != 'refs/heads/main'
+        run: |
+          python3 -c "import json;d=json.load(open('docs/data/naitajad.json'));print('\n'.join(f'{k}: {v.get(\"staatus\")} {v.get(\"viimane\")}' for k,v in d['staatus'].items()))" > testkokkuvote.txt || true
+          echo "::notice title=Testharu::$(tr '\n' ';' < testkokkuvote.txt)"
       - name: Salvesta muudetud andmed
+        if: github.ref == 'refs/heads/main'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -57,12 +65,15 @@ jobs:
             echo "hoiatusi=0" >> "$GITHUB_OUTPUT"
           fi
       - uses: actions/configure-pages@v5
+        if: github.ref == 'refs/heads/main'
       - uses: actions/upload-pages-artifact@v3
+        if: github.ref == 'refs/heads/main'
         with:
           path: docs
 
   avalda:
     needs: uuenda
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
