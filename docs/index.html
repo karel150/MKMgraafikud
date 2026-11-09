@@ -397,7 +397,7 @@ function koostaGrupid(D, META) {
     const ix = S('jaem_m_idx'), eur = S('jaem_m_eur');
     const tee = (y, lvl, kv) => {
       const l = viimane(lvl), c = y.values.length ? y.values.at(-1) : null;
-      return xy(y, pais(c == null ? '–' : sgn(c), '%', kv ? silt(y.periods.at(-1)) + ' kv' : silt(y.periods.at(-1) || ''), l.v == null ? '' : `müügitulu ${f0s(l.v)} mln €`));
+      return xy(y, pais(c == null ? '–' : sgn(c), '%', kv ? silt(y.periods.at(-1)) + ' kv' : silt(y.periods.at(-1) || ''), l.v == null ? '' : `müügitulu ${f0(l.v)} mln €`));
     };
     const mY = alates(muutus(ix, 12), ALGUS);
     const qY = alates(muutus(koonda(ix, kvKey, 3, mean), 4), ALGUS);
