@@ -236,14 +236,14 @@
    "valdkond": "Tööturg ja palgad",
    "peamine": true,
    "nimi": "Töötukassa vahendatud vabad töökohad",
-   "kirjeldus": "Töötukassa kaudu pakutavate vabade töökohtade arv kuu lõpu seisuga. Hõlmab ainult töökohti, mille tööandjad on töötukassale vahendamiseks esitanud, mitte kõiki vabu ametikohti majanduses.",
+   "kirjeldus": "Töötukassa kaudu pakutavate Eestis asuvate vabade töökohtade arv kuu lõpu seisuga (välismaa töökohad on välja jäetud). Hõlmab ainult töökohti, mille tööandjad on töötukassale vahendamiseks esitanud, mitte kõiki vabu ametikohti majanduses.",
    "miks": "Igakuine näitaja tööjõunõudluse muutusest. Koos registreeritud töötute arvuga näitab, kui palju on töötuid ühe pakutava töökoha kohta."
   },
   "16c": {
    "valdkond": "Tööturg ja palgad",
    "peamine": true,
    "nimi": "Vabad töökohad töötlevas tööstuses",
-   "kirjeldus": "Töötukassa kaudu pakutavad vabad töökohad töötleva tööstuse ettevõtetes (EMTAK C), kuu lõpu seisuga.",
+   "kirjeldus": "Töötukassa kaudu pakutavad vabad töökohad töötleva tööstuse ettevõtetes (EMTAK C) Eestis, kuu lõpu seisuga.",
    "miks": "Näitab tööstusettevõtete töötajate otsimise aktiivsust ja aitab märgata tööstuse nõudluse pöördeid varem kui toodangu- või hõiveandmed."
   }
  }

@@ -98,8 +98,14 @@ koosta_naitajad <- function(esi_kuu = NULL) {
     kuusumma(x$p, x[[v]])
   }, c(5000, 200000))
 
-  # Töötukassa vahendatud vabad töökohad, kuu lõpu seis: kokku ja töötlev tööstus (C)
-  vk <- mitu(function() tk_lehed(tk_fail("e5707aaa-a6cc-4cd9-a3e6-fb9df309ac76", "tegevusala")))
+  # Töötukassa vahendatud vabad töökohad Eestis, kuu lõpu seis: kokku ja töötlev tööstus (C).
+  # Välja jäetakse maakond "Välismaa" (EURES-e kaudu vahendatavad välismaa töökohad).
+  vk <- mitu(function() {
+    x <- tk_lehed(tk_fail("e5707aaa-a6cc-4cd9-a3e6-fb9df309ac76", "tegevusala"))
+    mk <- grep("^MAAKOND$", names(x), value = TRUE, ignore.case = TRUE)[1]
+    if (is.na(mk)) stop("Töötukassa vabade töökohtade failis puudub veerg MAAKOND.")
+    x[!grepl("^V\u00e4lismaa", x[[mk]], ignore.case = TRUE), ]
+  })
   vk_veerg <- function(x) grep("kuu l\u00f5pu seisuga", names(x), value = TRUE, ignore.case = TRUE)[1]
   lisa("tk_vabad_m", function() { x <- vk(); kuusumma(x$p, x[[vk_veerg(x)]]) }, c(100, 100000))
   lisa("tk_vabad_c_m", function() {
