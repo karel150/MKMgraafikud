@@ -12,14 +12,13 @@ jobs:
       - name: Lae
         run: |
           mkdir -p uuri
-          rm -f uuri/paev_* uuri/kov.xlsx
-          for pat in "tegevusala" "ameti ja vanuse" "registreeritud tootuse kestuse"; do
-            ID=$(python3 -c "import json,sys;d=json.load(open('uuri/ds.json'));print([x['id'] for x in d['distributions'] if sys.argv[1] in x['titleEt']][0])" "$pat")
-            curl -sL -o "uuri/f_${pat// /_}.xlsx" "https://andmed.eesti.ee/api/v2/datasets/e7ce24f2-7c77-403a-8559-12e9fd75b249/distribution/$ID/file" || true
+          rm -f uuri/f_*.xlsx uuri/paev.json
+          for q in "t%C3%B6%C3%B6kohad" "t%C3%B6%C3%B6pakkumised" "vabad" "t%C3%B6%C3%B6tukassa%20t%C3%B6%C3%B6kohad"; do
+            curl -sL -o "uuri/q_$q.json" "https://andmed.eesti.ee/api/datasets?search=$q&limit=75" || true
           done
           ls -la uuri
       - name: Salvesta
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A uuri && git commit -m "Uurimistulemus 5" && git push
+          git add -A uuri && git commit -m "Uurimistulemus 6" && git push
