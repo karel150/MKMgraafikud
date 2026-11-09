@@ -12,6 +12,8 @@
 #   skoor, skaala          kui indeks avaldab ainult skoori (nt 98,5 / 100)
 #   ruhm, ruhmad           Eesti tulemusrühm ja kõik rühmad (eraldaja |)
 #   silt                   lühike lisainfo kaardil
+#   eelmine_aasta, eelmine_koht, eelmine_skoor, eelmine_silt   eelmise väljaande tulemus
+#   sambad                 alaskoorid "nimi:praegu:eelmine|..." (nt B-READY kolm sammast)
 #   kirjeldus, koosseis, pikk, piirang, asutus, rutm   tekstid kaardi lisainfos
 #   allikas, url, url2     allika nimi ja lingid
 #   vordlus_aasta, vordlus_riike   mis väljaandest võrdlusriikide kohad on
@@ -53,6 +55,15 @@ koosta_indeksid <- function() {
       group     = tx(r$ruhm),
       groups    = if (nzchar(tx(r$ruhmad))) strsplit(tx(r$ruhmad), "|", fixed = TRUE)[[1]] else NULL,
       badge     = tx(r$silt),
+      prevYear  = if ("eelmine_aasta" %in% names(r)) nr(r$eelmine_aasta) else NULL,
+      prevRank  = if ("eelmine_koht" %in% names(r)) nr(r$eelmine_koht) else NULL,
+      prevScore = if ("eelmine_skoor" %in% names(r)) num(r$eelmine_skoor) else NULL,
+      prevBadge = if ("eelmine_silt" %in% names(r)) tx(r$eelmine_silt) else "",
+      pillars   = if ("sambad" %in% names(r) && nzchar(tx(r$sambad)))
+                    lapply(strsplit(tx(r$sambad), "|", fixed = TRUE)[[1]], function(x) {
+                      o <- strsplit(x, ":", fixed = TRUE)[[1]]
+                      list(o[1], num(o[2]), if (length(o) > 2) num(o[3]) else NULL)
+                    }) else NULL,
       desc      = tx(r$kirjeldus),
       parts     = tx(r$koosseis),
       long      = tx(r$pikk),

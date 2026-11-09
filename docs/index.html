@@ -133,6 +133,16 @@ details.tbl summary:focus-visible { outline: 2px solid var(--accent); }
 .rnum { text-align: right; font-variant-numeric: tabular-nums; }
 .rrow.axis { font-family: var(--f-mono); font-size: 11px; }
 .ends { display: flex; justify-content: space-between; }
+.prev { margin: 4px 0 0; padding-left: 32px; font-size: 13px; color: var(--muted); }
+.prev .pl { color: var(--fg); font-weight: 600; }
+.chg { font-weight: 600; color: var(--muted); white-space: nowrap; }
+.chg.up { color: var(--s3); }
+.chg.dn { color: var(--neg); }
+.pillars { padding: 4px 16px 12px 48px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.prow { display: grid; grid-template-columns: 1fr 64px 64px; gap: 10px; align-items: baseline; }
+.prow.ph { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.prow .pv { font-weight: 700; font-size: 18px; text-align: right; }
+.prow .chg, .prow.ph span { text-align: right; }
 .rank .big.grp { font-size: 26px; font-family: var(--f-display); font-weight: 800; }
 .ladder { list-style: none; margin: 0; padding: 4px 16px 12px 48px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); counter-reset: none; }
 .ladder li { padding: 4px 10px; border-left: 3px solid var(--line); }
@@ -895,11 +905,40 @@ function indeksiKaart(ix, nf1) {
     head.append(el('div', 'rank', `<span class="big">${nf1(ix.score)}</span><span class="of">punkti${ix.scale ? ` ${ix.scale}-st` : ''}</span>${badge}`));
   } else if (ix.group) {
     head.append(el('div', 'rank', `<span class="big grp">${esc(ix.group)}</span>${badge}`));
+  } else if (ix.pillars && ix.pillars.length) {
+    head.append(el('div', 'rank', badge));
   } else {
     head.append(el('div', 'rank', `${badge || '<span class="of">Tulemus on allika lehel.</span>'}`));
   }
+  // Eelmise väljaande tulemus
+  if (ix.prevYear && (ix.prevRank || ix.prevScore != null || ix.prevBadge)) {
+    const osad = [];
+    if (ix.prevRank) osad.push(`${ix.prevRank}. koht`);
+    if (ix.prevScore != null) osad.push(`skoor ${nf1(ix.prevScore)}`);
+    if (ix.prevBadge) osad.push(esc(ix.prevBadge));
+    let muut = '';
+    if (ix.rank && ix.prevRank) {
+      const d = ix.prevRank - ix.rank;
+      muut = d > 0 ? `<span class="chg up">▲ ${d} ${d === 1 ? 'koht' : 'kohta'} paremini</span>` : d < 0 ? `<span class="chg dn">▼ ${-d} ${d === -1 ? 'koht' : 'kohta'} halvemini</span>` : '<span class="chg">sama koht</span>';
+    } else if (ix.score != null && ix.prevScore != null) {
+      const d = ix.score - ix.prevScore;
+      muut = `<span class="chg${d > 0 ? ' up' : d < 0 ? ' dn' : ''}">${d === 0 ? 'sama skoor' : (d > 0 ? '+' : '−') + nf1(Math.abs(d)) + ' punkti'}</span>`;
+    }
+    head.append(el('p', 'prev', `<span class="pl">${ix.prevYear}. aasta väljaanne:</span> ${osad.join(', ')}${muut ? ' · ' + muut : ''}`));
+  }
   if (ix.desc) head.append(el('p', 'note', esc(ix.desc)));
   c.append(head);
+
+  // Alaskoorid (nt B-READY sambad): praegune skoor ja muutus eelmisest väljaandest
+  if (ix.pillars && ix.pillars.length) {
+    const t = el('div', 'pillars');
+    t.innerHTML = `<div class="prow ph"><span></span><span>${ix.year || ''}</span><span>${ix.prevYear ? 'vs ' + ix.prevYear : ''}</span></div>` +
+      ix.pillars.map(([n, v, p]) => {
+        const d = v != null && p != null ? v - p : null;
+        return `<div class="prow"><span class="pn">${esc(n)}</span><span class="pv">${v != null ? v.toLocaleString('et-EE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '–'}</span><span class="chg${d > 0 ? ' up' : d < 0 ? ' dn' : ''}">${d == null ? '' : (d > 0 ? '+' : d < 0 ? '−' : '±') + nf1(Math.abs(d))}</span></div>`;
+      }).join('');
+    c.append(t);
+  }
 
   // Tulemusrühmad (nt EIS, ESSS, B-READY): kõik rühmad, Eesti oma esile tõstetud
   if (ix.groups && ix.groups.length) {
