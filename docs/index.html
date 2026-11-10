@@ -330,7 +330,9 @@ footer a { color: var(--muted); }
 <script src="lib/echarts.min.js"></script>
 <script>
 // ===================== Abifunktsioonid =====================
-const nf = (d) => new Intl.NumberFormat('et-EE', { minimumFractionDigits: d, maximumFractionDigits: d });
+// Intl.NumberFormat'i loomine on kallis ja nf-i kutsutakse iga sildi ja lahtri kohta, seega üks vormindaja kümnendkohtade arvu kohta
+const NF = {};
+const nf = (d) => NF[d] || (NF[d] = new Intl.NumberFormat('et-EE', { minimumFractionDigits: d, maximumFractionDigits: d }));
 const f1 = (v) => nf(1).format(v);
 const f2 = (v) => nf(2).format(v);
 const f0 = (v) => nf(0).format(v);
@@ -681,10 +683,13 @@ function resolveItem(def, want) {
 }
 
 // ===================== Teema =====================
+// Värvid loetakse CSS-ist üks kord; teema vahetumisel tühjendab rerender() vahemälu
+let TEEMA = null, teemaV = 0;
 function T() {
+  if (TEEMA) return TEEMA;
   const s = getComputedStyle(document.documentElement);
   const g = (n) => s.getPropertyValue(n).trim();
-  return { fg: g('--fg'), muted: g('--muted'), grid: g('--grid'), line: g('--line'), surface: g('--surface'),
+  return TEEMA = { fg: g('--fg'), muted: g('--muted'), grid: g('--grid'), line: g('--line'), surface: g('--surface'),
     s1: g('--s1'), s2: g('--s2'), s3: g('--s3'), neg: g('--neg'), peer: g('--peer'), get: g,
     font: getComputedStyle(document.body).fontFamily };
 }
@@ -697,8 +702,7 @@ const charts = { majandus: [], indeksid: [], vordlus: [] };
 
 function buildEconomy() {
   const root = document.getElementById('p-majandus');
-  charts.majandus.forEach((c) => c.inst && c.inst.dispose());
-  charts.majandus = [];
+  tyhjenda('majandus');
   root.innerHTML = '';
   if (KOKKUVOTE) {
     const k = el('section', 'kokkuvote');
@@ -1149,8 +1153,7 @@ function koostaVordlus(V, META) {
 
 function buildVordlus() {
   const root = document.getElementById('p-vordlus');
-  charts.vordlus.forEach((c) => c.inst && c.inst.dispose());
-  charts.vordlus = [];
+  tyhjenda('vordlus');
   root.innerHTML = '';
   if (!VGROUPS) { root.innerHTML = '<p class="loadfail" role="alert">Võrdlusandmeid ei õnnestunud laadida. Proovi lehte hiljem uuesti avada.</p>'; return; }
   const bar = el('div', 'freqbar');
@@ -1289,12 +1292,32 @@ function koostaKokkuvote(D, kasitsi) {
 
 // ===================== Vahekaardid =====================
 const tabs = [...document.querySelectorAll('.tab')];
-function renderPanel(key) {
+// Graafik joonistatakse alles siis, kui kaart jõuab ekraani lähedale: vahekaardi avamisel
+// ei looda korraga kõiki (kuni 35) graafikuid. Juba joonistatud graafikule pannakse seaded
+// uuesti ainult siis, kui teema on vahepeal muutunud; muidu piisab suuruse kontrollist.
+function joonista(c) {
+  if (!c.inst) c.inst = echarts.init(c.dom, null, { renderer: 'svg' });
+  if (c.v !== teemaV) { c.inst.setOption(c.opt(), true); c.v = teemaV; }
+  c.inst.resize();
+}
+const ootel = new WeakMap();
+const laisk = 'IntersectionObserver' in window
+  ? new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return;
+      laisk.unobserve(e.target);
+      const c = ootel.get(e.target);
+      if (c) joonista(c);
+    }), { rootMargin: '300px 0px' })
+  : null;
+function tyhjenda(key) {
+  charts[key].forEach((c) => { if (laisk) laisk.unobserve(c.dom); if (c.inst) c.inst.dispose(); });
+  charts[key] = [];
+}
+function renderPanel(key, koik) {
   if (key === 'majandusplaan') { renderPlan(); return; }
   (charts[key] || []).forEach((c) => {
-    if (!c.inst) c.inst = echarts.init(c.dom, null, { renderer: 'svg' });
-    c.inst.setOption(c.opt(), true);
-    c.inst.resize();
+    if (c.inst || !laisk || koik) joonista(c);
+    else { ootel.set(c.dom, c); laisk.observe(c.dom); }
   });
 }
 function show(key, focus) {
@@ -1306,6 +1329,7 @@ function show(key, focus) {
     if (on && focus) b.focus();
   });
   try { history.replaceState(null, '', '#' + key); } catch (e) {}
+  if (EHITA[key]) { EHITA[key](); EHITA[key] = null; }
   requestAnimationFrame(() => renderPanel(key));
 }
 tabs.forEach((b, i) => {
@@ -1571,13 +1595,19 @@ const start = (location.hash || '').slice(1);
 const current = () => tabs.find((b) => b.getAttribute('aria-selected') === 'true').dataset.key;
 const laeJson = (f) => fetch(f, { cache: 'no-cache' }).then((r) => { if (!r.ok) throw new Error(f + ': ' + r.status); return r.json(); });
 
-async function kaivita() {
-  try {
-    const [nait, mp, ix, meta, vrd, ulv, kv] = await Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json'),
+// Vahekaardi sisu (DOM ja võrdluse arvutused) ehitatakse alles vahekaardi esimesel avamisel
+const EHITA = {};
+// Andmete laadimine algab kohe, fontide laadimisega paralleelselt
+const ANDMED = Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json'),
       laeJson('data/vordlus.json').catch((e) => { console.error(e); return null; }), laeJson('data/ulevaated.json').catch((e) => { console.error(e); return null; }),
       laeJson('data/kokkuvote.json').catch(() => null)]);
+ANDMED.catch(() => {}); // viga käsitletakse kaivita() sees
+
+async function kaivita() {
+  try {
+    const [nait, mp, ix, meta, vrd, ulv, kv] = await ANDMED;
     ULEVAATED = ulv ? ulv.ulevaated : null;
-    if (vrd) VGROUPS = koostaVordlus(vrd, meta.naitajad);
+    EHITA.vordlus = () => { if (vrd) VGROUPS = koostaVordlus(vrd, meta.naitajad); buildVordlus(); };
     GROUPS = koostaGrupid(nait, meta.naitajad);
     KOKKUVOTE = koostaKokkuvote(nait, kv);
     INDEXES = ix.indeksid;
@@ -1590,11 +1620,10 @@ async function kaivita() {
     document.querySelector('main .inner').insertAdjacentHTML('afterbegin', '<p class="loadfail" role="alert">Andmeid ei õnnestunud laadida. Proovi lehte hiljem uuesti avada.</p>');
     return;
   }
-  buildEconomy();
+  EHITA.majandus = buildEconomy;
+  EHITA.indeksid = buildIndexes;
+  EHITA.ulevaated = () => buildUlevaated(ULEVAATED);
   mpInitControls();
-  buildIndexes();
-  buildVordlus();
-  buildUlevaated(ULEVAATED);
   show(['majandusplaan', 'majandus', 'indeksid', 'vordlus', 'ulevaated'].includes(start) ? start : 'majandus');
 }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(kaivita); else kaivita();
@@ -1606,8 +1635,14 @@ if (window.parent !== window) {
   new ResizeObserver(teata).observe(document.body);
 }
 
-window.addEventListener('resize', () => { (charts[current()] || []).forEach((c) => c.inst && c.inst.resize()); mpCharts.forEach((c) => c.resize()); });
-const rerender = () => renderPanel(current());
+let suurusRaf = 0;
+window.addEventListener('resize', () => {
+  cancelAnimationFrame(suurusRaf);
+  suurusRaf = requestAnimationFrame(() => { (charts[current()] || []).forEach((c) => c.inst && c.inst.resize()); mpCharts.forEach((c) => c.resize()); });
+});
+const rerender = () => { TEEMA = null; teemaV++; renderPanel(current()); };
+// Printimisel peavad olemas olema ka need graafikud, milleni pole veel keritud
+window.addEventListener('beforeprint', () => renderPanel(current(), true));
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', rerender);
 new MutationObserver(rerender).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 </script>

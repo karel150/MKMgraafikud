@@ -20,6 +20,7 @@ concurrency:
 jobs:
   uuenda:
     runs-on: ubuntu-latest
+    timeout-minutes: 30   # rippuma jäänud API-päring ei hoia tööd kinni 6 tundi
     outputs:
       hoiatusi: ${{ steps.kontroll.outputs.hoiatusi }}
     steps:
