@@ -20,6 +20,8 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 
 * **R** laadib andmed ja arvutab majandusplaaniindeksi (sinu metoodika, failid `R/majandusplaaniindeks_sca.R` ja `R/esi_eesti.R`).
 * **Leht** loeb JSON-failid. Kvartali- ja aastavaated, aastamuutused ja z-skoorid arvutab leht ise.
+* **Eurostati päringud** tehakse kuni kolme katsega ja iga andmestik laaditakse käivituse jooksul üks kord (`get_eurostat`, `eurostat_plaan` failis `R/abi.R`).
+* **Andmefail kirjutatakse ainult siis, kui andmed muutusid.** Päeval, mil midagi uut ei avaldatud, commit'i ei teki. Viimase kontrolli aeg on failis `docs/data/seis.json`, mis avaldatakse koos lehega, kuid ei lähe repo ajalukku (`.gitignore`).
 * **Kaitse vigase uuenduse vastu:** kui mõne seeria laadimine ebaõnnestub või andmed tunduvad valed (tühi seeria, väärtused väljaspool lubatud vahemikku, viimane periood varasem kui eelmisel korral), jääb alles eelmine töötav versioon. Hoiatus läheb faili `hoiatused.txt` ja GitHub saadab teavituse.
 
 ## Failid

@@ -62,10 +62,92 @@ px_paring <- function(tabel, ..., katseid = 3, api = PX_API) {
 }
 
 # ---- Eurostat ---------------------------------------------------------------
+# get_eurostat: paketi eurostat samanimeline funktsioon koos korduskatsete ja
+# vahemäluga. Kuna see on defineeritud töökeskkonnas, kasutavad seda ka
+# metoodikaskriptid (majandusplaaniindeks_sca.R, esi_eesti.R), mis kutsuvad
+# get_eurostat() ilma paketi nimeta; neid skripte pole vaja muuta ja eraldi
+# käivitades töötavad nad endiselt paketi enda funktsiooniga.
+#   * Ajutise vea korral proovitakse uuesti (vaikimisi 3 katset, paus 5 s, 10 s).
+#   * Sama päringu (id + filtrid + vorming) tulemus jäetakse meelde, nii et üks
+#     käivitus ei laadi sama asja mitu korda. Meelde jääb ka lõplik viga, et
+#     sama ebaõnnestunud päringut ei korrataks iga sellest sõltuva seeria jaoks.
+.eurostat_malu <- new.env(parent = emptyenv())
+
+get_eurostat <- function(id, ..., katseid = 3, paus = 5, .lae = eurostat::get_eurostat) {
+  voti <- paste(deparse(list(id, ...), width.cutoff = 500L), collapse = "")
+  meeles <- .eurostat_malu[[voti]]
+  if (inherits(meeles, "condition")) stop(meeles)
+  if (!is.null(meeles)) return(meeles)
+
+  viga <- NULL
+  for (k in seq_len(katseid)) {
+    df <- tryCatch(.lae(id, ...), error = function(e) e)
+    if (is.data.frame(df)) {
+      assign(voti, df, envir = .eurostat_malu)
+      return(df)
+    }
+    # pakett eurostat võib võrguvea korral tagastada vea asemel NULL-i
+    viga <- if (inherits(df, "condition")) conditionMessage(df) else "Eurostat ei tagastanud andmeid"
+    if (k < katseid) {
+      message("Eurostat ", id, ": katse ", k, " ebaõnnestus (", viga, "), proovin uuesti.")
+      Sys.sleep(paus * k)
+    }
+  }
+  viga <- simpleError(paste0(id, ": ", viga, " (", katseid, " katset)"))
+  assign(voti, viga, envir = .eurostat_malu)
+  stop(viga)
+}
+
+# Andmestikud, millest on vaja mitut seeriat (rahvusvaheline võrdlus + Eesti
+# näitajad). Iga andmestik laaditakse ühe päringuga kõigi siin loetletud väärtuste
+# kohta ja üksikud seeriad lõigatakse sellest välja (eurostat_tabel). Nii tehakse
+# nt namq_10_gdp kohta seitsme päringu asemel üks.
+# Kui mõne seeria filtrid siia ei mahu (teine dimensioon või väärtus, mida plaanis
+# pole), tehakse selle seeria jaoks lihtsalt eraldi päring. Uue seeria lisamisel
+# olemasolevast andmestikust lisa siia tema väärtused, muidu laaditakse ta eraldi.
+eurostat_plaan <- function() {
+  riigid <- unique(c("EE", get0("VORDLUS_RIIGID", ifnotfound = character())))
+  list(
+    ei_bssi_m_r2   = list(geo = riigid, indic = "BS-ESI-I", s_adj = "SA", freq = "M"),
+    bop_iip6_q     = list(geo = riigid, currency = "MIO_EUR", bop_item = "FA__D__F", sector10 = "S1", sectpart = "S1",
+                          stk_flow = "L_LE", partner = "WRL_REST", freq = "Q"),
+    namq_10_gdp    = list(geo = riigid, na_item = c("B1GQ", "P6", "P61", "P62", "P51G"),
+                          unit = c("CP_MEUR", "CLV_PCH_SM"), s_adj = c("NSA", "SCA"), freq = "Q"),
+    nama_10_gdp    = list(geo = riigid, na_item = c("B1GQ", "P6"), unit = "CLV_PCH_PRE", freq = "A"),
+    namq_10_lp_ulc = list(geo = riigid, na_item = c("RLPR_HW", "NULC_HW"), unit = "PCH_SM", s_adj = "SCA", freq = "Q"),
+    nama_10_lp_ulc = list(geo = riigid, na_item = c("RLPR_HW", "NULC_HW"), unit = "PCH_PRE", freq = "A"),
+    lfsi_emp_q     = list(geo = riigid, indic_em = c("EMP_LFS", "ACT"), age = c("Y20-64", "Y15-74"), sex = "T",
+                          unit = "PC_POP", s_adj = "SA", freq = "Q"),
+    nrg_pc_205     = list(geo = riigid, nrg_cons = "TOT_KWH", tax = "X_TAX", currency = "EUR", unit = "KWH"),
+    nasa_10_ki     = list(geo = riigid, na_item = "SRG_S14_S15", unit = "PC", freq = "A"),
+    isoc_eb_ai     = list(geo = c(riigid, "EU27_2020"), indic_is = "E_AI_TANY", size_emp = "GE10", unit = "PC_ENT", freq = "A")
+  )
+}
+
+# Ühe seeria(rühma) toorandmed. Kui filtrid mahuvad andmestiku plaani, kasutatakse
+# ühist (meelde jäetud) päringut ja valik tehakse kohapeal; muidu tavaline päring.
+eurostat_tabel <- function(id, filters) {
+  plaan <- eurostat_plaan()[[id]]
+  mahub <- !is.null(plaan) && setequal(names(plaan), names(filters)) &&
+    all(vapply(names(plaan), function(n) all(filters[[n]] %in% plaan[[n]]), logical(1)))
+  if (!mahub) return(get_eurostat(id, filters = filters, time_format = "raw", cache = FALSE))
+
+  df <- get_eurostat(id, filters = plaan, time_format = "raw", cache = FALSE)
+  for (n in names(plaan)) {
+    if (n %in% names(df)) {
+      df <- df[df[[n]] %in% filters[[n]], , drop = FALSE]
+    } else if (length(plaan[[n]]) > 1) {
+      # ilma selle veeruta ei saa seeriaid eristada
+      stop(id, ": vastuses puudub veerg ", n, ".")
+    }
+  }
+  df
+}
+
 # vali: lisavalik pärast allalaadimist, nt list(nace_r2 = "C10-S951_X_K"), kui
 # dimensiooni ei saa päringusse panna või selle nimi võib erineda.
 eurostat_seeria <- function(id, filters, vali = NULL) {
-  df <- eurostat::get_eurostat(id, filters = filters, time_format = "raw", cache = FALSE)
+  df <- eurostat_tabel(id, filters)
   for (v in names(vali)) if (v %in% names(df)) df <- df[df[[v]] %in% vali[[v]], ]
   tcol <- intersect(c("time", "TIME_PERIOD"), names(df))[1]
   df <- df[!is.na(df$values), ]
@@ -136,12 +218,28 @@ loe_json <- function(fail) {
   tryCatch(fromJSON(tee, simplifyVector = TRUE), error = function(e) NULL)
 }
 
+# Fail kirjutatakse ainult siis, kui sisu muutus. Välja "uuendatud" (ajatempel)
+# võrdlusel ei arvestata: muidu muutuks iga fail igal käivitusel ja GitHubi tekiks
+# iga päev commit ka siis, kui ühtki uut arvu ei lisandunud. "uuendatud" tähendab
+# seega "andmed viimati muutusid"; viimase kontrolli aeg on failis seis.json.
+# Tagastab (nähtamatult) TRUE, kui fail kirjutati.
 kirjuta_json <- function(x, fail) {
   dir.create(DATA_DIR, showWarnings = FALSE, recursive = TRUE)
+  tee <- file.path(DATA_DIR, fail)
+  uus <- as.character(toJSON(x, auto_unbox = TRUE, digits = NA, na = "null", null = "null"))
+  if (file.exists(tee)) {
+    ilma_ajata <- function(s) charToRaw(enc2utf8(sub('"uuendatud":("[^"]*"|[-+0-9.eE]+)', '"uuendatud":0', s)))
+    vana <- tryCatch(paste(readLines(tee, warn = FALSE, encoding = "UTF-8"), collapse = "\n"), error = function(e) NULL)
+    if (!is.null(vana) && identical(ilma_ajata(vana), ilma_ajata(uus))) {
+      message("Muutusteta: ", tee)
+      return(invisible(FALSE))
+    }
+  }
   tmp <- file.path(DATA_DIR, paste0(".", fail, ".tmp"))
-  write_json(x, tmp, auto_unbox = TRUE, digits = NA, na = "null", null = "null")
-  file.rename(tmp, file.path(DATA_DIR, fail))
-  message("Kirjutatud: ", file.path(DATA_DIR, fail))
+  writeLines(uus, tmp, useBytes = TRUE)
+  file.rename(tmp, tee)
+  message("Kirjutatud: ", tee)
+  invisible(TRUE)
 }
 
 # Seeria JSON-iks: perioodid ja väärtused jäävad alati massiivideks
