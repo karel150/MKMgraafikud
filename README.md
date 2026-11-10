@@ -41,6 +41,7 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `docs/data/` | Andmefailid. Neid kirjutab robot, käsitsi ei muuda (v.a `kirjeldused.json`). |
 | `docs/data/kirjeldused.json` | Näitajate nimed, valdkonnad, põhinäitaja märge ja selgitused (indikaatorite tabeli lehelt 2.1 AS-IS). **Muudetakse käsitsi.** |
 | `docs/lib/`, `docs/fonts/` | ECharts ja fondid. Asuvad samas kohas, et leht ei laadiks midagi välistest teenustest. |
+| `tools/echarts-kooste.mjs` | ECharts'i kohandatud kooste kirjeldus: `docs/lib/echarts.min.js` sisaldab ainult lehel kasutatavaid graafikutüüpe. Uue tüübi lisamisel ehita fail uuesti (juhis faili päises). |
 | `.github/workflows/uuenda.yml` | Automaatne uuendamine ja avaldamine. |
 | `mkm-ee/manustamine.html` | Koodijupp mkm.ee veebimeeskonnale. |
 
