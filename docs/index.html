@@ -1600,19 +1600,20 @@ const EHITA = {};
 // Andmete laadimine algab kohe, fontide laadimisega paralleelselt
 const ANDMED = Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json'),
       laeJson('data/vordlus.json').catch((e) => { console.error(e); return null; }), laeJson('data/ulevaated.json').catch((e) => { console.error(e); return null; }),
-      laeJson('data/kokkuvote.json').catch(() => null)]);
+      laeJson('data/kokkuvote.json').catch(() => null), laeJson('data/seis.json').catch(() => null)]);
 ANDMED.catch(() => {}); // viga käsitletakse kaivita() sees
 
 async function kaivita() {
   try {
-    const [nait, mp, ix, meta, vrd, ulv, kv] = await ANDMED;
+    const [nait, mp, ix, meta, vrd, ulv, kv, seis] = await ANDMED;
     ULEVAATED = ulv ? ulv.ulevaated : null;
     EHITA.vordlus = () => { if (vrd) VGROUPS = koostaVordlus(vrd, meta.naitajad); buildVordlus(); };
     GROUPS = koostaGrupid(nait, meta.naitajad);
     KOKKUVOTE = koostaKokkuvote(nait, kv);
     INDEXES = ix.indeksid;
     MP = mp; mpPrepare();
-    const d = new Date(nait.uuendatud);
+    // seis.json: viimase kontrolli aeg. Andmefailide "uuendatud" muutub ainult siis, kui andmed muutusid.
+    const d = new Date((seis && seis.kontrollitud) || nait.uuendatud);
     document.getElementById('seis').textContent = 'andmed seisuga ' + d.toLocaleDateString('et-EE');
   } catch (e) {
     console.error(e);

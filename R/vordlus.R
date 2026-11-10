@@ -12,7 +12,7 @@ VORDLUS_RIIGID <- c("EE", "LV", "LT", "FI", "SE")
 
 # Üks Eurostati päring mitme riigi kohta -> nimega list seeriatest (NULL, kui riigil andmeid pole)
 eurostat_riigid <- function(id, filters, geos = VORDLUS_RIIGID, vali = NULL) {
-  df <- eurostat::get_eurostat(id, filters = c(filters, list(geo = geos)), time_format = "raw", cache = FALSE)
+  df <- eurostat_tabel(id, c(filters, list(geo = geos)))
   for (v in names(vali)) if (v %in% names(df)) df <- df[df[[v]] %in% vali[[v]], ]
   tcol <- intersect(c("time", "TIME_PERIOD"), names(df))[1]
   df <- df[!is.na(df$values), ]

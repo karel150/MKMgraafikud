@@ -53,6 +53,14 @@ tryCatch({
   kirjuta_json(list(ulevaated = u), "ulevaated.json")
 }, error = function(e) hoiata("Ülevaadete nimekiri (andmed/ulevaated.csv): ", conditionMessage(e), ". Jäetakse alles eelmine versioon."))
 
+# ---- Viimase kontrolli aeg ----------------------------------------------------
+# Andmefailid muutuvad ainult siis, kui muutusid andmed (vt kirjuta_json). Et leht
+# saaks siiski näidata, millal andmeid viimati kontrolliti, kirjutatakse see eraldi
+# väikesesse faili. seis.json on .gitignore'is: see läheb avaldatavale lehele, aga
+# mitte repo ajalukku.
+write_json(list(kontrollitud = aeg_utc(), hoiatusi = length(hoiatused)),
+           file.path(DATA_DIR, "seis.json"), auto_unbox = TRUE)
+
 # ---- Kokkuvõte --------------------------------------------------------------
 if (length(hoiatused)) {
   writeLines(hoiatused, "hoiatused.txt", useBytes = TRUE)
