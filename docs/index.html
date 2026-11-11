@@ -9,28 +9,30 @@
 <style>
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; }
-/* Paigutus: navy päisevöö kolme suure vahekaardinupuga; all kaardiruudustik, rühmitatud teemade kaupa */
+/* Värvid: hele sinimustvalge. Lipusinine (#0072CE) on rõhuvärv ja graafikute põhiseeria, tekst on must,
+   pinnad valged jaheda lumehalli taustaga. Paigutus: hele päis tekstiliste vahekaartidega, all kaardiruudustik. */
 :root {
-  --bg: #F3F5F8;
+  --bg: #F2F5F9;
   --surface: #FFFFFF;
-  --fg: #142039;
-  --muted: #59647A;
-  --line: #DCE1E9;
-  --grid: #E8ECF2;
-  --band: #16233F;
-  --band-fg: #F4F6FA;
-  --band-muted: #A9B4C9;
-  --accent: #E8A33D;
-  --s1: #2F5FB3;
+  --fg: #10141B;
+  --muted: #566074;
+  --line: #D8DFE9;
+  --grid: #E6EBF2;
+  --band: #FFFFFF;
+  --band-fg: #10141B;
+  --band-muted: #566074;
+  --accent: #0072CE;
+  --s1: #0072CE;
   --s2: #C7781A;
   --s3: #00897A;
   --s4: #8B5CC4;
   --s5: #C24A6E;
   --neg: #C0503A;
   --peer: #9AA4B5;
-  --chip: #EDF0F5;
+  --chip: #EBF0F6;
   --mid: #EEF0F3;
   --dark-line: #2B3445;
+  --hea: #1B7F5C;
   --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
   --f-body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -39,15 +41,15 @@ body { margin: 0; }
   :root:not([data-theme="light"]) {
     --bg: #0D1424; --surface: #141E33; --fg: #E6EAF2; --muted: #9AA5BA;
     --line: #253150; --grid: #1F2A43; --band: #0A1222; --band-fg: #EEF1F7; --band-muted: #8D99B0;
-    --accent: #F0B24F; --s1: #5E8CDB; --s2: #C27E1C; --s3: #14A493; --s4: #A07AD8; --s5: #DB6A7E; --neg: #E07A62;
-    --peer: #6C7790; --chip: #1C2740; --mid: #26314A; --dark-line: #C9D1DE; color-scheme: dark;
+    --accent: #4FA3EE; --s1: #4FA3EE; --s2: #C27E1C; --s3: #14A493; --s4: #A07AD8; --s5: #DB6A7E; --neg: #E07A62;
+    --peer: #6C7790; --chip: #1C2740; --mid: #26314A; --dark-line: #C9D1DE; --hea: #35B58A; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0D1424; --surface: #141E33; --fg: #E6EAF2; --muted: #9AA5BA;
   --line: #253150; --grid: #1F2A43; --band: #0A1222; --band-fg: #EEF1F7; --band-muted: #8D99B0;
-  --accent: #F0B24F; --s1: #5E8CDB; --s2: #C27E1C; --s3: #14A493; --s4: #A07AD8; --s5: #DB6A7E; --neg: #E07A62;
-  --peer: #6C7790; --chip: #1C2740; --mid: #26314A; --dark-line: #C9D1DE; color-scheme: dark;
+  --accent: #4FA3EE; --s1: #4FA3EE; --s2: #C27E1C; --s3: #14A493; --s4: #A07AD8; --s5: #DB6A7E; --neg: #E07A62;
+  --peer: #6C7790; --chip: #1C2740; --mid: #26314A; --dark-line: #C9D1DE; --hea: #35B58A; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -56,31 +58,24 @@ body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font
 .inner { max-width: 1240px; margin: 0 auto; }
 
 /* Päis */
-.band { background: var(--band); color: var(--band-fg); padding-block: 28px 0; }
-.band .inner { display: flex; flex-direction: column; gap: 22px; }
-.top { display: flex; flex-direction: column; gap: 8px; }
-.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
-h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(28px, 4.2vw, 44px); line-height: 1.05; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
-.lead { color: var(--band-muted); margin: 0; max-width: 68ch; }
-.tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-@media (max-width: 1100px) { .tabs { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 900px) { .tabs { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 760px) { .tabs { grid-template-columns: 1fr; } }
+.band { background: var(--band); color: var(--band-fg); padding-block: 22px 0; border-top: 4px solid var(--s1); border-bottom: 1px solid var(--line); }
+.band .inner { display: flex; flex-direction: column; gap: 18px; }
+.top { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+/* Väike sinimustvalge märk pealkirja ees */
+.lipp { flex: none; width: 30px; height: 21px; border-radius: 2px; box-shadow: 0 0 0 1px var(--line);
+  background: linear-gradient(#0072CE 0 33.4%, #000 33.4% 66.7%, #fff 66.7%); }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .04em; color: var(--band-muted); margin-left: auto; }
+h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(22px, 3vw, 30px); line-height: 1.1; margin: 0; letter-spacing: -.01em; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: thin; margin-bottom: -1px; }
 .tab {
-  text-align: left; cursor: pointer; font: inherit; color: var(--band-fg);
-  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.12);
-  border-bottom: none; border-radius: 8px 8px 0 0; padding: 14px 16px 16px;
-  display: flex; flex-direction: column; gap: 4px; min-width: 0;
+  flex: none; cursor: pointer; font: inherit; color: var(--band-muted); background: none; border: 0;
+  border-bottom: 3px solid transparent; padding: 10px 14px 11px; white-space: nowrap;
 }
-.tab:hover { background: rgba(255,255,255,.08); }
-.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.tab .tnum { font-family: var(--f-mono); font-size: 12px; color: var(--band-muted); }
-.tab .tname { font-family: var(--f-display); font-weight: 700; font-size: 18px; line-height: 1.2; }
-.tab .tdesc { font-size: 13.5px; color: var(--band-muted); }
-.tab[aria-selected="true"] { background: var(--bg); color: var(--fg); border-color: var(--bg); }
-.tab[aria-selected="true"] .tdesc, .tab[aria-selected="true"] .tnum { color: var(--muted); }
-.tab[aria-selected="true"] .tnum { color: var(--s2); }
-@media (max-width: 760px) { .tab { border-radius: 8px; border-bottom: 1px solid rgba(255,255,255,.12); } .band { padding-bottom: 16px; } }
+.tab .tname { font-family: var(--f-display); font-weight: 700; font-size: 15.5px; }
+.tab:hover { color: var(--band-fg); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tab[aria-selected="true"] { color: var(--band-fg); border-bottom-color: var(--s1); }
+@media (max-width: 760px) { .eyebrow { margin-left: 0; flex-basis: 100%; } }
 
 /* Sisu */
 main { padding-block: 28px 48px; }
@@ -236,6 +231,63 @@ footer a { color: var(--muted); }
 .links .lp { font-weight: 600; line-height: 1.3; }
 .links .lh { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 .links .lh::after { content: " ↗"; }
+/* Ülevaade (esileht) */
+#p-ulevaade { gap: 18px; position: relative; }
+/* õrn ruudustik lehe ülaosas, hajub allapoole */
+#p-ulevaade::before { content: ""; position: absolute; inset: -28px -16px auto; height: 520px; z-index: 0; pointer-events: none;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 36px 36px; mask-image: linear-gradient(#000, transparent); -webkit-mask-image: linear-gradient(#000, transparent); }
+#p-ulevaade > * { position: relative; z-index: 1; }
+.ul-riba { display: flex; gap: 6px 22px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); }
+.ul-riba span { white-space: nowrap; }
+.ul-riba b { font-weight: 500; color: var(--fg); margin-left: 4px; }
+.yles { color: var(--hea); } .alla { color: var(--neg); } .neutr { color: var(--muted); }
+.ul-rida { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 900px) { .ul-rida { grid-template-columns: 1fr; } }
+.ul-kaart { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.ul-silt { font-family: var(--f-mono); font-size: 12px; letter-spacing: .03em; color: var(--muted); margin: 0; }
+.ul-silt::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 8px; background: var(--s1); transform: rotate(45deg); }
+.ul-juht { font-family: var(--f-display); font-weight: 600; font-size: clamp(20px, 2.4vw, 27px); line-height: 1.28; margin: 0; max-width: 34em; text-wrap: pretty; }
+.ul-juht em { font-style: normal; color: var(--s1); }
+.ul-tekst { margin: 0; font-size: 15.5px; line-height: 1.6; max-width: 76ch; color: var(--fg); }
+.ul-meta { margin: 0; font-size: 12.5px; color: var(--muted); }
+.ul-nupud { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.ul-nupp { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--s1); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; }
+.ul-nupp:hover { border-color: var(--s1); background: color-mix(in srgb, var(--s1) 7%, transparent); }
+.ul-nupp:focus-visible, .ul-edasi button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ul-moodik { align-items: center; text-align: center; }
+.ul-moodik .ul-silt { align-self: flex-start; text-align: left; }
+.ul-moodik svg { margin-top: auto; }
+.ul-moodik p:last-child { margin-bottom: auto; }
+.ul-moodik svg { width: min(100%, 250px); height: auto; overflow: visible; }
+.ul-moodik .mv { font-family: var(--f-display); font-weight: 800; font-size: 52px; line-height: 1; margin-top: -58px; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.ul-moodik p { margin: 0; font-size: 13px; color: var(--muted); }
+.ul-kpid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 1000px) { .ul-kpid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .ul-kpid { grid-template-columns: 1fr; } }
+.ul-kpi { padding: 18px 20px 16px; gap: 6px; position: relative; overflow: hidden; }
+.ul-kpi .kn { font-size: 13.5px; color: var(--muted); }
+.ul-kpi .ka { font-family: var(--f-display); font-weight: 800; font-size: 36px; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.ul-kpi .ka small { font-size: 20px; margin-left: 2px; }
+.ul-kpi .km { font-family: var(--f-mono); font-size: 12.5px; }
+.ul-kpi svg { position: absolute; right: 0; bottom: 0; width: 40%; height: 50px; }
+.ul-kaart h2 { font-family: var(--f-display); font-weight: 800; font-size: 19px; margin: 0; }
+.ul-kaart .al { margin: -8px 0 0; font-size: 13px; color: var(--muted); }
+.ul-skp { height: 290px; width: 100%; }
+.ul-kohad { display: flex; flex-direction: column; gap: 13px; margin-top: 4px; }
+.ul-koht { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 14.5px; }
+.ul-koht .kk { font-family: var(--f-mono); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ul-koht .kk i { font-style: normal; margin-left: 6px; }
+.ul-koht .kt { grid-column: 1 / -1; position: relative; height: 5px; border-radius: 3px; background: var(--grid); }
+.ul-koht .kt span { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: linear-gradient(90deg, color-mix(in srgb, var(--s1) 35%, var(--surface)), var(--s1)); }
+.ul-koht .kt span::after { content: ""; position: absolute; right: -6px; top: 50%; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 3px solid var(--s1); transform: translateY(-50%); box-sizing: border-box; }
+.ul-edasi-h { font-family: var(--f-display); font-weight: 800; font-size: 19px; margin: 10px 0 -4px; }
+.ul-edasi { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 14px; }
+.ul-edasi button { font: inherit; text-align: left; cursor: pointer; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--fg); border-radius: 4px 4px 14px 14px; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ul-edasi button:hover { border-color: var(--s1); border-top-color: var(--s1); }
+.ul-edasi .en { font-family: var(--f-display); font-weight: 700; font-size: 16.5px; line-height: 1.2; }
+.ul-edasi .ed { font-size: 13.5px; color: var(--muted); }
+.ul-edasi .ev { font-family: var(--f-mono); font-size: 12.5px; color: var(--s1); margin-top: auto; padding-top: 6px; }
 .loadfail { background: var(--surface); border: 1px solid var(--neg); border-radius: 8px; padding: 16px; }
 .chip.warn { color: var(--s2); background: transparent; border: 1px solid currentColor; }
 </style>
@@ -245,32 +297,25 @@ footer a { color: var(--muted); }
 <div class="band gutter">
   <div class="inner">
     <div class="top">
-      <span class="eyebrow">MKM majandusanalüüs · <span id="seis">andmed laadimisel</span></span>
+      <span class="lipp" aria-hidden="true"></span>
       <h1>Eesti majandus numbrites</h1>
-      <p class="lead">Viis vaadet Eesti majandusele: majandusplaaniindeks, põhilised majandusnäitajad, Eesti koht rahvusvahelistes edetabelites, võrdlus naaberriikidega ning teiste asutuste ülevaated.</p>
+      <span class="eyebrow">MKM majandusanalüüs · <span id="seis">andmed laadimisel</span></span>
     </div>
     <div class="tabs" role="tablist" aria-label="Vaated">
-      <button class="tab" role="tab" id="tab-majandusplaan" aria-controls="p-majandusplaan" aria-selected="false" data-key="majandusplaan">
-        <span class="tnum">01</span><span class="tname">Majandusplaani näitajad</span><span class="tdesc">Koondindeks ja 8 alamnäitajat</span>
-      </button>
-      <button class="tab" role="tab" id="tab-majandus" aria-controls="p-majandus" aria-selected="true" data-key="majandus">
-        <span class="tnum">02</span><span class="tname">Eesti majanduse graafikud</span><span class="tdesc">35 näitajat, neist 19 põhinäitajat</span>
-      </button>
-      <button class="tab" role="tab" id="tab-indeksid" aria-controls="p-indeksid" aria-selected="false" data-key="indeksid">
-        <span class="tnum">03</span><span class="tname">Eesti positsioon indeksites</span><span class="tdesc">13 rahvusvahelist indeksit</span>
-      </button>
-      <button class="tab" role="tab" id="tab-vordlus" aria-controls="p-vordlus" aria-selected="false" data-key="vordlus">
-        <span class="tnum">04</span><span class="tname">Rahvusvaheline võrdlus</span><span class="tdesc">Eesti, Läti, Leedu, Soome ja Rootsi Eurostati andmetel</span>
-      </button>
-      <button class="tab" role="tab" id="tab-ulevaated" aria-controls="p-ulevaated" aria-selected="false" data-key="ulevaated">
-        <span class="tnum">05</span><span class="tname">Teiste asutuste ülevaated</span><span class="tdesc">Majandusnäitajad, prognoosid ja analüüsid</span>
-      </button>
+      <button class="tab" role="tab" id="tab-ulevaade" aria-controls="p-ulevaade" aria-selected="true" data-key="ulevaade"><span class="tname">Ülevaade</span></button>
+      <button class="tab" role="tab" id="tab-majandusplaan" aria-controls="p-majandusplaan" aria-selected="false" data-key="majandusplaan"><span class="tname">Majandusplaan</span></button>
+      <button class="tab" role="tab" id="tab-majandus" aria-controls="p-majandus" aria-selected="false" data-key="majandus"><span class="tname">Majanduse graafikud</span></button>
+      <button class="tab" role="tab" id="tab-indeksid" aria-controls="p-indeksid" aria-selected="false" data-key="indeksid"><span class="tname">Eesti indeksites</span></button>
+      <button class="tab" role="tab" id="tab-vordlus" aria-controls="p-vordlus" aria-selected="false" data-key="vordlus"><span class="tname">Rahvusvaheline võrdlus</span></button>
+      <button class="tab" role="tab" id="tab-ulevaated" aria-controls="p-ulevaated" aria-selected="false" data-key="ulevaated"><span class="tname">Teiste ülevaated</span></button>
     </div>
   </div>
 </div>
 
 <main class="gutter">
   <div class="inner">
+    <section class="panel" id="p-ulevaade" role="tabpanel" aria-labelledby="tab-ulevaade"></section>
+
     <section class="panel" id="p-majandusplaan" role="tabpanel" aria-labelledby="tab-majandusplaan" hidden>
       <div class="mp">
         <aside class="mp-side" aria-label="Seaded">
@@ -310,7 +355,7 @@ footer a { color: var(--muted); }
       </div>
     </section>
 
-    <section class="panel" id="p-majandus" role="tabpanel" aria-labelledby="tab-majandus"></section>
+    <section class="panel" id="p-majandus" role="tabpanel" aria-labelledby="tab-majandus" hidden></section>
 
     <section class="panel" id="p-indeksid" role="tabpanel" aria-labelledby="tab-indeksid" hidden></section>
 
@@ -698,7 +743,7 @@ function T() {
 function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-const charts = { majandus: [], indeksid: [], vordlus: [] };
+const charts = { ulevaade: [], majandus: [], indeksid: [], vordlus: [] };
 
 function buildEconomy() {
   const root = document.getElementById('p-majandus');
@@ -1212,7 +1257,9 @@ const KUUD_ESS = ['jaanuaris', 'veebruaris', 'märtsis', 'aprillis', 'mais', 'ju
 const KUUD_GEN = ['jaanuari', 'veebruari', 'märtsi', 'aprilli', 'mai', 'juuni', 'juuli', 'augusti', 'septembri', 'oktoobri', 'novembri', 'detsembri'];
 function koostaKokkuvote(D, kasitsi) {
   if (kasitsi && kasitsi.tekst && kasitsi.tekst.trim()) {
-    return { tekst: esc(kasitsi.tekst.trim()), meta: `Analüütiku kokkuvõte${kasitsi.autor ? ', ' + esc(kasitsi.autor) : ''}${kasitsi.kuupaev ? ', ' + esc(kasitsi.kuupaev) : ''}.` };
+    const t = kasitsi.tekst.trim(), lopp = t.search(/[.!?](\s|$)/);
+    return { tekst: esc(t), laused: lopp < 0 ? [t] : [t.slice(0, lopp + 1), t.slice(lopp + 1).trim()].filter(Boolean), rohk: '', kasitsi: true,
+      meta: `Analüütiku kokkuvõte${kasitsi.autor ? ', ' + esc(kasitsi.autor) : ''}${kasitsi.kuupaev ? ', ' + esc(kasitsi.kuupaev) : ''}.` };
   }
   const S = (k) => D.seeriad[k] || { periods: [], values: [] };
   const last = (s, n = 1) => { const i = s.values.length - n; return i >= 0 ? { p: s.periods[i], v: s.values[i] } : null; };
@@ -1223,7 +1270,7 @@ function koostaKokkuvote(D, kasitsi) {
   const kv = (p) => ['I', 'II', 'III', 'IV'][+p.slice(5) - 1] + ' kvartalis';
   const muutus = (v, kasv, langus) => (v >= 0.05 ? `${kasv} ${pr(v)} %` : v <= -0.05 ? `${langus} ${pr(-v)} %` : 'püsis samal tasemel');
   const laused = [];
-  let skoor = 0, n = 0;
+  let skoor = 0, n = 0, rohk = '';
 
   // SKP ja hinnang
   // SKP: korrigeeritud lõplik rida + kiirhinnang, kui see on uuem
@@ -1236,6 +1283,7 @@ function koostaKokkuvote(D, kasitsi) {
     const kiir = skp0 && g > skp0.v + 0.3, aegl = skp0 && g < skp0.v - 0.3;
     const trend = g < 0 ? (kiir ? ', kuid langus on aeglustunud' : aegl ? ' ja langus on süvenenud' : '')
                         : (kiir ? (g < 1.5 ? ', kuigi kasv on kiirenenud' : ' ja kasv on kiirenenud') : aegl ? ' ja kasv on aeglustunud' : '');
+    rohk = hinnang;
     laused.push(`${hinnang}${trend}: sisemajanduse koguprodukt oli ${kiir ? 'kiirhinnangu järgi ' : ''}${skp.p.slice(0, 4)}. aasta ${kv(skp.p)} ${pr(Math.abs(g))} % ${g >= 0 ? 'suurem' : 'väiksem'} kui aasta varem${skp0 ? ` (eelmises kvartalis ${pr(skp0.v)} %)` : ''}.`);
     skoor += g < 0 ? -1 : g >= 1.5 ? 1 : 0; n++;
   }
@@ -1287,7 +1335,171 @@ function koostaKokkuvote(D, kasitsi) {
     laused.push(r >= 0.4 ? 'Kokkuvõttes viitab enamik näitajaid majanduse paranemisele.' : r <= -0.4 ? 'Kokkuvõttes viitab enamik näitajaid majanduse nõrgenemisele.' : 'Kokkuvõttes on pilt kirju: osa näitajaid paraneb, osa on veel nõrgad.');
   }
   if (!laused.length) return null;
-  return { tekst: laused.join(' '), meta: 'Automaatne kokkuvõte viimastest andmetest, uueneb koos andmetega. Hinnang põhineb lihtsatel reeglitel ega asenda analüütiku hinnangut.' };
+  return { tekst: laused.join(' '), laused, rohk, meta: 'Automaatne kokkuvõte viimastest andmetest, uueneb koos andmetega. Hinnang põhineb lihtsatel reeglitel ega asenda analüütiku hinnangut.' };
+}
+
+// ===================== Ülevaade (esileht) =====================
+// Kõik arvud tulevad samadest seeriatest, mida kasutavad graafikute vahekaart ja automaatne kokkuvõte.
+let ULV = null;
+const INDEKSI_LYHEND = { imd: 'IMD konkurentsivõime', gii: 'Globaalne innovatsioon', eis: 'EL-i innovatsioon', itci: 'Maksude konkurentsivõime',
+  cpi: 'Korruptsioonitaju', esss: 'Iduettevõtlus (EL)', imdd: 'Digitaalne konkurentsivõime', gtci: 'Talentide konkurentsivõime', ief: 'Majandusvabadus' };
+function koostaUlevaade(D) {
+  const S = (k) => D.seeriad[k] || { periods: [], values: [] };
+  const viim = (s, n = 1) => { const i = s.values.length - n; return i >= 0 && s.values[i] != null ? { p: s.periods[i], v: s.values[i] } : null; };
+  const aastaga = (s) => ({ periods: s.periods.slice(12), values: s.values.slice(12).map((v, i) => (v == null || !s.values[i] ? null : (v / s.values[i] - 1) * 100)) });
+  const saba = (s, n) => s.values.slice(-n).filter((v) => v != null);
+  // SKP: lõplik (korrigeeritud) rida ja selle järel kiirhinnang, kui see on uuem
+  const skpF = S('skp_q_sa').periods.length ? S('skp_q_sa') : S('skp_q'), kh = S('skp_q_kiir');
+  const skpX = skpF.periods.slice(), skpY = skpF.values.slice(); let kiirN = 0;
+  kh.periods.forEach((p, i) => { if (p > (skpF.periods.at(-1) || '') && kh.values[i] != null) { skpX.push(p); skpY.push(kh.values[i]); kiirN++; } });
+  const skp = skpY.length ? { p: skpX.at(-1), v: skpY.at(-1), v0: skpY.at(-2), p0: skpX.at(-2), kiir: kiirN > 0 } : null;
+  const eksY = aastaga(S('kaup_m')), jaeY = aastaga(S('jaem_m_idx')), regY = aastaga(S('regtootud_m'));
+  const esiA = viim(S('esi_m')), esiH = viim(S('esi_m_hinnang'));
+  const esi = esiH && (!esiA || esiH.p > esiA.p) ? { ...esiH, hinnang: true } : esiA;
+  return { skp, skpX, skpY, kiirN,
+    too: viim(S('too_m_yoy')), eks: viim(eksY), eksSaba: saba(eksY, 24), jae: viim(jaeY),
+    thi: viim(S('thi_m')), thi0: viim(S('thi_m'), 2), thiSaba: saba(S('thi_m'), 24),
+    reg: viim(S('regtootud_m')), regA: viim(regY), regSaba: saba(S('regtootud_m'), 24),
+    palk: viim(S('palk_q_lvl')), palkA: viim(S('palk_q_yoy')), vabad: viim(S('tk_vabad_m')), esi };
+}
+// Suund: ▲/▼ ja värv selle järgi, kas tõus on selle näitaja puhul hea (hea = 1), halb (−1) või neutraalne (0)
+function suund(v, hea = 1) {
+  const yles = v > 0.049, alla = v < -0.049;
+  return { m: yles ? '▲' : alla ? '▼' : '■', c: !hea || (!yles && !alla) ? 'neutr' : (yles ? hea > 0 : hea < 0) ? 'yles' : 'alla' };
+}
+const kuuLyh = (p) => KUUD[+p.slice(5) - 1];
+const kvLyh = (p) => RN[+p.slice(5) - 1] + ' kv';
+function sade(arr, cls) { // sparkline SVG-na: värv tuleb CSS-ist, seega järgib teemat ilma ümberjoonistamata
+  if (arr.length < 2) return '';
+  const lo = Math.min(...arr), hi = Math.max(...arr), w = 120, h = 40;
+  const pt = arr.map((v, i) => `${(i / (arr.length - 1) * w).toFixed(1)},${(h - 3 - (hi === lo ? 0.5 : (v - lo) / (hi - lo)) * (h - 8)).toFixed(1)}`);
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true" class="${cls}"><polygon points="0,${h} ${pt.join(' ')} ${w},${h}" fill="currentColor" opacity=".09"/><polyline points="${pt.join(' ')}" fill="none" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
+}
+function moodik(v, lo = 70, hi = 130, kesk = 100) { // poolring: skaala lo..hi, märk pikaajalisel keskmisel
+  const r = 90, cx = 110, cy = 105, osa = (x) => Math.min(1, Math.max(0, (x - lo) / (hi - lo)));
+  const pt = (f, rr = r) => [cx - rr * Math.cos(Math.PI * f), cy - rr * Math.sin(Math.PI * f)].map((x) => x.toFixed(1)).join(' ');
+  const f = osa(v), k = osa(kesk);
+  return `<svg viewBox="0 -22 220 144" aria-hidden="true">
+    <path d="M ${pt(0)} A ${r} ${r} 0 0 1 ${pt(1)}" fill="none" stroke="var(--grid)" stroke-width="13" stroke-linecap="round"/>
+    <path d="M ${pt(0)} A ${r} ${r} 0 0 1 ${pt(f)}" fill="none" stroke="var(--s1)" stroke-width="13" stroke-linecap="round"/>
+    <path d="M ${pt(k, r + 10)} L ${pt(k, r + 19)}" stroke="var(--fg)" stroke-width="2"/>
+    <text x="${pt(k, r + 30).split(' ')[0]}" y="${(+pt(k, r + 30).split(' ')[1] + 4).toFixed(1)}" text-anchor="middle" font-size="11" fill="var(--fg)" font-family="var(--f-mono)">${kesk}</text>
+    <circle cx="${pt(f).split(' ')[0]}" cy="${pt(f).split(' ')[1]}" r="8" fill="var(--surface)" stroke="var(--s1)" stroke-width="4"/>
+    <text x="${pt(0, r).split(' ')[0]}" y="121" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--f-mono)">${lo}</text>
+    <text x="${pt(1, r).split(' ')[0]}" y="121" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--f-mono)">${hi}</text>
+  </svg>`;
+}
+function ava(key) { show(key, true); window.scrollTo({ top: 0 }); }
+
+function buildUlevaade() {
+  const root = document.getElementById('p-ulevaade');
+  tyhjenda('ulevaade');
+  root.innerHTML = '';
+  const u = ULV, pr = (v, d = 1) => nf(d).format(Math.abs(v)), miinus = (v) => (v < 0 ? '−' : '');
+
+  // 1. Näitajate riba
+  const riba = [];
+  const lisa = (nimi, x, hea, tekst, tiitel) => { if (!x) return; const s = hea == null ? null : suund(x.v, hea); riba.push(`<span title="${esc(tiitel)}">${nimi}<b${s ? ` class="${s.c}"` : ''}>${s ? s.m + ' ' : ''}${tekst}</b></span>`); };
+  if (u.skp) lisa('SKP', u.skp, 1, pr(u.skp.v) + '%', `SKP reaalkasv aastaga, ${silt(u.skp.p)} kv${u.skp.kiir ? ' (kiirhinnang)' : ''}`);
+  if (u.too) lisa('Tööstus', u.too, 1, pr(u.too.v) + '%', `Tööstustoodangu maht aastaga, ${silt(u.too.p)}`);
+  if (u.eks) lisa('Eksport', u.eks, 1, pr(u.eks.v) + '%', `Kaupade eksport aastaga, ${silt(u.eks.p)}`);
+  if (u.jae) lisa('Jaemüük', u.jae, 1, pr(u.jae.v) + '%', `Jaemüügi maht aastaga, ${silt(u.jae.p)}`);
+  if (u.thi) lisa('Hinnad', u.thi, -1, pr(u.thi.v) + '%', `Tarbijahinnaindeks aastaga, ${silt(u.thi.p)}`);
+  if (u.regA) lisa('Töötud', u.regA, -1, pr(u.regA.v) + '%', `Registreeritud töötute arv aastaga, ${silt(u.regA.p)}`);
+  if (u.palk) lisa('Palk', u.palk, null, f0(u.palk.v) + ' €', `Keskmine brutokuupalk, ${silt(u.palk.p)} kv`);
+  if (u.vabad) lisa('Vabad töökohad', u.vabad, null, f0(u.vabad.v), `Töötukassa vahendatavad vabad töökohad, ${silt(u.vabad.p)}`);
+  if (u.esi) lisa('Usaldus', u.esi, null, pr(u.esi.v), `Majandususaldusindeks, ${silt(u.esi.p)}${u.esi.hinnang ? ' (hinnang)' : ''}`);
+  if (riba.length) { const r = el('div', 'ul-riba', riba.join('')); r.setAttribute('aria-label', 'Viimased näitajad'); root.append(r); }
+
+  // 2. Kokkuvõte ja majandususaldus
+  const rida1 = el('div', 'ul-rida');
+  if (KOKKUVOTE) {
+    const [juht, ...muu] = KOKKUVOTE.laused;
+    let juhtH = esc(juht);
+    if (KOKKUVOTE.rohk) juhtH = juhtH.replace(esc(KOKKUVOTE.rohk), `<em>${esc(KOKKUVOTE.rohk)}</em>`);
+    const k = el('section', 'ul-kaart');
+    k.setAttribute('aria-labelledby', 'ul-kv');
+    k.innerHTML = `<p class="ul-silt" id="ul-kv">${KOKKUVOTE.kasitsi ? 'Analüütiku kokkuvõte' : 'Automaatne kokkuvõte'} · ${esc(document.getElementById('seis').textContent)}</p>
+      <p class="ul-juht">${juhtH}</p>${muu.length ? `<p class="ul-tekst">${muu.map(esc).join(' ')}</p>` : ''}
+      <div class="ul-nupud"><button type="button" class="ul-nupp" data-ava="majandus">Vaata kõiki graafikuid</button><button type="button" class="ul-nupp" data-ava="vordlus">Võrdle naaberriikidega</button><button type="button" class="ul-nupp" data-ava="majandusplaan">Majandusplaaniindeks</button></div>
+      <p class="ul-meta">${KOKKUVOTE.meta}</p>`;
+    rida1.append(k);
+  }
+  if (u.esi) {
+    const m = el('section', 'ul-kaart ul-moodik');
+    m.setAttribute('aria-label', `Majandususaldus ${silt(u.esi.p)}: ${f1(u.esi.v)} punkti, pikaajaline keskmine on 100.`);
+    m.innerHTML = `<p class="ul-silt">Majandususaldus · ${esc(silt(u.esi.p))}${u.esi.hinnang ? ' (hinnang)' : ''}</p>${moodik(u.esi.v)}<div class="mv">${f1(u.esi.v)}</div>
+      <p>Pikaajaline keskmine on 100.<br>${u.esi.v >= 100 ? 'Kindlustunne on keskmisest kõrgem.' : 'Kindlustunne on keskmisest madalam.'}</p>`;
+    rida1.append(m);
+  }
+  if (rida1.children.length) root.append(rida1);
+
+  // 3. Neli põhinäitajat
+  const kpid = el('div', 'ul-kpid');
+  const kpi = (nimi, arv, yhik, s, mTekst, spark) => { const k = el('div', 'ul-kaart ul-kpi'); k.innerHTML = `<span class="kn">${nimi}</span><span class="ka">${arv}${yhik ? `<small>${yhik}</small>` : ''}</span><span class="km ${s.c}">${s.m} ${mTekst}</span>${spark}`; kpid.append(k); };
+  if (u.skp) { const d = u.skp.v0 == null ? null : u.skp.v - u.skp.v0, s = suund(d ?? 0, 1);
+    kpi(`SKP reaalkasv · ${esc(silt(u.skp.p))} kv${u.skp.kiir ? ' (kiirhinnang)' : ''}`, miinus(u.skp.v) + pr(u.skp.v), '%', s, d == null ? '' : `${pr(d)} pp kvartaliga`, sade(u.skpY.slice(-12).filter((v) => v != null), s.c)); }
+  if (u.reg) { const s = suund(u.regA ? u.regA.v : 0, -1);
+    kpi(`Registreeritud töötud · ${esc(silt(u.reg.p))}`, f0(u.reg.v), '', s, u.regA ? `${pr(u.regA.v)}% aastaga` : '', sade(u.regSaba, s.c)); }
+  if (u.eks) { const s = suund(u.eks.v, 1);
+    kpi(`Kaupade eksport · ${esc(silt(u.eks.p))}`, (u.eks.v > 0 ? '+' : miinus(u.eks.v)) + pr(u.eks.v), '%', s, 'aastaga', sade(u.eksSaba, s.c)); }
+  if (u.thi) { const d = u.thi0 ? u.thi.v - u.thi0.v : null, s = suund(d ?? 0, -1);
+    kpi(`Tarbijahinnaindeks · ${esc(silt(u.thi.p))}`, miinus(u.thi.v) + pr(u.thi.v), '%', s, d == null ? 'aastaga' : `${pr(d)} pp kuuga`, sade(u.thiSaba, s.c)); }
+  if (kpid.children.length) root.append(kpid);
+
+  // 4. SKP graafik ja Eesti koht edetabelites
+  const rida2 = el('div', 'ul-rida');
+  if (u.skpY.length > 2) {
+    const n = Math.min(u.skpY.length, 12), x = u.skpX.slice(-n), y = u.skpY.slice(-n), kiir0 = n - u.kiirN;
+    const k = el('section', 'ul-kaart');
+    k.innerHTML = `<h2>SKP kasv kvartalite kaupa</h2><p class="al">Muutus võrreldes eelmise aasta sama kvartaliga, %, sesoonselt ja tööpäevade arvuga korrigeeritud${u.kiirN ? '. Katkendjoon on kiirhinnang.' : '.'}</p>`;
+    const dom = el('div', 'ul-skp'); dom.setAttribute('role', 'img');
+    dom.setAttribute('aria-label', `SKP kasv ${silt(x[0])} kuni ${silt(x.at(-1))}; viimane väärtus ${f1(y.at(-1))} %.`);
+    k.append(dom);
+    const nupp = el('div', 'ul-nupud', '<button type="button" class="ul-nupp" data-ava="majandus">Kõik 35 näitajat</button>'); k.append(nupp);
+    rida2.append(k);
+    charts.ulevaade.push({ dom, opt: () => {
+      const t = T(), lbl = (c) => ({ show: true, position: 'top', distance: 8, color: c, fontSize: 12, fontWeight: 600, formatter: (p) => f1(p.value) });
+      return { animation: false, textStyle: { fontFamily: t.font }, grid: { left: 18, right: 26, top: 30, bottom: 6, containLabel: true },
+        tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.line, textStyle: { color: t.fg, fontSize: 12 }, axisPointer: { lineStyle: { color: t.muted } },
+          formatter: (ps) => { const p = ps.find((q) => q.value != null); return p ? `${esc(p.name)} kv<br><b>${f1(p.value)} %</b>${p.dataIndex >= kiir0 ? ' (kiirhinnang)' : ''}` : ''; } },
+        xAxis: { type: 'category', data: x.map(silt), boundaryGap: false, axisTick: { show: false }, axisLine: { lineStyle: { color: t.line } },
+          axisLabel: { color: t.muted, fontSize: 11, interval: 0, hideOverlap: true, formatter: (v) => (v.endsWith(' I') ? v : v.split(' ')[1]) } },
+        yAxis: { type: 'value', splitLine: { lineStyle: { color: t.grid } }, axisLabel: { color: t.muted, fontSize: 11, formatter: (v) => nf(Number.isInteger(v) ? 0 : 1).format(v) } },
+        series: [
+          { type: 'line', data: y.map((v, i) => (i < kiir0 ? v : null)), symbol: 'circle', symbolSize: 9, lineStyle: { color: t.s1, width: 3 }, itemStyle: { color: t.surface, borderColor: t.s1, borderWidth: 2.5 },
+            areaStyle: { color: t.s1, opacity: 0.09 }, label: lbl(t.fg), markLine: { silent: true, symbol: 'none', label: { show: false }, lineStyle: { color: t.muted, width: 1 }, data: [{ yAxis: 0 }] } },
+          { type: 'line', data: y.map((v, i) => (i >= kiir0 - 1 ? v : null)), symbol: 'circle', symbolSize: (v, p) => (p.dataIndex >= kiir0 ? 13 : 0), lineStyle: { color: t.s2, width: 3, type: 'dashed' },
+            itemStyle: { color: t.s2 }, label: { ...lbl(t.s2), formatter: (p) => (p.dataIndex >= kiir0 ? f1(p.value) : '') } },
+        ] };
+    } });
+  }
+  const kohad = INDEXES.filter((ix) => ix.prio === 1 && ix.rank && ix.of).map((ix) => ({ ix, osa: 1 - (ix.rank - 1) / (ix.of - 1) })).sort((a, b) => b.osa - a.osa).slice(0, 6);
+  if (kohad.length) {
+    const k = el('section', 'ul-kaart');
+    k.innerHTML = `<h2>Eesti koht maailmas</h2><p class="al">Koht riikide seas; mida pikem riba, seda kõrgem koht. Nool näitab muutust eelmise edetabeliga.</p><div class="ul-kohad">` +
+      kohad.map(({ ix, osa }) => {
+        const d = ix.prevRank ? ix.prevRank - ix.rank : null, s = d ? suund(d, 1) : null;
+        return `<div class="ul-koht"><span>${esc(INDEKSI_LYHEND[ix.id] || ix.title)}</span><span class="kk">${ix.rank} / ${ix.of}${s ? `<i class="${s.c}" title="${ix.prevYear ? esc(ix.prevYear) + ': ' : ''}${ix.prevRank}. koht">${s.m}${Math.abs(d)}</i>` : ''}</span><span class="kt"><span style="width:${Math.max(3, osa * 100).toFixed(1)}%"></span></span></div>`;
+      }).join('') + `</div><div class="ul-nupud" style="margin-top:auto"><button type="button" class="ul-nupp" data-ava="indeksid">Kõik ${INDEXES.length} indeksit</button></div>`;
+    rida2.append(k);
+  }
+  if (rida2.children.length) root.append(rida2);
+
+  // 5. Edasi teistesse vaadetesse
+  let mp = null;
+  try { mp = mpVaade('Q').filter((r) => r.naitaja === KOOND && r.tase != null).at(-1); } catch (e) { console.error(e); }
+  const nNait = GROUPS.reduce((a, g) => a + g.items.length, 0);
+  const edasi = [
+    ['majandusplaan', 'Majandusplaan', 'Koondindeks ja 8 alamnäitajat', mp ? `Indeks ${arvS(mp.tase)} · ${mp.per}` : ''],
+    ['majandus', 'Majanduse graafikud', 'Kasv, kaubandus, hinnad, tööturg ja investeeringud', `${nNait} näitajat`],
+    ['indeksid', 'Eesti indeksites', 'Eesti koht rahvusvahelistes edetabelites', `${INDEXES.length} indeksit`],
+    ['vordlus', 'Rahvusvaheline võrdlus', 'Eesti, Läti, Leedu, Soome ja Rootsi kõrvuti', 'Eurostati andmed'],
+    ['ulevaated', 'Teiste ülevaated', 'Teiste asutuste näitajad, prognoosid ja analüüsid', ULEVAATED ? `${ULEVAATED.length} linki` : ''],
+  ];
+  root.append(el('h2', 'ul-edasi-h', 'Vaata lähemalt'));
+  root.append(el('div', 'ul-edasi', edasi.map(([k, n, d, v]) => `<button type="button" data-ava="${k}"><span class="en">${n}</span><span class="ed">${d}</span><span class="ev">${esc(v)}</span></button>`).join('')));
+  root.querySelectorAll('[data-ava]').forEach((b) => b.addEventListener('click', () => ava(b.dataset.ava)));
 }
 
 // ===================== Vahekaardid =====================
@@ -1610,6 +1822,7 @@ async function kaivita() {
     EHITA.vordlus = () => { if (vrd) VGROUPS = koostaVordlus(vrd, meta.naitajad); buildVordlus(); };
     GROUPS = koostaGrupid(nait, meta.naitajad);
     KOKKUVOTE = koostaKokkuvote(nait, kv);
+    ULV = koostaUlevaade(nait);
     INDEXES = ix.indeksid;
     MP = mp; mpPrepare();
     // seis.json: viimase kontrolli aeg. Andmefailide "uuendatud" muutub ainult siis, kui andmed muutusid.
@@ -1621,11 +1834,12 @@ async function kaivita() {
     document.querySelector('main .inner').insertAdjacentHTML('afterbegin', '<p class="loadfail" role="alert">Andmeid ei õnnestunud laadida. Proovi lehte hiljem uuesti avada.</p>');
     return;
   }
+  EHITA.ulevaade = buildUlevaade;
   EHITA.majandus = buildEconomy;
   EHITA.indeksid = buildIndexes;
   EHITA.ulevaated = () => buildUlevaated(ULEVAATED);
   mpInitControls();
-  show(['majandusplaan', 'majandus', 'indeksid', 'vordlus', 'ulevaated'].includes(start) ? start : 'majandus');
+  show(['ulevaade', 'majandusplaan', 'majandus', 'indeksid', 'vordlus', 'ulevaated'].includes(start) ? start : 'ulevaade');
 }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(kaivita); else kaivita();
 
