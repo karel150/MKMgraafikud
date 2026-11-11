@@ -126,6 +126,11 @@ koosta_vordlus <- function() {
     })
   }
 
+  # 32 Ettevõtete uute laenude intressimäär (ECB MIR), lisaks euroala (U2). ECB avaldab
+  # selle rea ainult euroala riikide kohta, seega Rootsi jääb välja.
+  andmestik("laenuintress_m", "ecb", list(), c(-2, 30), geos = c(VORDLUS_RIIGID, "U2"),
+            fn = function(geos) ecb_laenuintress()[geos])
+
   # 13 Majandususaldus (ESI), SA
   andmestik("esi_m", "ei_bssi_m_r2", list(indic = "BS-ESI-I", s_adj = "SA", freq = "M"), c(30, 170))
   # 6 Otseinvesteeringute kohustiste positsioon, mln €, ja nominaalne SKP (suhte jaoks)

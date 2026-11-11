@@ -61,6 +61,63 @@ px_paring <- function(tabel, ..., katseid = 3, api = PX_API) {
   df
 }
 
+# ---- Euroopa Keskpank (ECB Data Portal) -------------------------------------
+# Üks päring mitme riigi kohta -> nimega list seeriatest (NULL, kui riigil seda rida pole).
+#   voog: andmevoog, nt "MIR" (rahaloomeasutuste intressimäärad)
+#   voti: seeriavõti ilma andmevoota, riigi koht tähisega {geo},
+#         nt "M.{geo}.B.A2I.AM.R.A.2240.EUR.N"
+# Sama päringu tulemus jäetakse käivituse ajaks meelde (naitajad.R ja vordlus.R
+# kasutavad sama allalaadimist).
+ECB_API <- "https://data-api.ecb.europa.eu/service/data/"
+.ecb_malu <- new.env(parent = emptyenv())
+
+ecb_riigid <- function(voog, voti, geos, katseid = 3) {
+  url <- paste0(ECB_API, voog, "/", sub("{geo}", paste(geos, collapse = "+"), voti, fixed = TRUE))
+  meeles <- .ecb_malu[[url]]
+  if (inherits(meeles, "condition")) stop(meeles)
+  if (!is.null(meeles)) return(meeles[geos])
+
+  tulemus <- tryCatch({
+    vastus <- NULL
+    for (k in seq_len(katseid)) {
+      vastus <- tryCatch(GET(url, query = list(format = "csvdata", startPeriod = paste0(ALGUS, "-01")), timeout(90)),
+                         error = function(e) e)
+      # 404 = sellist seeriat pole; korduskatse ei aita
+      if (!inherits(vastus, "error") && status_code(vastus) %in% c(200, 404)) break
+      if (k < katseid) Sys.sleep(5 * k)
+    }
+    if (inherits(vastus, "error")) stop("ECB ", voog, ": ", conditionMessage(vastus))
+    stop_for_status(vastus, task = paste("laadida ECB andmevoogu", voog))
+    ecb_loe_csv(content(vastus, as = "text", encoding = "UTF-8"), voog)
+  }, error = function(e) e)
+  assign(url, tulemus, envir = .ecb_malu)
+  if (inherits(tulemus, "condition")) stop(tulemus)
+  tulemus[geos]
+}
+
+# ECB csvdata-vastus -> nimega list seeriatest riigi koodi järgi
+ecb_loe_csv <- function(tekst, voog = "ECB") {
+  df <- read.csv(text = tekst, stringsAsFactors = FALSE, check.names = FALSE, colClasses = "character")
+  names(df) <- toupper(names(df))
+  puudu <- setdiff(c("REF_AREA", "TIME_PERIOD", "OBS_VALUE"), names(df))
+  if (length(puudu)) stop("ECB ", voog, ": vastuses puuduvad veerud ", paste(puudu, collapse = ", "), ".")
+  df$v <- suppressWarnings(as.numeric(df$OBS_VALUE))
+  df <- df[!is.na(df$v), ]
+  if (!nrow(df)) stop("ECB ", voog, ": päring ei tagastanud andmeid.")
+  lapply(split(df, df$REF_AREA), function(d) {
+    p <- norm_periood(d$TIME_PERIOD)
+    if (anyDuplicated(p)) stop("ECB ", voog, " ", d$REF_AREA[1], ": võti jätab alles mitu seeriat.")
+    seeria(p, d$v)
+  })
+}
+
+# Ettevõtete uute laenude intressimäär (ECB laenukulu koondnäitaja, % aastas): Eesti,
+# võrdlusriigid ja euroala (U2). Riik, kelle kohta ECB seda rida ei avalda, jääb välja.
+ECB_LAENUINTRESS <- "M.{geo}.B.A2I.AM.R.A.2240.EUR.N"
+ecb_laenuintress <- function() {
+  ecb_riigid("MIR", ECB_LAENUINTRESS, unique(c("EE", get0("VORDLUS_RIIGID", ifnotfound = character()), "U2")))
+}
+
 # ---- Eurostat ---------------------------------------------------------------
 # get_eurostat: paketi eurostat samanimeline funktsioon koos korduskatsete ja
 # vahemäluga. Kuna see on defineeritud töökeskkonnas, kasutavad seda ka
