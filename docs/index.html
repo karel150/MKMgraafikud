@@ -1566,34 +1566,47 @@ function kokkuvotteKaart(kv, silt) {
 }
 const vaikeAlgus = (t) => (/^[A-ZÕÄÖÜ][a-zõäöü]/.test(t) ? t[0].toLowerCase() + t.slice(1) : t); // akronüümid (IMD, EL-i) jäävad suureks
 
-// Eesti indeksites: kohad, muutus eelmise väljaandega ja võrdlus naaberriikidega
+// Eesti indeksites: ülevaatlik jutt selle kohta, mis vallas läheb hästi ja kus tagasihoidlikumalt.
+// Arve tekstis meelega ei ole (täpsed kohad on kaartidel); hinnang tuleb koha suhtest riikide arvu.
+// Iga edetabeli valdkond kahes vormis: [„… poolest", „… edetabelis"]. Siin puuduvat edetabelit jutus ei mainita.
+const INDEKSI_VALD = {
+  itci: ['maksusüsteemi', 'maksude konkurentsivõime'], esss: ['iduettevõtluse', 'iduettevõtluse'], ief: ['majandusvabaduse', 'majandusvabaduse'],
+  cpi: ['vähese korruptsiooni', 'korruptsioonitaju'], gii: ['innovatsiooni', 'globaalse innovatsiooni'],
+  eis: ['innovatsiooni (Euroopa Liidu riikide võrdluses)', 'Euroopa Liidu innovatsiooni'], gtci: ['talentide', 'talentide konkurentsivõime'],
+  imd: ['üldise konkurentsivõime', 'üldise konkurentsivõime'], imdd: ['digitaalse konkurentsivõime', 'digitaalse konkurentsivõime'] };
 function koostaIndeksiKokkuvote() {
-  const nimi = (ix) => vaikeAlgus(INDEKSI_LYHEND[ix.id] || ix.title);
-  const koht = INDEXES.filter((ix) => ix.rank);
+  const loend = (l) => (l.length > 1 ? l.slice(0, -1).join(', ') + ' ja ' + l.at(-1) : l[0] || '');
+  // suhteline koht: 0 = esimene, 1 = viimane; kui riikide arvu pole, loetakse esikümme tugevaks
+  const koht = INDEXES.filter((ix) => ix.rank && INDEKSI_VALD[ix.id])
+    .map((ix) => ({ ix, osa: ix.of ? (ix.rank - 1) / (ix.of - 1) : (ix.rank <= 10 ? 0.05 : 0.35) })).sort((a, b) => a.osa - b.osa);
   if (koht.length < 2) return null;
+  const poolest = (l) => loend(l.map((k) => INDEKSI_VALD[k.ix.id][0])), tabelis = (l) => loend([...new Set(l.map((k) => INDEKSI_VALD[k.ix.id][1]))]);
+  const tugev = koht.filter((k) => k.osa <= 0.2), kesk = koht.filter((k) => k.osa > 0.2 && k.osa <= 0.5), nork = koht.filter((k) => k.osa > 0.5);
   const laused = [];
-  const top10 = koht.filter((ix) => ix.rank <= 10).length;
-  const rohk = top10 ? `esikümnes ${top10} rahvusvahelises edetabelis` : '';
-  laused.push(top10 ? `Eesti on ${rohk} ${koht.length}-st.` : `Eesti ei ole praegu üheski ${koht.length} rahvusvahelisest edetabelist esikümnes.`);
-  // suhteliselt kõrgeimad kohad (koht riikide arvu suhtes; kui riikide arvu pole, siis koha enda järgi)
-  const parimad = koht.slice().sort((a, b) => a.rank / (a.of || 200) - b.rank / (b.of || 200)).slice(0, 3);
-  laused.push(`Kõrgeimad kohad: ${parimad.map((ix) => `${nimi(ix)} (${ix.rank}. koht${ix.of ? ` ${ix.of} riigi seas` : ''})`).join(', ')}.`);
-  const muut = koht.filter((ix) => ix.prevRank);
-  if (muut.length) {
-    const yles = muut.filter((ix) => ix.prevRank > ix.rank).sort((a, b) => (b.prevRank - b.rank) - (a.prevRank - a.rank));
-    const alla = muut.filter((ix) => ix.prevRank < ix.rank).sort((a, b) => (b.rank - b.prevRank) - (a.rank - a.prevRank));
-    const sama = muut.length - yles.length - alla.length;
-    const enim = (l) => (l.length ? ` (enim: ${nimi(l[0])}, ${l[0].prevRank}. → ${l[0].rank}. koht)` : '');
-    laused.push(`Võrreldes eelmise väljaandega paranes Eesti koht ${yles.length} edetabelis${enim(yles)}, langes ${alla.length} edetabelis${enim(alla)} ja jäi samaks ${sama} edetabelis.`);
-  }
-  // naaberriigid: mitmes edetabelis on Eesti eespool (võrdlusriikide tabeli sama väljaande kohad)
-  const vrd = [['Läti', 'Lätist'], ['Leedu', 'Leedust'], ['Soome', 'Soomest']].map(([riik, seest]) => {
-    let ees = 0, kokku = 0;
-    INDEXES.forEach((ix) => { const e = (ix.peers || []).find((p) => p[0] === 'Eesti' && p[1] != null), r = (ix.peers || []).find((p) => p[0] === riik && p[1] != null); if (e && r) { kokku++; if (e[1] < r[1]) ees++; } });
-    return kokku ? `${seest} ${ees} edetabelis ${kokku}-st` : null;
-  }).filter(Boolean);
-  if (vrd.length) { vrd[0] = vrd[0].replace(' ', ' eespool '); laused.push(`Eesti on ${vrd.length > 1 ? vrd.slice(0, -1).join(', ') + ' ja ' + vrd.at(-1) : vrd[0]}.`); }
-  return { laused, rohk, meta: 'Automaatne kokkuvõte edetabelite viimaste väljaannete põhjal. Väiksem koht on parem.' };
+  let rohk = '';
+  if (tugev.length) {
+    rohk = `${poolest(tugev.slice(0, 3))} poolest`;
+    laused.push(`Rahvusvahelistes edetabelites paistab Eesti kõige rohkem silma ${rohk}.`);
+    if (tugev.length > 3) laused.push(`Maailma parimate hulka kuulub Eesti ka ${poolest(tugev.slice(3))} poolest.`);
+  } else laused.push('Rahvusvahelistes edetabelites ei kuulu Eesti praegu üheski valdkonnas parimate hulka.');
+  if (kesk.length) laused.push(`Tagasihoidlikum on tulemus ${tabelis(kesk)} edetabelis, kus Eesti jääb riikide esimesse poolde, kuid mitte tippu.`);
+  if (nork.length) laused.push(`Kõige nõrgem on Eesti koht ${tabelis(nork)} edetabelis, kus ta jääb riikide tagumisse poolde.`);
+  // suund võrreldes eelmise väljaandega
+  const yles = koht.filter((k) => k.ix.prevRank && k.ix.prevRank > k.ix.rank), alla = koht.filter((k) => k.ix.prevRank && k.ix.prevRank < k.ix.rank);
+  if (yles.length && alla.length) laused.push(`Võrreldes eelmise väljaandega on Eesti tõusnud ${tabelis(yles)} edetabelis, kuid langenud ${tabelis(alla)} edetabelis.`);
+  else if (yles.length) laused.push(`Võrreldes eelmise väljaandega on Eesti tõusnud ${tabelis(yles)} edetabelis; üheski edetabelis koht ei langenud.`);
+  else if (alla.length) laused.push(`Võrreldes eelmise väljaandega on Eesti langenud ${tabelis(alla)} edetabelis; üheski edetabelis koht ei paranenud.`);
+  // naaberriigid: kas Eesti on enamasti ees või taga (võrdlusriikide tabeli sama väljaande kohad)
+  const ees = [], taga = [], vordne = [];
+  [['Lätit', 'Lätist', 'Läti'], ['Leedut', 'Leedust', 'Leedu'], ['Soomet', 'Soomest', 'Soome']].forEach(([osastav, seest, riik]) => {
+    let e = 0, n = 0;
+    INDEXES.forEach((ix) => { const a = (ix.peers || []).find((p) => p[0] === 'Eesti' && p[1] != null), b = (ix.peers || []).find((p) => p[0] === riik && p[1] != null); if (a && b) { n++; if (a[1] < b[1]) e++; } });
+    if (n < 2) return;
+    (e / n > 0.5 ? ees : e / n < 0.5 ? taga : vordne).push(e / n > 0.5 ? osastav : e / n < 0.5 ? seest : riik + 'ga');
+  });
+  const naabrid = [ees.length ? `${loend(ees)} edestab Eesti enamikus edetabelites` : '', taga.length ? `${loend(taga)} jääb enamasti maha` : '', vordne.length ? `${loend(vordne)} on seis tasavägine` : ''].filter(Boolean);
+  if (naabrid.length) laused.push(naabrid.length > 1 ? `${naabrid.slice(0, -1).join(', ')}, kuid ${naabrid.at(-1)}.` : `${naabrid[0]}.`);
+  return { laused, rohk, meta: 'Automaatne kokkuvõte edetabelite viimaste väljaannete põhjal. Täpsed kohad ja muutused on allpool kaartidel.' };
 }
 
 // Rahvusvaheline võrdlus: Eesti viimane väärtus ja koht võrdlusriikide seas (samad arvud mis kaartidel)
