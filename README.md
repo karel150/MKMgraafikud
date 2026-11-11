@@ -1,6 +1,6 @@
 # Eesti majandus numbrites
 
-Avalik näidikulaud viie vaatega:
+Avalik näidikulaud. Avaleht on **Ülevaade**: automaatne kokkuvõte, majandususaldus, neli põhinäitajat, SKP kasv ja Eesti koht edetabelites, kõik samadest andmefailidest. Sealt ja vahekaartidelt pääseb viide vaatesse:
 
 1. **Majandusplaani näitajad**: majandusplaaniindeks ja selle 8 alamnäitajat (tasemed, muutused, soojuskaart, andmetabel).
 2. **Eesti majanduse graafikud**: 35 näitajat (neist 19 põhinäitajat) kuu-, kvartali- ja aastavaatega.
