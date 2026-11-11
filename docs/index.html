@@ -251,6 +251,7 @@ footer a { color: var(--muted); }
 .ul-juht em { font-style: normal; color: var(--s1); }
 .ul-tekst { margin: 0; font-size: 15.5px; line-height: 1.6; max-width: 76ch; color: var(--fg); }
 .ul-meta { margin: 0; font-size: 12.5px; color: var(--muted); }
+.kv-kaart { margin-bottom: 4px; }
 .ul-nupud { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
 .ul-nupp { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--s1); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; }
 .ul-nupp:hover { border-color: var(--s1); background: color-mix(in srgb, var(--s1) 7%, transparent); }
@@ -990,6 +991,7 @@ function buildIndexes() {
   const root = document.getElementById('p-indeksid');
   root.innerHTML = '';
   const nf1 = (v) => v.toLocaleString('et-EE', { maximumFractionDigits: 1 });
+  try { const kv = koostaIndeksiKokkuvote(); if (kv) root.append(kokkuvotteKaart(kv, 'Automaatne kokkuvõte · Eesti koht edetabelites')); } catch (e) { console.error(e); }
   const osad = [[1, 'Põhiindeksid', 'Väiksem koht on parem. Võrdlus Soome ja Balti riikidega, kus andmed olemas.'],
                 [2, 'Täiendavad indeksid', 'Digitaalne areng, valitsemine ja talendid.']];
   osad.forEach(([prio, nimi, alam]) => {
@@ -1255,6 +1257,7 @@ function buildVordlus() {
     [['M', 'Kuu'], ['Q', 'Kvartal'], ['A', 'Aasta']].map(([k, n]) => `<button type="button" role="radio" data-f="${k}" aria-checked="${k === vrdFreq}" tabindex="${k === vrdFreq ? 0 : -1}">${n}</button>`).join('') +
     `</div><span class="fnote">Tulbad näitavad iga riigi väärtust viimasel perioodil, mille kohta on Eesti andmed. Kui riigil selle perioodi andmed puuduvad, on näidatud tema viimane periood (sulgudes). Aegrea leiad kaardi tabelist. Kõik andmed on Eurostatist, seetõttu võivad Eesti väärtused veidi erineda Statistikaameti omadest.</span>`;
   root.append(bar);
+  try { const kv = koostaVordluseKokkuvote(vrdFreq); if (kv) root.append(kokkuvotteKaart(kv, 'Automaatne kokkuvõte · Eesti võrdlusriikide seas')); } catch (e) { console.error(e); }
   const btns = [...bar.querySelectorAll('button[data-f]')];
   const vali = (f) => { vrdFreq = f; try { localStorage.setItem('vrdFreq', f); } catch (e) {} buildVordlus(); renderPanel('vordlus'); const b = root.querySelector(`button[data-f="${f}"]`); if (b) b.focus(); };
   btns.forEach((b, i) => {
@@ -1549,6 +1552,93 @@ function buildUlevaade() {
   root.append(el('h2', 'ul-edasi-h', 'Vaata lähemalt'));
   root.append(el('div', 'ul-edasi', edasi.map(([k, n, d, v]) => `<button type="button" data-ava="${k}"><span class="en">${n}</span><span class="ed">${d}</span><span class="ev">${esc(v)}</span></button>`).join('')));
   root.querySelectorAll('[data-ava]').forEach((b) => b.addEventListener('click', () => ava(b.dataset.ava)));
+}
+
+// ===================== Vahekaartide kokkuvõtted =====================
+// Sama kujuga lõik nagu avalehel: esimene lause suurelt (rohk esile tõstetud), ülejäänu tavatekstina.
+function kokkuvotteKaart(kv, silt) {
+  const k = el('section', 'ul-kaart kv-kaart');
+  const [juht, ...muu] = kv.laused;
+  let juhtH = esc(juht);
+  if (kv.rohk) juhtH = juhtH.replace(esc(kv.rohk), `<em>${esc(kv.rohk)}</em>`);
+  k.innerHTML = `<p class="ul-silt">${esc(silt)}</p><p class="ul-juht">${juhtH}</p>${muu.length ? `<p class="ul-tekst">${muu.map(esc).join(' ')}</p>` : ''}<p class="ul-meta">${esc(kv.meta)}</p>`;
+  return k;
+}
+const vaikeAlgus = (t) => (/^[A-ZÕÄÖÜ][a-zõäöü]/.test(t) ? t[0].toLowerCase() + t.slice(1) : t); // akronüümid (IMD, EL-i) jäävad suureks
+
+// Eesti indeksites: kohad, muutus eelmise väljaandega ja võrdlus naaberriikidega
+function koostaIndeksiKokkuvote() {
+  const nimi = (ix) => vaikeAlgus(INDEKSI_LYHEND[ix.id] || ix.title);
+  const koht = INDEXES.filter((ix) => ix.rank);
+  if (koht.length < 2) return null;
+  const laused = [];
+  const top10 = koht.filter((ix) => ix.rank <= 10).length;
+  const rohk = top10 ? `esikümnes ${top10} rahvusvahelises edetabelis` : '';
+  laused.push(top10 ? `Eesti on ${rohk} ${koht.length}-st.` : `Eesti ei ole praegu üheski ${koht.length} rahvusvahelisest edetabelist esikümnes.`);
+  // suhteliselt kõrgeimad kohad (koht riikide arvu suhtes; kui riikide arvu pole, siis koha enda järgi)
+  const parimad = koht.slice().sort((a, b) => a.rank / (a.of || 200) - b.rank / (b.of || 200)).slice(0, 3);
+  laused.push(`Kõrgeimad kohad: ${parimad.map((ix) => `${nimi(ix)} (${ix.rank}. koht${ix.of ? ` ${ix.of} riigi seas` : ''})`).join(', ')}.`);
+  const muut = koht.filter((ix) => ix.prevRank);
+  if (muut.length) {
+    const yles = muut.filter((ix) => ix.prevRank > ix.rank).sort((a, b) => (b.prevRank - b.rank) - (a.prevRank - a.rank));
+    const alla = muut.filter((ix) => ix.prevRank < ix.rank).sort((a, b) => (b.rank - b.prevRank) - (a.rank - a.prevRank));
+    const sama = muut.length - yles.length - alla.length;
+    const enim = (l) => (l.length ? ` (enim: ${nimi(l[0])}, ${l[0].prevRank}. → ${l[0].rank}. koht)` : '');
+    laused.push(`Võrreldes eelmise väljaandega paranes Eesti koht ${yles.length} edetabelis${enim(yles)}, langes ${alla.length} edetabelis${enim(alla)} ja jäi samaks ${sama} edetabelis.`);
+  }
+  // naaberriigid: mitmes edetabelis on Eesti eespool (võrdlusriikide tabeli sama väljaande kohad)
+  const vrd = [['Läti', 'Lätist'], ['Leedu', 'Leedust'], ['Soome', 'Soomest']].map(([riik, seest]) => {
+    let ees = 0, kokku = 0;
+    INDEXES.forEach((ix) => { const e = (ix.peers || []).find((p) => p[0] === 'Eesti' && p[1] != null), r = (ix.peers || []).find((p) => p[0] === riik && p[1] != null); if (e && r) { kokku++; if (e[1] < r[1]) ees++; } });
+    return kokku ? `${seest} ${ees} edetabelis ${kokku}-st` : null;
+  }).filter(Boolean);
+  if (vrd.length) { vrd[0] = vrd[0].replace(' ', ' eespool '); laused.push(`Eesti on ${vrd.length > 1 ? vrd.slice(0, -1).join(', ') + ' ja ' + vrd.at(-1) : vrd[0]}.`); }
+  return { laused, rohk, meta: 'Automaatne kokkuvõte edetabelite viimaste väljaannete põhjal. Väiksem koht on parem.' };
+}
+
+// Rahvusvaheline võrdlus: Eesti viimane väärtus ja koht võrdlusriikide seas (samad arvud mis kaartidel)
+function vrdSeis(it) {
+  if (!it || !it.series) return null;
+  const i = lastIdx(it.y);
+  if (i < 0) return null;
+  const v = it.y[i];
+  const r = it.series.filter((x) => x.riik && x.y[i] != null).map((x) => ({ nimi: x.name, v: x.y[i] })).sort((a, b) => b.v - a.v);
+  if (r.length < 2) return null;
+  return { v, n: r.length, koht: r.filter((x) => x.v > v).length + 1, r, per: it.freq === 'Q' ? it.x[i] + ' kv' : it.x[i],
+    lisa: it.series.filter((x) => !x.riik && x.y[i] != null).map((x) => ({ nimi: x.name, v: x.y[i] })) };
+}
+function koostaVordluseKokkuvote(freq) {
+  const seis = {};
+  let kokku = 0, korgeim = 0, madalaim = 0;
+  VGROUPS.forEach((g) => g.items.forEach((def) => {
+    const z = vrdSeis(resolveItem(def, freq));
+    if (!z) return;
+    seis[def.nr] = z; kokku++;
+    if (z.koht === 1) korgeim++;
+    if (z.koht === z.n) madalaim++;
+  }));
+  if (!kokku) return null;
+  const pr = (v, d = 1) => nf(d).format(Math.abs(v)).replace(/^/, v < 0 ? '−' : '');
+  const MITMES = ['', 'esimene', 'teine', 'kolmas', 'neljas', 'viies', 'kuues', 'seitsmes', 'kaheksas'], MITME = ['', 'ühe', 'kahe', 'kolme', 'nelja', 'viie', 'kuue', 'seitsme', 'kaheksa'];
+  const seas = (z, sona = 'riigi') => `${MITME[z.n] || z.n} ${sona} seas`;
+  // koht sõnadega: esimesel ja viimasel kohal oma sõnastus, muidu nt "kasvult kolmas"
+  const jarg = (z, k, m, mille = 'kõrguselt') => (z.koht === 1 ? k : z.koht === z.n ? m : `${mille} ${MITMES[z.koht] || z.koht + '.'}`);
+  // äärmused ilma Eestita (Eesti enda väärtus on lauses juba öeldud)
+  const aared = (z, d = 1, yhik = '%') => [z.koht > 1 ? `kõrgeim ${z.r[0].nimi} ${pr(z.r[0].v, d)}${yhik}` : '', z.koht < z.n ? `madalaim ${z.r.at(-1).nimi} ${pr(z.r.at(-1).v, d)}${yhik}` : ''].filter(Boolean).join(', ');
+  const laused = [];
+  let rohk = '';
+  const skp = seis['1'];
+  if (skp) {
+    rohk = `${jarg(skp, 'kiireim kasv', 'aeglaseim kasv', 'kasvult')} ${seas(skp, 'võrdlusriigi')}`;
+    laused.push(`Eesti majandus ${skp.v >= 0 ? 'kasvas' : 'kahanes'} aastaga ${nf(1).format(Math.abs(skp.v))}% (${skp.per}) – ${rohk} (${aared(skp)}).`);
+  }
+  const too = seis['2'], hind = seis['9'], tootus = seis['14'], intr = seis['32'];
+  if (too) laused.push(`Töötleva tööstuse toodang ${too.v >= 0 ? 'kasvas' : 'vähenes'} ${nf(1).format(Math.abs(too.v))}% (${too.per}), ${jarg(too, 'kõige kiirem kasv', 'kõige nõrgem tulemus', 'kasvult')} ${seas(too)}.`);
+  if (hind) laused.push(`Tarbijahinnad tõusid Eestis ${pr(hind.v)}% (${hind.per}) – ${jarg(hind, 'kõige kiiremini', 'kõige aeglasemalt', 'kiiruselt')} ${seas(hind)} (${aared(hind)}).`);
+  if (tootus) laused.push(`Töötuse määr oli ${pr(tootus.v)}% (${tootus.per}), ${jarg(tootus, 'kõrgeim', 'madalaim')} ${seas(tootus)} (${aared(tootus)}).`);
+  if (intr) laused.push(`Ettevõtete uute laenude intressimäär oli ${pr(intr.v, 2)}% (${intr.per}), ${jarg(intr, 'kõrgeim', 'madalaim')} ${seas(intr)}${intr.lisa.length ? `; ${vaikeAlgus(intr.lisa[0].nimi)} keskmine oli ${pr(intr.lisa[0].v, 2)}%` : ''}.`);
+  laused.push(`Kokku on Eesti ${kokku} võrreldavast näitajast ${korgeim} puhul võrdlusriikide seas kõrgeima ja ${madalaim} puhul madalaima väärtusega.`);
+  return { laused, rohk, meta: `Automaatne kokkuvõte Eurostati ja Euroopa Keskpanga andmete põhjal. Arvud vastavad valitud sagedusele (${FREQ_NAME[freq]}) ja kaartidel näidatule; kõrgem väärtus ei tähenda alati paremat tulemust.` };
 }
 
 // ===================== Vahekaardid =====================
