@@ -266,6 +266,14 @@ koosta_naitajad <- function(esi_kuu = NULL) {
       vali = list(nace_r2 = "C10-S951_X_K")), c(0, 100))
   })
 
+  # ---- Euroopa Keskpank -----------------------------------------------------------
+  # Ettevõtete uute laenude intressimäär, % aastas (MIR, laenukulu koondnäitaja)
+  lisa("laenuintress_m", function() {
+    s <- ecb_laenuintress()[["EE"]]
+    if (is.null(s)) stop("ECB-s pole Eesti andmeid.")
+    s
+  }, c(-2, 30))
+
   # ---- Majandususaldus ---------------------------------------------------------
   # Kui majandusplaaniindeksi arvutus õnnestus, kasutatakse sealset ESI-t
   # (Eurostat + hinnang Statistikaameti baromeetritest). Muidu ainult Eurostat.

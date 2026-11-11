@@ -245,6 +245,13 @@
    "nimi": "Vabad töökohad töötlevas tööstuses",
    "kirjeldus": "Töötukassa kaudu pakutavad vabad töökohad töötleva tööstuse ettevõtetes (EMTAK C) Eestis, kuu lõpu seisuga.",
    "miks": "Näitab tööstusettevõtete töötajate otsimise aktiivsust ja aitab märgata tööstuse nõudluse pöördeid varem kui toodangu- või hõiveandmed."
+  },
+  "32": {
+   "valdkond": "Investeeringud ja kapital",
+   "peamine": true,
+   "nimi": "Ettevõtete laenude intressimäär",
+   "kirjeldus": "Eestis tegutsevate krediidiasutuste poolt mittefinantsettevõtetele antud uute eurolaenude keskmine intressimäär protsentides aastas. Euroopa Keskpanga laenukulu koondnäitaja: lühi- ja pikaajaliste laenude intressimäärad on kaalutud uute laenude mahu libiseva keskmisega",
+   "miks": "Näitab, kui kallis on ettevõtetele laenuraha; mõjutab investeerimisotsuseid ning võrdlus teiste euroala riikidega iseloomustab Eesti ettevõtete rahastamistingimusi"
   }
  }
 }

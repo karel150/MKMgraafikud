@@ -367,7 +367,7 @@ footer a { color: var(--muted); }
 
 <footer class="gutter">
   <div class="inner">
-    <p>Allikad: Statistikaamet (andmed.stat.ee, CC BY 4.0), Eurostat, Euroopa Komisjon, IMD, WIPO, Tax Foundation, Transparency International, Heritage Foundation. Lingid on iga kaardi all.</p>
+    <p>Allikad: Statistikaamet (andmed.stat.ee, CC BY 4.0), Eurostat, Euroopa Keskpank, Euroopa Komisjon, IMD, WIPO, Tax Foundation, Transparency International, Heritage Foundation. Lingid on iga kaardi all.</p>
     <p>Andmeid uuendatakse automaatselt tööpäeviti. Edetabelid uuendatakse käsitsi pärast nende avaldamist.</p>
   </div>
 </footer>
@@ -613,6 +613,13 @@ function koostaGrupid(D, META) {
       F: { Q: xy(kapQ, pais(f1(viimane(kapQ).v), '%', `SKP-st, ${silt(viimane(kapQ).p || '')} kv`, 'reaalkasv ' + sgn(Q('kapital_q_yoy').values.at(-1)) + ' %')),
            A: xy(kapA, pais(f1(viimane(kapA).v), '%', `SKP-st, ${viimane(kapA).p || ''}`, 'reaalkasv ' + sgn(S('kapital_a_yoy').values.at(-1)) + ' %')) },
       src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Avaliku ja erasektori investeeringud kokku, jooksevhindades. Kvartaliosakaal on sesoonselt korrigeerimata.' },
+
+    { nr: '32', unitChip: '% aastas', kind: 'line', unit: '%', dec: 2, head: 'level', scale: true,
+      F: { M: xy(Q('laenuintress_m')),
+           Q: xy(koonda(Q('laenuintress_m'), kvKey, 3, (v) => r2(mean(v))), { note: 'Kvartali kuude keskmine.' }),
+           A: xy(koonda(S('laenuintress_m'), aKey, 12, (v) => r2(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
+      src: 'Euroopa Keskpank, MIR', url: 'https://data.ecb.europa.eu/data/datasets/MIR/MIR.M.EE.B.A2I.AM.R.A.2240.EUR.N',
+      note: 'Mittefinantsettevõtete uute eurolaenude keskmine intressimäär (laenukulu koondnäitaja).' },
 
     { nr: '7', unitChip: '% SKP-st', kind: 'col', unit: '%', dec: 2, head: 'level',
       F: { A: xy(S('berd_a')) }, src: 'Statistikaamet TD052', url: SA('TD052') },
@@ -1151,6 +1158,14 @@ function koostaVordlus(V, META) {
       F: { Q: riigid((g) => alates(suhe(S('inv_q_' + g), S('skp_q_' + g)), ALGUS), { note: 'Sesoonselt korrigeerimata.' }),
            A: riigid((g) => suhe(kvAasta(S('inv_q_' + g)), kvAasta(S('skp_q_' + g)))) },
       src: 'Eurostat namq_10_gdp', url: EUSTAT('namq_10_gdp'), note: 'Kapitali kogumahutus põhivarasse jooksevhindades.' },
+    { nr: '32', unitChip: '% aastas', kind: 'lines', unit: '%', dec: 2, head: 'vrd',
+      F: { M: riigid((g) => alates(S('laenuintress_m_' + g), ALGUS), {}, [{ name: 'Euroala', c: '--peer', s: alates(S('laenuintress_m_U2'), ALGUS) }]),
+           Q: riigid((g) => alates(koonda(S('laenuintress_m_' + g), kvKey, 3, (v) => r2(mean(v))), ALGUS), { note: 'Kvartali kuude keskmine.' },
+             [{ name: 'Euroala', c: '--peer', s: alates(koonda(S('laenuintress_m_U2'), kvKey, 3, (v) => r2(mean(v))), ALGUS) }]),
+           A: riigid((g) => koonda(S('laenuintress_m_' + g), aKey, 12, (v) => r2(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' },
+             [{ name: 'Euroala', c: '--peer', s: koonda(S('laenuintress_m_U2'), aKey, 12, (v) => r2(mean(v))) }]) },
+      src: 'Euroopa Keskpank, MIR', url: 'https://data.ecb.europa.eu/data/datasets/MIR/MIR.M.EE.B.A2I.AM.R.A.2240.EUR.N',
+      note: 'Mittefinantsettevõtete uute eurolaenude keskmine intressimäär. Euroopa Keskpank avaldab näitaja ainult euroala riikide kohta, seega Rootsit võrdluses pole. Katkendjoonega tulp: euroala.' },
     { nr: '7', unitChip: '% SKP-st', kind: 'lines', unit: '%', dec: 2, head: 'vrd', F: { A: riigid((g) => S('berd_a_' + g)) },
       src: 'Eurostat rd_e_gerdtot', url: EUSTAT('rd_e_gerdtot') },
     { nr: '8', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'vrd', pm: true,
@@ -1456,7 +1471,7 @@ function buildUlevaade() {
     const dom = el('div', 'ul-skp'); dom.setAttribute('role', 'img');
     dom.setAttribute('aria-label', `SKP kasv ${silt(x[0])} kuni ${silt(x.at(-1))}; viimane väärtus ${f1(y.at(-1))} %.`);
     k.append(dom);
-    const nupp = el('div', 'ul-nupud', '<button type="button" class="ul-nupp" data-ava="majandus">Kõik 35 näitajat</button>'); k.append(nupp);
+    const nupp = el('div', 'ul-nupud', `<button type="button" class="ul-nupp" data-ava="majandus">Kõik ${GROUPS.reduce((a, g) => a + g.items.length, 0)} näitajat</button>`); k.append(nupp);
     rida2.append(k);
     charts.ulevaade.push({ dom, opt: () => {
       const t = T(), lbl = (c) => ({ show: true, position: 'top', distance: 8, color: c, fontSize: 12, fontWeight: 600, formatter: (p) => f1(p.value) });
