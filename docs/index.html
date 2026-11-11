@@ -367,7 +367,7 @@ footer a { color: var(--muted); }
 
 <footer class="gutter">
   <div class="inner">
-    <p>Allikad: Statistikaamet (andmed.stat.ee, CC BY 4.0), Eurostat, Euroopa Keskpank, Euroopa Komisjon, IMD, WIPO, Tax Foundation, Transparency International, Heritage Foundation. Lingid on iga kaardi all.</p>
+    <p>Allikad: Statistikaamet (andmed.stat.ee, CC BY 4.0), Eurostat, Euroopa Keskpank, Maksu- ja Tolliamet, Euroopa Komisjon, IMD, WIPO, Tax Foundation, Transparency International, Heritage Foundation. Lingid on iga kaardi all.</p>
     <p>Andmeid uuendatakse automaatselt tööpäeviti. Edetabelid uuendatakse käsitsi pärast nende avaldamist.</p>
   </div>
 </footer>
@@ -459,6 +459,21 @@ function koostaGrupid(D, META) {
   // ---- 1, 2: kasv ja tööstus -------------------------------------------------
   const tooQ = alates(muutus(koonda(S('tootlev_m_lvl'), kvKey, 3, sum), 4), ALGUS);
   const tooA = muutus(koonda(S('tootlev_m_lvl'), aKey, 12, sum), 1);
+  // ---- 34, 35: maksuvõlg (EMTA), kuu lõpu seis ---------------------------------
+  const EMTA_URL = 'https://www.emta.ee/eraklient/amet-uudised-ja-kontakt/uudised-pressiinfo-statistika/statistika-ja-avaandmed';
+  // perioodi lõpu seis: kvartali viimane kuu või detsember
+  const mvLopp = (s, f) => {
+    const per = [], val = [];
+    s.periods.forEach((p, i) => { const m = +p.slice(5); if (f === 'A' ? m === 12 : m % 3 === 0) { per.push(f === 'A' ? aKey(p) : kvKey(p)); val.push(s.values[i]); } });
+    return { periods: per, values: val };
+  };
+  const mvSum = { periods: S('maksuvolg_summa_m').periods, values: S('maksuvolg_summa_m').values.map(r1) };
+  const mvArv = (f) => {
+    const t = f ? mvLopp(S('maksuvolg_arv_m'), f) : S('maksuvolg_arv_m'), fi = f ? mvLopp(S('maksuvolg_fi_m'), f) : S('maksuvolg_fi_m'), ji = f ? mvLopp(S('maksuvolg_ji_m'), f) : S('maksuvolg_ji_m');
+    return xy(t, { series: [{ name: 'Füüsilised isikud', y: joonda(t.periods, fi), c: '--s1' }, { name: 'Juriidilised isikud', y: joonda(t.periods, ji), c: '--s2' }],
+      note: f === 'Q' ? 'Kvartali lõpu seis.' : f === 'A' ? 'Aasta lõpu seis.' : undefined });
+  };
+  const mvArvF = { M: mvArv(), Q: mvArv('Q'), A: mvArv('A') };
   // ---- 33: tootmisvõimsuse rakendatus: Eurostati rida + Statistikaameti kvartalid, mida Eurostatis veel pole
   const vmE = S('voimsus_q'), vmS = S('voimsus_q_stat'), vmViim = vmE.periods.at(-1) || '';
   const vmLisa = vmS.periods.map((p, i) => [p, vmS.values[i]]).filter(([p, v]) => p > vmViim && v != null);
@@ -709,7 +724,12 @@ function koostaGrupid(D, META) {
       src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table', note: esiNote },
 
     { nr: '15', unitChip: '% SKP-st', kind: 'col', unit: '%', head: 'level',
-      F: { A: xy(S('volg_a')) }, src: 'Statistikaamet RR061', url: SA('RR061'), note: 'Konsolideeritud võlg (Maastrichti võlg).' },
+      F: { A: xy(S('volg_a')) }, src: 'Statistikaamet RR061', url: SA('RR061'), note: 'Konsolideeritud võlg (Maastrichti võlg).' },    // Maksuvõlg: EMTA avaldab iga kuu 1. kuupäeva seisu ehk eelmise kuu lõpu seisu. Kvartali ja aasta väärtus on perioodi lõpu seis.
+    { nr: '34', unitChip: 'isikut, kuu lõpus', kind: 'lines', unit: '', dec: 0, head: 'levelpct', F: mvArvF,
+      src: 'Maksu- ja Tolliamet', url: EMTA_URL, note: 'Pealkirjas võlglaste arv kokku. Füüsiliste isikute arv kõigub maamaksu ja mootorsõidukimaksu tähtaegade tõttu.' },
+    { nr: '35', unitChip: 'mln €, kuu lõpus', kind: 'line', unit: ' mln €', dec: 1, head: 'levelpct', scale: true,
+      F: { M: xy(mvSum), Q: xy(mvLopp(mvSum, 'Q'), { note: 'Kvartali lõpu seis.' }), A: xy(mvLopp(mvSum, 'A'), { note: 'Aasta lõpu seis.' }) },
+      src: 'Maksu- ja Tolliamet', url: EMTA_URL, note: 'Kõigi isikute maksuvõlg kokku; fail ei jaota summat füüsiliste ja juriidiliste isikute vahel.' },
   ];
 
   // Rühmitamine valdkondade kaupa (järjekord nagu indikaatorite tabelis)

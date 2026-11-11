@@ -281,6 +281,13 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
       vali = list(nace_r2 = "C10-S951_X_K")), c(0, 100))
   })
 
+  # ---- Maksuvõlg (Maksu- ja Tolliamet), kuu lõpu seis ------------------------------
+  mv <- mitu(emta_maksuvolg)
+  lisa("maksuvolg_arv_m",   function() { d <- mv(); seeria(d$per, d$kokku) }, c(1000, 1e6))
+  lisa("maksuvolg_fi_m",    function() { d <- mv(); seeria(d$per, d$fi) },    c(100, 1e6))
+  lisa("maksuvolg_ji_m",    function() { d <- mv(); seeria(d$per, d$ji) },    c(100, 1e6))
+  lisa("maksuvolg_summa_m", function() { d <- mv(); seeria(d$per, d$summa) }, c(10, 5000))
+
   # ---- Euroopa Keskpank -----------------------------------------------------------
   # Ettevõtete uute laenude intressimäär, % aastas (MIR, laenukulu koondnäitaja)
   lisa("laenuintress_m", function() {
