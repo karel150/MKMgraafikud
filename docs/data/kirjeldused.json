@@ -11,8 +11,8 @@
   "2": {
    "valdkond": "Majanduskasv, tootmine ja tarbimine",
    "peamine": true,
-   "nimi": "Tööstustoodangu mahuindeks",
-   "kirjeldus": "Tööstustoodangu mahu muutus püsivhindades; tegevusalade ulatus tuleb määrata: BTD = mäetööstus + töötlev tööstus + energeetika või C = ainult töötlev tööstus",
+   "nimi": "Töötleva tööstuse toodangu mahuindeks",
+   "kirjeldus": "Töötleva tööstuse (EMTAK C) toodangu mahu muutus püsivhindades võrreldes eelmise aasta sama perioodiga, kalendaarselt korrigeeritud",
    "miks": "Annab varajase signaali tootmise ja eksporditööstuse tsükli muutumisest; aitab hinnata, kas SKP ja ekspordi taastumine jõuab tööstusettevõtetesse"
   },
   "3": {
@@ -252,6 +252,13 @@
    "nimi": "Ettevõtete laenude intressimäär",
    "kirjeldus": "Eestis tegutsevate krediidiasutuste poolt mittefinantsettevõtetele antud uute eurolaenude keskmine intressimäär protsentides aastas. Euroopa Keskpanga laenukulu koondnäitaja: lühi- ja pikaajaliste laenude intressimäärad on kaalutud uute laenude mahu libiseva keskmisega",
    "miks": "Näitab, kui kallis on ettevõtetele laenuraha; mõjutab investeerimisotsuseid ning võrdlus teiste euroala riikidega iseloomustab Eesti ettevõtete rahastamistingimusi"
+  },
+  "33": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": true,
+   "nimi": "Töötleva tööstuse tootmisvõimsuse rakendatus",
+   "kirjeldus": "Töötleva tööstuse ettevõtete hinnang, kui suurt osa oma tootmisvõimsusest nad praegu kasutavad (%, sesoonselt korrigeeritud). Pärineb Euroopa Komisjoni ühtlustatud tööstusbaromeetrist, mida küsitletakse kord kvartalis",
+   "miks": "Näitab, kui palju on tööstuses vaba tootmisvõimsust: kõrge tase viitab tugevale nõudlusele ja investeerimisvajadusele, madal tase nõrgale nõudlusele"
   }
  }
 }

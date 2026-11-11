@@ -28,10 +28,12 @@ mp_ok <- tryCatch({
   FALSE
 })
 esi_kuu <- if (mp_ok && !is.null(mp$esi)) as.data.frame(mp$esi$kuu) else NULL
+# Tootmisvõimsuse rakendatuse kvartalid Statistikaameti baromeetrist (hooajaliselt korrigeeritud)
+icu_kv  <- if (mp_ok && !is.null(mp$icu_bar03)) as.data.frame(mp$icu_bar03) else NULL
 
 # ---- 2. Eesti majanduse näitajad --------------------------------------------
 message("== Majandusnäitajad ==")
-naitajad <- koosta_naitajad(esi_kuu)
+naitajad <- koosta_naitajad(esi_kuu, icu_kv)
 kirjuta_json(naitajad, "naitajad.json")
 
 # ---- 3. Edetabelid -------------------------------------------------------------
@@ -41,7 +43,7 @@ tryCatch(kirjuta_json(koosta_indeksid(), "indeksid.json"),
 
 # ---- 4. Rahvusvaheline võrdlus (Eurostat) ---------------------------------------
 message("== Rahvusvaheline võrdlus ==")
-tryCatch(kirjuta_json(koosta_vordlus(), "vordlus.json"),
+tryCatch(kirjuta_json(koosta_vordlus(icu_kv), "vordlus.json"),
          error = function(e) hoiata("Rahvusvaheline võrdlus: ", conditionMessage(e), ". Jäetakse alles eelmine versioon."))
 
 # ---- 5. Teiste asutuste ülevaated (käsitsi uuendatav nimekiri) -----------------

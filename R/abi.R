@@ -61,6 +61,41 @@ px_paring <- function(tabel, ..., katseid = 3, api = PX_API) {
   df
 }
 
+# ---- Töötleva tööstuse tootmisvõimsuse rakendatus ---------------------------
+# Ajalooline rida: Eurostati tabel teibs070 (%, sesoonselt korrigeeritud). Kui see
+# ei laadi, kasutatakse sama rida andmestikust ei_bsin_q_r2 (BS-ICU-PC, SA).
+voimsus_eurostat_riigid <- function(geos) {
+  tryCatch(eurostat_riigid("teibs070", list(), geos), error = function(e) {
+    message("teibs070 ei laadinud (", conditionMessage(e), "), kasutan andmestikku ei_bsin_q_r2.")
+    eurostat_riigid("ei_bsin_q_r2", list(indic = "BS-ICU-PC", s_adj = "SA", freq = "Q"), geos)
+  })
+}
+
+# Eesti kvartalid, mida Eurostatis veel pole (pärast perioodi `viimane`, nt "2026Q2"):
+# Statistikaameti tööstusbaromeeter BAR03, näitaja INDU_TOT_13_QP_Q. Küsimust
+# küsitakse kvartali esimesel kuul.
+#   icu: majandusplaaniindeksi skripti rida (time, values), kus BAR03 on juba
+#        hooajaliselt korrigeeritud; siis näitavad leht ja indeks sama arvu.
+#        Kui seda pole (indeksi arvutus ebaõnnestus), võetakse BAR03 otse,
+#        hooajaliselt korrigeerimata.
+voimsus_stat <- function(viimane, icu = NULL) {
+  if (!length(viimane)) viimane <- ""
+  if (!is.null(icu) && nrow(icu)) {
+    lt <- as.POSIXlt(as.Date(icu$time))
+    p <- sprintf("%dQ%d", lt$year + 1900L, lt$mon %/% 3L + 1L)
+    v <- icu$values
+  } else {
+    d <- px_paring("BAR03", valik("N\u00e4itaja", "INDU_TOT_13_QP_Q"), valik("Vaatlusperiood", "*"))
+    d <- d[!is.na(d$value), ]
+    kv <- sprintf("%sQ%d", substr(d$Vaatlusperiood, 1, 4), (as.integer(substr(d$Vaatlusperiood, 6, 7)) - 1L) %/% 3L + 1L)
+    v <- tapply(d$value, kv, mean)
+    p <- names(v); v <- as.numeric(v)
+  }
+  ok <- !is.na(v) & p > viimane
+  if (any(v[ok] < 30 | v[ok] > 100)) stop("BAR03: tootmisvõimsuse rakendatus väljaspool vahemikku [30, 100].")
+  seeria(p[ok], v[ok])
+}
+
 # ---- Euroopa Keskpank (ECB Data Portal) -------------------------------------
 # Üks päring mitme riigi kohta -> nimega list seeriatest (NULL, kui riigil seda rida pole).
 #   voog: andmevoog, nt "MIR" (rahaloomeasutuste intressimäärad)
@@ -177,6 +212,7 @@ eurostat_plaan <- function() {
                           unit = "PC_POP", s_adj = "SA", freq = "Q"),
     nrg_pc_205     = list(geo = riigid, nrg_cons = "TOT_KWH", tax = "X_TAX", currency = "EUR", unit = "KWH"),
     nasa_10_ki     = list(geo = riigid, na_item = "SRG_S14_S15", unit = "PC", freq = "A"),
+    teibs070       = list(geo = riigid),
     isoc_eb_ai     = list(geo = c(riigid, "EU27_2020"), indic_is = "E_AI_TANY", size_emp = "GE10", unit = "PC_ENT", freq = "A")
   )
 }

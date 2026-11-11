@@ -457,8 +457,13 @@ function koostaGrupid(D, META) {
   };
 
   // ---- 1, 2: kasv ja tööstus -------------------------------------------------
-  const tooQ = alates(muutus(koonda(S('too_m_lvl'), kvKey, 3, sum), 4), ALGUS);
-  const tooA = muutus(koonda(S('too_m_lvl'), aKey, 12, sum), 1);
+  const tooQ = alates(muutus(koonda(S('tootlev_m_lvl'), kvKey, 3, sum), 4), ALGUS);
+  const tooA = muutus(koonda(S('tootlev_m_lvl'), aKey, 12, sum), 1);
+  // ---- 33: tootmisvõimsuse rakendatus: Eurostati rida + Statistikaameti kvartalid, mida Eurostatis veel pole
+  const vmE = S('voimsus_q'), vmS = S('voimsus_q_stat'), vmViim = vmE.periods.at(-1) || '';
+  const vmLisa = vmS.periods.map((p, i) => [p, vmS.values[i]]).filter(([p, v]) => p > vmViim && v != null);
+  const vmKoik = { periods: vmE.periods.concat(vmLisa.map((x) => x[0])), values: vmE.values.concat(vmLisa.map((x) => r1(x[1]))) };
+  const vmQ = alates(vmKoik, ALGUS), vmStat = new Set(vmLisa.map((x) => x[0]));
   // ---- 3–5: eksport -------------------------------------------------------------
   const ekspNom = (k) => ({ Q: alates(muutus(S(k + '_q_cur'), 4), ALGUS), A: muutus(S(k + '_a_cur'), 1) });
   const kaupN = ekspNom('ekspK'), teenN = ekspNom('ekspT');
@@ -568,8 +573,13 @@ function koostaGrupid(D, META) {
            A: xy(krtA, { series: [{ name: 'Kogurahvatulu', y: krtA.values, c: '--s1' }, { name: 'SKP jooksevhindades', y: joonda(krtA.periods, skpNA), c: '--s2' }] }) },
       src: 'Statistikaamet RAA0012', url: SA('RAA0012'), note: 'Jooksevhindades, seega sisaldab hinnamuutust.' },
     { nr: '2', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'yoy',
-      F: { M: xy(Q('too_m_yoy')), Q: xy(tooQ), A: xy(tooA) },
-      src: 'Statistikaamet TO0053', url: SA('TO0053'), note: 'Kõik sektorid (B–D), kalendaarselt korrigeeritud. Kvartali- ja aastamuutus on arvutatud mahuindeksi perioodikeskmistest.' },
+      F: { M: xy(Q('tootlev_m_yoy')), Q: xy(tooQ), A: xy(tooA) },
+      src: 'Statistikaamet TO0053', url: SA('TO0053'), note: 'Töötlev tööstus (EMTAK C), kalendaarselt korrigeeritud. Kvartali- ja aastamuutus on arvutatud mahuindeksi perioodikeskmistest.' },
+    { nr: '33', unitChip: '% tootmisvõimsusest', kind: 'line', unit: '%', head: 'level', scale: true, estName: 'Statistikaamet',
+      F: { Q: xy(vmQ, { est: vmStat.size ? vmQ.periods.map((p, i) => (vmStat.has(p) || vmStat.has(vmQ.periods[i + 1]) ? vmQ.values[i] : null)) : undefined,
+             note: 'Sesoonselt korrigeeritud.' + (vmStat.size ? ' Katkendjoon: kvartalid, mida Eurostat pole veel avaldanud, Statistikaameti tööstusbaromeetrist (BAR03).' : '') }),
+           A: xy(koonda(vmKoik, aKey, 4, (v) => r1(mean(v))), { note: 'Aasta kvartalite keskmine. Poolikut aastat ei näidata.' }) },
+      src: 'Eurostat teibs070', url: 'https://ec.europa.eu/eurostat/databrowser/view/teibs070/default/table' },
     { nr: '20b', unitChip: 'mahu muutus aasta varem, %', kind: 'bar', unit: '%', head: 'custom', F: jaemF,
       src: 'Statistikaamet KM020', url: SA('KM020'), note: 'Jaekaubandus v.a mootorsõidukid (G47), mahuindeks püsivhindades. Kvartali ja aasta muutus on arvutatud kuuindeksite keskmisest. Sesoonselt korrigeerimata.' },
     { nr: '20', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'yoy',
@@ -915,7 +925,7 @@ function economyOption(it) {
     s.markPoint = { symbol: 'circle', symbolSize: 8, data: [{ coord: [lastIdx(it.y), it.y[lastIdx(it.y)]] }], itemStyle: { color: t.s1, borderColor: t.surface, borderWidth: 2 }, label: { show: false } };
     if (it.ref != null) s.markLine = { silent: true, symbol: 'none', label: { show: false }, lineStyle: { color: t.muted, type: 'dashed' }, data: [{ yAxis: it.ref }] };
     base.series = [s];
-    if (it.est) base.series.push({ type: 'line', name: 'Hinnang', data: it.est, showSymbol: false, connectNulls: false, lineStyle: { color: t.s2, width: 2, type: 'dashed' }, itemStyle: { color: t.s2 } });
+    if (it.est) base.series.push({ type: 'line', name: it.estName || 'Hinnang', data: it.est, showSymbol: false, connectNulls: false, lineStyle: { color: t.s2, width: 2, type: 'dashed' }, itemStyle: { color: t.s2 } });
     if (it.ref != null) { base.yAxis.min = (v) => Math.floor(Math.min(v.min, it.ref) - 2); base.yAxis.max = (v) => Math.ceil(Math.max(v.max, it.ref) + 2); }
   } else if (it.kind === 'stack') {
     base.legend = { ...legend, itemHeight: 8, icon: 'roundRect' };
@@ -1121,8 +1131,11 @@ function koostaVordlus(V, META) {
     { nr: '1', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'vrd', pm: true,
       F: { Q: riigid((g) => alates(S('skp_kasv_q_' + g), ALGUS), { note: 'Muutus aasta varem, sesoonselt ja kalendaarselt korrigeeritud.' }), A: riigid((g) => S('skp_kasv_a_' + g)) },
       src: 'Eurostat namq_10_gdp / nama_10_gdp', url: EUSTAT('namq_10_gdp'), note: 'Aheldatud mahu muutus.' },
-    { nr: '2', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true, F: indeksF('too_m_'),
-      src: 'Eurostat sts_inpr_m', url: EUSTAT('sts_inpr_m'), note: 'Tööstus kokku (B–D), kalendaarselt korrigeeritud.' },
+    { nr: '2', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true, F: indeksF('tootlev_m_'),
+      src: 'Eurostat sts_inpr_m', url: EUSTAT('sts_inpr_m'), note: 'Töötlev tööstus (C), kalendaarselt korrigeeritud.' },
+    { nr: '33', unitChip: '% tootmisvõimsusest', kind: 'lines', unit: '%', head: 'vrd',
+      F: { Q: riigid((g) => alates(S('voimsus_q_' + g), ALGUS)), A: riigid((g) => qKesk(S('voimsus_q_' + g)), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
+      src: 'Eurostat teibs070', url: EUSTAT('teibs070'), note: 'Sesoonselt korrigeeritud. Eesti kvartalid, mida Eurostat pole veel avaldanud, on Statistikaameti tööstusbaromeetrist (BAR03).' },
     { nr: '20', nimi: 'Jaekaubanduse mahuindeks', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true, F: indeksF('jae_m_'),
       src: 'Eurostat sts_trtu_m', url: EUSTAT('sts_trtu_m'), note: 'Jaekaubandus ilma mootorsõidukiteta (G47), püsivhindades, kalendaarselt korrigeeritud.' },
     { nr: '29', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true,
@@ -1303,9 +1316,9 @@ function koostaKokkuvote(D, kasitsi) {
     skoor += g < 0 ? -1 : g >= 1.5 ? 1 : 0; n++;
   }
   // Kuunäitajad: tööstus, eksport, jaemüük
-  const too = last(S('too_m_yoy')), eks = yoyM(S('kaup_m')), jae = yoyM(S('jaem_m_idx'));
+  const too = last(S('tootlev_m_yoy')), eks = yoyM(S('kaup_m')), jae = yoyM(S('jaem_m_idx'));
   const loetelu = (a) => (a.length > 1 ? a.slice(0, -1).join(', ') + ' ja ' + a.at(-1) : a[0]);
-  const kuuN = [[too, 'tööstustoodang', 'kasvas', 'vähenes'], [eks, 'kaupade eksport', 'kasvas', 'vähenes'], [jae, 'jaemüügi maht', 'suurenes', 'vähenes']].filter((x) => x[0]);
+  const kuuN = [[too, 'töötleva tööstuse toodang', 'kasvas', 'vähenes'], [eks, 'kaupade eksport', 'kasvas', 'vähenes'], [jae, 'jaemüügi maht', 'suurenes', 'vähenes']].filter((x) => x[0]);
   kuuN.forEach(([x]) => { skoor += Math.sign(Math.round(x.v)); n++; });
   if (kuuN.length) {
     const samaKuu = kuuN.every(([x]) => x.p === kuuN[0][0].p);
@@ -1372,7 +1385,7 @@ function koostaUlevaade(D) {
   const esiA = viim(S('esi_m')), esiH = viim(S('esi_m_hinnang'));
   const esi = esiH && (!esiA || esiH.p > esiA.p) ? { ...esiH, hinnang: true } : esiA;
   return { skp, skpX, skpY, kiirN,
-    too: viim(S('too_m_yoy')), eks: viim(eksY), eksSaba: saba(eksY, 24), jae: viim(jaeY),
+    too: viim(S('tootlev_m_yoy')), eks: viim(eksY), eksSaba: saba(eksY, 24), jae: viim(jaeY),
     thi: viim(S('thi_m')), thi0: viim(S('thi_m'), 2), thiSaba: saba(S('thi_m'), 24),
     reg: viim(S('regtootud_m')), regA: viim(regY), regSaba: saba(S('regtootud_m'), 24),
     palk: viim(S('palk_q_lvl')), palkA: viim(S('palk_q_yoy')), vabad: viim(S('tk_vabad_m')), esi };
@@ -1416,7 +1429,7 @@ function buildUlevaade() {
   const riba = [];
   const lisa = (nimi, x, hea, tekst, tiitel) => { if (!x) return; const s = hea == null ? null : suund(x.v, hea); riba.push(`<span title="${esc(tiitel)}">${nimi}<b${s ? ` class="${s.c}"` : ''}>${s ? s.m + ' ' : ''}${tekst}</b></span>`); };
   if (u.skp) lisa('SKP', u.skp, 1, pr(u.skp.v) + '%', `SKP reaalkasv aastaga, ${silt(u.skp.p)} kv${u.skp.kiir ? ' (kiirhinnang)' : ''}`);
-  if (u.too) lisa('Tööstus', u.too, 1, pr(u.too.v) + '%', `Tööstustoodangu maht aastaga, ${silt(u.too.p)}`);
+  if (u.too) lisa('Töötlev tööstus', u.too, 1, pr(u.too.v) + '%', `Töötleva tööstuse toodangu maht aastaga, ${silt(u.too.p)}`);
   if (u.eks) lisa('Eksport', u.eks, 1, pr(u.eks.v) + '%', `Kaupade eksport aastaga, ${silt(u.eks.p)}`);
   if (u.jae) lisa('Jaemüük', u.jae, 1, pr(u.jae.v) + '%', `Jaemüügi maht aastaga, ${silt(u.jae.p)}`);
   if (u.thi) lisa('Hinnad', u.thi, -1, pr(u.thi.v) + '%', `Tarbijahinnaindeks aastaga, ${silt(u.thi.p)}`);

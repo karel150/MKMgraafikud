@@ -10,7 +10,7 @@
 
 NAITAJA <- "Näitaja"
 
-koosta_naitajad <- function(esi_kuu = NULL) {
+koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
   vana <- loe_json("naitajad.json")$seeriad
   tul  <- list()
   lisa <- function(nimi, f, vahemik = c(-Inf, Inf)) {
@@ -147,12 +147,27 @@ koosta_naitajad <- function(esi_kuu = NULL) {
   lisa("ulc_nom_a",  function() { d <- aa(rl("3", "2")); seeria(d$Aasta, d$value) }, YOY)
   lisa("ulc_real_a", function() { d <- aa(rl("3", "6")); seeria(d$Aasta, d$value) }, YOY)
 
-  # ---- Tööstustoodang (TO0053): B-D, kalendaarselt korrigeeritud -----------
+  # ---- Töötleva tööstuse toodang (TO0053): tegevusala C, kalendaarselt korrigeeritud ----
   to <- mitu(function() px_paring("TO0053",
-    valik(NAITAJA, c("PROD", "PROD_SM")), valik("Tegevusala", "BTD"),
+    valik(NAITAJA, c("PROD", "PROD_SM")), valik("Tegevusala", "C"),
     valik("Korrigeerimine", "W"), valik("Vaatlusperiood", "*")))
-  lisa("too_m_yoy", function() { d <- to(); d <- d[d[[NAITAJA]] == "PROD_SM", ]; seeria(d$Vaatlusperiood, d$value) }, YOY)
-  lisa("too_m_lvl", function() { d <- to(); d <- d[d[[NAITAJA]] == "PROD", ]; seeria(d$Vaatlusperiood, d$value) }, c(1, 1000))
+  lisa("tootlev_m_yoy", function() { d <- to(); d <- d[d[[NAITAJA]] == "PROD_SM", ]; seeria(d$Vaatlusperiood, d$value) }, YOY)
+  lisa("tootlev_m_lvl", function() { d <- to(); d <- d[d[[NAITAJA]] == "PROD", ]; seeria(d$Vaatlusperiood, d$value) }, c(1, 1000))
+
+  # ---- Töötleva tööstuse tootmisvõimsuse rakendatus, % ---------------------------
+  # voimsus_q: Eurostat (teibs070). voimsus_q_stat: kvartalid, mida Eurostatis veel
+  # pole, Statistikaameti tööstusbaromeetrist (BAR03). Leht liidab need üheks reaks.
+  lisa("voimsus_q", function() {
+    s <- voimsus_eurostat_riigid("EE")$EE
+    if (is.null(s)) stop("Eurostatis pole Eesti andmeid.")
+    s
+  }, c(30, 100))
+  tul$voimsus_q_stat <- tryCatch(
+    list(seeria = voimsus_stat(tail(tul$voimsus_q$seeria$periods, 1), icu), staatus = "uuendatud"),
+    error = function(e) {
+      hoiata("voimsus_q_stat: ", conditionMessage(e), " Jäetakse alles eelmine versioon.")
+      list(seeria = if (is.null(vana$voimsus_q_stat)) list(periods = character(), values = numeric()) else vana$voimsus_q_stat, staatus = "vana")
+    })
 
   # ---- Tarbijahinnaindeks (IA021 kuu, IA001 aasta) --------------------------
   lisa("thi_m", function() { d <- px_paring("IA021", valik(NAITAJA, "1"), valik("Aasta", "*"), valik("Kuu", "*")); seeria(per_m(d$Aasta, d$Kuu), d$value) }, c(-20, 50))

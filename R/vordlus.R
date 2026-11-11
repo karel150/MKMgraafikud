@@ -90,7 +90,7 @@ jvs_riigid <- function(geos = VORDLUS_RIIGID) {
   lapply(tul, function(d) if (is.null(d)) NULL else { d <- d[order(d$p), ]; seeria(d$p, d$v) })
 }
 
-koosta_vordlus <- function() {
+koosta_vordlus <- function(icu = NULL) {
   vana <- loe_json("vordlus.json")$seeriad
   tul  <- list()
 
@@ -163,7 +163,18 @@ koosta_vordlus <- function() {
   andmestik("ekspT_q", "namq_10_gdp", Q_(na_item = "P62",  unit = "CP_MEUR", s_adj = "NSA"), c(1, 1e7))
   andmestik("inv_q",   "namq_10_gdp", Q_(na_item = "P51G", unit = "CP_MEUR", s_adj = "NSA"), c(1, 1e7))
   # 2 tööstustoodang (B-D), 20 jaekaubandus (G47), 23 tootjahinnad: indeksid 2021 = 100
-  andmestik("too_m", "sts_inpr_m", M_(indic_bt = "PRD", nace_r2 = "B-D", s_adj = "CA", unit = "I21"), IDX)
+  # Töötlev tööstus (C)
+  andmestik("tootlev_m", "sts_inpr_m", M_(indic_bt = "PRD", nace_r2 = "C", s_adj = "CA", unit = "I21"), IDX)
+  # 33 Töötleva tööstuse tootmisvõimsuse rakendatus, %, SA. Eesti reale lisatakse kvartalid,
+  # mida Eurostatis veel pole, Statistikaameti tööstusbaromeetrist (vt voimsus_stat).
+  andmestik("voimsus_q", "teibs070", list(), c(30, 100), fn = function(geos) {
+    l <- voimsus_eurostat_riigid(geos)
+    if (!is.null(l$EE)) {
+      st <- tryCatch(voimsus_stat(tail(l$EE$periods, 1), icu), error = function(e) NULL)
+      if (!is.null(st) && length(st$periods)) l$EE <- list(periods = c(l$EE$periods, st$periods), values = c(l$EE$values, st$values))
+    }
+    l
+  })
   andmestik("jae_m", "sts_trtu_m", M_(indic_bt = "VOL_SLS", nace_r2 = "G47", s_adj = "CA", unit = "I21"), IDX,
             varu = list(list(id = "sts_trtu_m", filters = M_(indic_bt = "TOVV", nace_r2 = "G47", s_adj = "CA", unit = "I21"))))
   andmestik("ppi_m", "sts_inpp_m", M_(indic_bt = "PRC_PRR", nace_r2 = "B-E36", s_adj = "NSA", unit = "I21"), IDX)
