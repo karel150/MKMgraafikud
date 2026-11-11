@@ -3,7 +3,7 @@
 Avalik näidikulaud. Avaleht on **Ülevaade**: automaatne kokkuvõte, majandususaldus, neli põhinäitajat, SKP kasv ja Eesti koht edetabelites, kõik samadest andmefailidest. Sealt ja vahekaartidelt pääseb viide vaatesse:
 
 1. **Majandusplaani näitajad**: majandusplaaniindeks ja selle 8 alamnäitajat (tasemed, muutused, soojuskaart, andmetabel).
-2. **Eesti majanduse graafikud**: 37 näitajat (neist 21 põhinäitajat) kuu-, kvartali- ja aastavaatega.
+2. **Eesti majanduse graafikud**: 37 näitajat (neist 17 põhinäitajat, kuni 3 iga valdkonna kohta) kuu-, kvartali- ja aastavaatega.
 3. **Eesti positsioon indeksites**: 13 rahvusvahelist indeksit (MAPO to-do faili leht „2.1 Indeksid“), jaotatud põhi- ja täiendavateks.
 4. **Rahvusvaheline võrdlus**: 26 näitajat Eurostati ja Euroopa Keskpanga andmetel Eesti, Läti, Leedu, Soome ja Rootsi kohta. Need on vahekaardi 2 näitajad, millel on Eurostatis võrreldav vaste (sh Statistikaameti näitajate vasted, nt ühtlustatud THI, tööjõukulu indeks).
 5. **Teiste asutuste ülevaated**: lingid teiste asutuste majandusnäitajatele, prognoosidele ja analüüsidele.

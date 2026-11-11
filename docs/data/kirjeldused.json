@@ -108,7 +108,7 @@
   },
   "16": {
    "valdkond": "Tööturg ja palgad",
-   "peamine": true,
+   "peamine": false,
    "nimi": "Vabade ametikohtade määr",
    "kirjeldus": "Vabade ametikohtade osakaal kõigist ametikohtadest; täiendavalt vabade ametikohtade absoluutarv",
    "miks": "Näitab tööjõunõudlust ja värbamisraskuste ulatust. Koos töötuse määraga aitab aru saada, kas tööturg on pingeline või on probleem nõudluses ja oskuste sobivuses"
@@ -234,14 +234,14 @@
   },
   "16b": {
    "valdkond": "Tööturg ja palgad",
-   "peamine": true,
+   "peamine": false,
    "nimi": "Töötukassa vahendatud vabad töökohad",
    "kirjeldus": "Töötukassa kaudu pakutavate Eestis asuvate vabade töökohtade arv kuu lõpu seisuga (välismaa töökohad on välja jäetud). Hõlmab ainult töökohti, mille tööandjad on töötukassale vahendamiseks esitanud, mitte kõiki vabu ametikohti majanduses.",
    "miks": "Igakuine näitaja tööjõunõudluse muutusest. Koos registreeritud töötute arvuga näitab, kui palju on töötuid ühe pakutava töökoha kohta."
   },
   "16c": {
    "valdkond": "Tööturg ja palgad",
-   "peamine": true,
+   "peamine": false,
    "nimi": "Vabad töökohad töötlevas tööstuses",
    "kirjeldus": "Töötukassa kaudu pakutavad vabad töökohad töötleva tööstuse ettevõtetes (EMTAK C) Eestis, kuu lõpu seisuga.",
    "miks": "Näitab tööstusettevõtete töötajate otsimise aktiivsust ja aitab märgata tööstuse nõudluse pöördeid varem kui toodangu- või hõiveandmed."
@@ -255,7 +255,7 @@
   },
   "33": {
    "valdkond": "Majanduskasv, tootmine ja tarbimine",
-   "peamine": true,
+   "peamine": false,
    "nimi": "Töötleva tööstuse tootmisvõimsuse rakendatus",
    "kirjeldus": "Töötleva tööstuse ettevõtete hinnang, kui suurt osa oma tootmisvõimsusest nad praegu kasutavad (%, sesoonselt korrigeeritud). Pärineb Euroopa Komisjoni ühtlustatud tööstusbaromeetrist, mida küsitletakse kord kvartalis",
    "miks": "Näitab, kui palju on tööstuses vaba tootmisvõimsust: kõrge tase viitab tugevale nõudlusele ja investeerimisvajadusele, madal tase nõrgale nõudlusele"
