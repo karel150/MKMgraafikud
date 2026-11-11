@@ -259,6 +259,20 @@
    "nimi": "Töötleva tööstuse tootmisvõimsuse rakendatus",
    "kirjeldus": "Töötleva tööstuse ettevõtete hinnang, kui suurt osa oma tootmisvõimsusest nad praegu kasutavad (%, sesoonselt korrigeeritud). Pärineb Euroopa Komisjoni ühtlustatud tööstusbaromeetrist, mida küsitletakse kord kvartalis",
    "miks": "Näitab, kui palju on tööstuses vaba tootmisvõimsust: kõrge tase viitab tugevale nõudlusele ja investeerimisvajadusele, madal tase nõrgale nõudlusele"
+  },
+  "34": {
+   "valdkond": "Riigi rahandus",
+   "peamine": true,
+   "nimi": "Maksuvõlglaste arv",
+   "kirjeldus": "Maksu- ja Tolliameti andmetel maksuvõlaga isikute arv kuu lõpu seisuga, eraldi füüsilised ja juriidilised isikud. Arvesse lähevad vähemalt 10-eurosed võlad",
+   "miks": "Näitab, kui paljudel inimestel ja ettevõtetel on raskusi maksude tähtaegse tasumisega. Füüsiliste isikute arvu mõjutavad tugevalt maamaksu ja mootorsõidukimaksu tähtajad, juriidiliste isikute arv iseloomustab paremini ettevõtete maksevõimet"
+  },
+  "35": {
+   "valdkond": "Riigi rahandus",
+   "peamine": true,
+   "nimi": "Maksuvõla summa",
+   "kirjeldus": "Maksu- ja Tolliametile tasumata maksuvõla kogusumma kuu lõpu seisuga, miljonites eurodes; sisaldab ka ajatatud võlga",
+   "miks": "Maksuvõla kasv viitab ettevõtete ja inimeste makseraskustele ning on riigieelarvesse laekumata tulu; aasta alguses väheneb summa aegunud võlgade kustutamise tõttu"
   }
  }
 }

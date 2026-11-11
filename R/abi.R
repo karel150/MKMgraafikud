@@ -61,6 +61,57 @@ px_paring <- function(tabel, ..., katseid = 3, api = PX_API) {
   df
 }
 
+# ---- Maksu- ja Tolliamet: maksuvõla ülevaade ----------------------------------
+# EMTA avaldab iga kuu 1. kuupäeva seisu (võlgnike arv ja võlasumma). Fail laaditakse
+# EMTA lingilt; kui see ei õnnestu, kasutatakse repos olevat koopiat
+# andmed/maksuvola_ulevaade.csv ja lisatakse hoiatus (koopia võib olla vananenud).
+# Tagastab data.frame'i: per (eelmise kuu kood, nt 01.11.2026 -> "2026M10", sest
+# 1. kuupäeva seis on eelmise kuu lõpu seis), kokku, fi, ji, summa (mln €).
+EMTA_MAKSUVOLG_URL  <- "https://ncfailid.emta.ee/s/n8MYQDceSXrSBF8/download/maksuvola_ulevaade.csv"
+EMTA_MAKSUVOLG_FAIL <- "andmed/maksuvola_ulevaade.csv"
+
+emta_loe_maksuvolg <- function(tekst) {
+  tekst <- sub("^\ufeff", "", tekst)
+  df <- read.csv(text = tekst, stringsAsFactors = FALSE, check.names = FALSE, encoding = "UTF-8")
+  veerg <- function(muster) {
+    i <- grep(muster, names(df))
+    if (length(i) != 1) stop("EMTA maksuvõlg: veergu '", muster, "' ei leitud (faili ülesehitus on muutunud).")
+    df[[i]]
+  }
+  kp <- as.Date(trimws(veerg("^Kuup")), format = "%d.%m.%Y")
+  out <- data.frame(
+    kp    = kp,
+    kokku = as.numeric(veerg("nike arv kokku$")),
+    fi    = as.numeric(veerg("^F.+isikust v.lgnike arv$")),
+    ji    = as.numeric(veerg("^Juriidilisest isikust v.lgnike arv$")),
+    summa = as.numeric(veerg("^V.lasumma kokku$")) / 1e6
+  )
+  out <- out[!is.na(out$kp), ]
+  if (!nrow(out)) stop("EMTA maksuvõlg: failis pole ridu.")
+  lt <- as.POSIXlt(out$kp)
+  out$per <- ifelse(lt$mon == 0, sprintf("%dM12", lt$year + 1899L), sprintf("%dM%02d", lt$year + 1900L, lt$mon))
+  if (anyDuplicated(out$per)) stop("EMTA maksuvõlg: sama kuu kohta on mitu rida.")
+  out[order(out$per), ]
+}
+
+emta_maksuvolg <- function(katseid = 3) {
+  vastus <- NULL
+  for (k in seq_len(katseid)) {
+    vastus <- tryCatch(GET(EMTA_MAKSUVOLG_URL, timeout(60)), error = function(e) e)
+    if (!inherits(vastus, "error") && status_code(vastus) == 200) break
+    if (k < katseid) Sys.sleep(5 * k)
+  }
+  veebist <- tryCatch({
+    if (inherits(vastus, "error")) stop(conditionMessage(vastus))
+    stop_for_status(vastus, task = "laadida EMTA maksuvõla ülevaadet")
+    emta_loe_maksuvolg(content(vastus, as = "text", encoding = "UTF-8"))
+  }, error = function(e) e)
+  if (!inherits(veebist, "error")) return(veebist)
+  hoiata("EMTA maksuvõlg: faili ei õnnestunud laadida (", conditionMessage(veebist),
+         "). Kasutatakse koopiat ", EMTA_MAKSUVOLG_FAIL, ", mis võib olla vananenud.")
+  emta_loe_maksuvolg(paste(readLines(EMTA_MAKSUVOLG_FAIL, warn = FALSE, encoding = "UTF-8"), collapse = "\n"))
+}
+
 # ---- Töötleva tööstuse tootmisvõimsuse rakendatus ---------------------------
 # Ajalooline rida: Eurostati tabel teibs070 (%, sesoonselt korrigeeritud). Kui see
 # ei laadi, kasutatakse sama rida andmestikust ei_bsin_q_r2 (BS-ICU-PC, SA).
