@@ -838,7 +838,8 @@ function setFreq(f) {
 function headline(it) {
   const dec = it.dec ?? 1;
   const fmt = nf(dec).format;
-  if (it.head === 'custom') return { big: it.big, unit: it.bigUnit, per: it.per, delta: it.deltaTxt };
+  // 'custom': pealkiri on vaates endas ette antud (pais). Kui mõnel sagedusel seda pole, näidatakse viimast väärtust nagu muutuse näitajal.
+  if (it.head === 'custom' && it.big != null) return { big: it.big, unit: it.bigUnit, per: it.per, delta: it.deltaTxt };
   if (it.head === 'vrd') {
     // Eesti viimane väärtus ja koht võrdlusriikide seas samal perioodil
     const i = lastIdx(it.y), v = it.y[i];
@@ -854,7 +855,7 @@ function headline(it) {
   const lag = { M: 12, Q: 4, H: 2, A: 1 }[it.freq];
   if (it.head === 'level' && i - lag >= 0 && it.y[i - lag] != null) delta = sgn(v - it.y[i - lag], fmt) + (it.unit === '%' ? ' pp' : '') + ' aastaga';
   if (it.head === 'levelpct' && i - lag >= 0 && it.y[i - lag]) delta = sgn((v / it.y[i - lag] - 1) * 100) + ' % aastaga';
-  return { big: (it.head === 'yoy' ? sgn(v, fmt) : fmt(v)), unit: it.unit.trim(), per, delta };
+  return { big: (it.head === 'yoy' || it.head === 'custom' ? sgn(v, fmt) : fmt(v)), unit: it.unit.trim(), per, delta };
 }
 
 function buildCard(it, key = 'majandus') {
