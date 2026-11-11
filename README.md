@@ -15,7 +15,7 @@ Andmed uuendatakse automaatselt tööpäeviti GitHub Actionsiga. Leht on staatil
 ```
 Statistikaamet, Eurostat ──► R/uuenda.R ──► docs/data/*.json ──► docs/index.html
 andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub Pages või
-                                tööpäeviti 09:15)                 MKM-i server)
+                                tööpäeviti 8.05)                  MKM-i server)
 ```
 
 * **R** laadib andmed ja arvutab majandusplaaniindeksi (sinu metoodika, failid `R/majandusplaaniindeks_sca.R` ja `R/esi_eesti.R`).
@@ -104,7 +104,7 @@ Anna veebimeeskonnale fail `mkm-ee/manustamine.html`. Selles on:
 
 ## Igapäevane töö
 
-**Midagi ei ole vaja teha.** Robot käivitub tööpäeviti 09:15 (talvel 08:15). Uued andmed salvestatakse ja leht avaldatakse automaatselt.
+**Midagi ei ole vaja teha.** Robot käivitub tööpäeviti kell 8.05 Eesti aja järgi, nii suvel kui talvel. Uued andmed salvestatakse ja leht avaldatakse automaatselt.
 
 Kui GitHub saadab teavituse „Run failed“:
 

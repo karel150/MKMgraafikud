@@ -1,8 +1,12 @@
 name: Uuenda andmed ja avalda
 
 on:
+  # Uuendus tööpäeviti kell 8.05 Eesti aja järgi. GitHubi cron on UTC-s ega tunne suveaega,
+  # seepärast on kaks aega: 5.05 UTC (suveaeg, UTC+3) ja 6.05 UTC (talveaeg, UTC+2).
+  # Töö "kell" laseb neist läbi ainult selle, mis parajasti vastab Eesti kellale 8.05.
   schedule:
-    - cron: "15 6 * * 1-5"
+    - cron: "5 5 * * 1-5"
+    - cron: "5 6 * * 1-5"
   workflow_dispatch:
   push:
     branches: [main]
@@ -18,7 +22,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  kell:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      kaivita: ${{ steps.k.outputs.kaivita }}
+    steps:
+      - id: k
+        env:
+          AJAKAVA: ${{ github.event.schedule }}
+        run: |
+          nihe=$(TZ=Europe/Tallinn date +%z)   # +0300 suveajal, +0200 talveajal
+          kaivita=true                          # käsitsi käivitus ja push lähevad alati läbi
+          if [ "$AJAKAVA" = "5 5 * * 1-5" ] && [ "$nihe" != "+0300" ]; then kaivita=false; fi
+          if [ "$AJAKAVA" = "5 6 * * 1-5" ] && [ "$nihe" != "+0200" ]; then kaivita=false; fi
+          echo "Ajakava: '${AJAKAVA:-puudub}', Eesti aja nihe: $nihe, käivitan: $kaivita"
+          echo "kaivita=$kaivita" >> "$GITHUB_OUTPUT"
+
   uuenda:
+    needs: kell
+    if: needs.kell.outputs.kaivita == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30   # rippuma jäänud API-päring ei hoia tööd kinni 6 tundi
     outputs:
@@ -85,7 +108,7 @@ jobs:
 
   teavita:
     needs: [uuenda, avalda]
-    if: needs.uuenda.outputs.hoiatusi != '0'
+    if: needs.uuenda.result == 'success' && needs.uuenda.outputs.hoiatusi != '0'
     runs-on: ubuntu-latest
     steps:
       - run: |
