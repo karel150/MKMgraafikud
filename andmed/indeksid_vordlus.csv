@@ -29,8 +29,10 @@ gtci,Eesti,21,
 gtci,Soome,4,
 gtci,Leedu,27,
 gtci,Läti,33,
-idi,Eesti,,98.5
-idi,Soome,,98.4
+idi,Eesti,3,98.5
+idi,Soome,4,98.4
+idi,Leedu,13,96.6
+idi,Läti,18,95.5
 imdt,Leedu,20,
 imdt,Läti,21,
 imdt,Soome,12,
