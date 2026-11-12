@@ -4,8 +4,8 @@
 #
 # Edetabelitel API-t ei ole. Uuenda CSV-faile käsitsi, kui uus väljaanne
 # ilmub (vt veergu rutm).
-# Erand: WGI kuus mõõdet (kaardi alaskoorid, aasta ja silt) laaditakse igal
-# käivitusel Maailmapanga API-st; CSV-s on WGI kohta ainult tekstid. Indeksite valik ja kirjeldused pärinevad MAPO
+# Erand: WGI kuue mõõtme ja B-READY kolme samba kohad (ning aasta ja silt) arvutatakse
+# igal käivitusel Maailmapanga API andmetest; CSV-s on nende kohta tekstid ja lingid. Indeksite valik ja kirjeldused pärinevad MAPO
 # to-do faili lehelt "2.1 Indeksid".
 #
 # indeksid.csv veerud:
@@ -80,22 +80,28 @@ koosta_indeksid <- function() {
       url2      = tx(r$url2)
     )
   })
-  # WGI kuus mõõdet tulevad Maailmapanga API-st (vt wgi_eesti failis abi.R). Kui laadimine
-  # ei õnnestu, jäävad alles eelmisel korral salvestatud arvud ja tekib hoiatus.
-  i <- which(vapply(indeksid, function(x) identical(x$id, "wgi"), logical(1)))
-  if (length(i) == 1) {
-    w <- tryCatch(wgi_eesti(), error = function(e) { hoiata("WGI (Maailmapank): ", conditionMessage(e), " Jäetakse alles eelmine versioon."); NULL })
+  # WGI ja B-READY: koondkohta ei ole, seepärast näidatakse Eesti kohta iga mõõtme / samba
+  # järgi. Kohad arvutatakse Maailmapanga API andmetest (vt wgi_eesti ja bready_eesti failis
+  # abi.R). Kui laadimine ei õnnestu, jääb alles eelmisel korral salvestatu ja tekib hoiatus.
+  vana <- tryCatch(fromJSON(file.path(DATA_DIR, "indeksid.json"), simplifyVector = FALSE)$indeksid, error = function(e) NULL)
+  kohad <- function(id, nimi, laadija, silt) {
+    i <- which(vapply(indeksid, function(x) identical(x$id, id), logical(1)))
+    if (length(i) != 1) return(invisible())
+    w <- tryCatch(laadija(), error = function(e) { hoiata(nimi, " (Maailmapank): ", conditionMessage(e), " Jäetakse alles eelmine versioon."); NULL })
     if (!is.null(w)) {
-      indeksid[[i]]$pillars  <- w$sambad
-      indeksid[[i]]$year     <- w$aasta
-      indeksid[[i]]$prevYear <- w$eelmine_aasta
-      indeksid[[i]]$badge    <- if (w$moot == "skoor") "Kuus mõõdet, skoor 0–100" else "Kuus mõõdet, protsentiilkoht 0–100"
+      indeksid[[i]]$pillars     <<- w$sambad
+      indeksid[[i]]$pillarsKind <<- "koht"
+      indeksid[[i]]$pillarsOf   <<- w$riike
+      indeksid[[i]]$year        <<- w$aasta
+      indeksid[[i]]$prevYear    <<- w$eelmine_aasta
+      indeksid[[i]]$badge       <<- silt(w)
     } else {
-      vana <- tryCatch(fromJSON(file.path(DATA_DIR, "indeksid.json"), simplifyVector = FALSE)$indeksid, error = function(e) NULL)
-      v <- Filter(function(x) identical(x$id, "wgi"), vana)
-      if (length(v) && length(v[[1]]$pillars)) for (n in c("pillars", "year", "prevYear", "badge")) indeksid[[i]][[n]] <- v[[1]][[n]]
+      v <- Filter(function(x) identical(x$id, id), vana)
+      if (length(v) && length(v[[1]]$pillars)) for (n in c("pillars", "pillarsKind", "pillarsOf", "year", "prevYear", "badge")) indeksid[[i]][[n]] <<- v[[1]][[n]]
     }
   }
+  kohad("wgi", "WGI", wgi_eesti, function(w) "Kuus mõõdet, koondkohta ei ole")
+  kohad("bready", "B-READY", bready_eesti, function(w) "Kolm sammast, koondkohta ei avaldata")
   list(uuendatud = aeg_utc(), indeksid = indeksid)
 }
 
