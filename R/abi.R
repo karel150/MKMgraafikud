@@ -96,13 +96,25 @@ wgi_data360 <- function(alates) {
     names(d) <- toupper(names(d))
     puudu <- setdiff(c("INDICATOR", "TIME_PERIOD", "OBS_VALUE"), names(d))
     if (length(puudu)) stop("Data360 vastuses puuduvad väljad ", paste(puudu, collapse = ", "), ".")
-    osad[[length(osad) + 1]] <- data.frame(id = as.character(d$INDICATOR), aasta = suppressWarnings(as.integer(substr(d$TIME_PERIOD, 1, 4))),
-                                           v = suppressWarnings(as.numeric(d$OBS_VALUE)), stringsAsFactors = FALSE)
+    osad[[length(osad) + 1]] <- d[, vapply(d, is.atomic, logical(1)), drop = FALSE]
     skip <- skip + nrow(d)
     if (is.null(v$count) || skip >= v$count || length(osad) >= 20) break
   }
   if (!length(osad)) stop("Data360 ei tagastanud WB_WGI andmeid.")
-  do.call(rbind, osad)
+  veerud <- Reduce(intersect, lapply(osad, names))
+  d <- do.call(rbind, lapply(osad, function(x) x[, veerud, drop = FALSE]))
+  # Mõõdik (hinnang, protsentiilkoht, skoor jne) võib olla näitaja koodis või eraldi väljal
+  # (nt UNIT_MEASURE). Seepärast liidetakse koodile kõik väljad, mille väärtus ridade vahel erineb.
+  lisa <- setdiff(veerud[vapply(veerud, function(n) length(unique(d[[n]])) > 1, logical(1))],
+                  c("INDICATOR", "TIME_PERIOD", "OBS_VALUE", "DECIMALS", "LATEST_DATA", "OBS_STATUS", "OBS_CONF", "COMMENT_OBS", "COMMENT_TS", "DATA_SOURCE", "TIME_FORMAT"))
+  id <- do.call(paste, c(list(as.character(d$INDICATOR)), lapply(lisa, function(n) as.character(d[[n]])), sep = " "))
+  out <- data.frame(id = id, aasta = suppressWarnings(as.integer(substr(d$TIME_PERIOD, 1, 4))),
+                    v = suppressWarnings(as.numeric(d$OBS_VALUE)), stringsAsFactors = FALSE)
+  # Diagnostika logisse: väljad ja ühe mõõtme viimase aasta read
+  message("WGI Data360: väljad: ", paste(veerud, collapse = ", "), " | eristavad: ", paste(lisa, collapse = ", "))
+  naidis <- out[grepl("CC", out$id) & out$aasta == max(out$aasta, na.rm = TRUE), ]
+  for (i in seq_len(min(nrow(naidis), 15))) message("WGI Data360 näidis: ", naidis$id[i], " | ", naidis$aasta[i], " | ", naidis$v[i])
+  out
 }
 
 # Vanem API: protsentiilkohad (allikas 3 = Worldwide Governance Indicators)
