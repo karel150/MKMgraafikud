@@ -61,6 +61,105 @@ px_paring <- function(tabel, ..., katseid = 3, api = PX_API) {
   df
 }
 
+# ---- Maailmapank: valitsemise indikaatorid (WGI) ------------------------------
+# Kuus mõõdet Eesti kohta Maailmapanga API-st. Esmalt Data360 (andmebaas WB_WGI,
+# https://data360.worldbank.org/en/dataset/WB_WGI); kui see ei õnnestu, siis
+# Maailmapanga vanem API (api.worldbank.org, allikas 3).
+# Iga mõõtme kohta avaldab Maailmapank mitu arvu (hinnang, standardviga, allikate
+# arv, protsentiilkoht, 0–100 skoor). Lehel näidatakse 0–100 skoori, kui see on
+# kõigi kuue mõõtme kohta olemas, muidu protsentiilkohta (mitu protsenti riikidest
+# jääb Eestist tahapoole). Valik ja leitud näitajate koodid kirjutatakse logisse.
+WGI_MOOTMED <- c(VA = "Kodanike hääl ja avalik vastutus", PV = "Poliitiline stabiilsus",
+                 GE = "Valitsuse tulemuslikkus", RQ = "Regulatsioonide kvaliteet",
+                 RL = "Õigusriik", CC = "Korruptsiooni ohjamine")
+
+http_json <- function(url, query = list(), katseid = 3) {
+  vastus <- NULL
+  for (k in seq_len(katseid)) {
+    vastus <- tryCatch(GET(url, query = query, timeout(60)), error = function(e) e)
+    if (!inherits(vastus, "error") && status_code(vastus) == 200) break
+    if (k < katseid) Sys.sleep(5 * k)
+  }
+  if (inherits(vastus, "error")) stop(conditionMessage(vastus))
+  stop_for_status(vastus, task = paste("laadida", url))
+  fromJSON(content(vastus, as = "text", encoding = "UTF-8"))
+}
+
+# Data360: kõik WB_WGI read Eesti kohta alates aastast `alates` -> data.frame(id, aasta, v)
+wgi_data360 <- function(alates) {
+  osad <- list(); skip <- 0
+  repeat {
+    v <- http_json("https://data360api.worldbank.org/data360/data",
+                   list(DATABASE_ID = "WB_WGI", REF_AREA = "EST", timePeriodFrom = alates, skip = skip))
+    d <- v$value
+    if (!is.data.frame(d) || !nrow(d)) break
+    names(d) <- toupper(names(d))
+    puudu <- setdiff(c("INDICATOR", "TIME_PERIOD", "OBS_VALUE"), names(d))
+    if (length(puudu)) stop("Data360 vastuses puuduvad väljad ", paste(puudu, collapse = ", "), ".")
+    osad[[length(osad) + 1]] <- data.frame(id = as.character(d$INDICATOR), aasta = suppressWarnings(as.integer(substr(d$TIME_PERIOD, 1, 4))),
+                                           v = suppressWarnings(as.numeric(d$OBS_VALUE)), stringsAsFactors = FALSE)
+    skip <- skip + nrow(d)
+    if (is.null(v$count) || skip >= v$count || length(osad) >= 20) break
+  }
+  if (!length(osad)) stop("Data360 ei tagastanud WB_WGI andmeid.")
+  do.call(rbind, osad)
+}
+
+# Vanem API: protsentiilkohad (allikas 3 = Worldwide Governance Indicators)
+wgi_vana_api <- function(alates) {
+  koodid <- paste0(names(WGI_MOOTMED), ".PER.RNK", collapse = ";")
+  v <- http_json(paste0("https://api.worldbank.org/v2/country/EST/indicator/", koodid),
+                 list(source = 3, format = "json", per_page = 1000, date = paste0(alates, ":2100")))
+  d <- if (is.list(v) && length(v) >= 2) v[[2]] else NULL
+  if (!is.data.frame(d) || !nrow(d)) stop("api.worldbank.org ei tagastanud WGI andmeid.")
+  data.frame(id = as.character(d$indicator$id), aasta = suppressWarnings(as.integer(d$date)),
+             v = suppressWarnings(as.numeric(d$value)), stringsAsFactors = FALSE)
+}
+
+# Valib kuue mõõtme kohta sama mõõdiku ja viimase aasta, mille kohta on kõik kuus olemas.
+wgi_vali <- function(df) {
+  df <- df[!is.na(df$v) & !is.na(df$aasta), ]
+  osad <- strsplit(toupper(df$id), "[^A-Z0-9]+")
+  df$moode <- vapply(osad, function(o) { m <- intersect(o, names(WGI_MOOTMED)); if (length(m) == 1) m else NA_character_ }, character(1))
+  # mõõdik koodi ülejäänud osade järgi; hinnang (-2,5…2,5), standardviga, allikate arv ja usalduspiirid jäävad välja
+  df$moot <- vapply(osad, function(o) {
+    if (any(o %in% c("EST", "STD", "ERR", "SE", "STDERR", "NO", "SRC", "NSRC", "NSOURCE", "LOWER", "UPPER", "LB", "UB", "LCI", "UCI"))) return(NA_character_)
+    if (any(o %in% c("PER", "PCT", "PCTL", "RNK", "RANK", "PERCENTILE"))) return("protsentiil")
+    if (any(o %in% c("SCORE", "SCR", "SC", "IDX", "INDEX"))) return("skoor")
+    NA_character_
+  }, character(1))
+  df <- df[!is.na(df$moode) & !is.na(df$moot) & df$v >= 0 & df$v <= 100, ]
+  for (moot in c("skoor", "protsentiil")) {
+    d <- df[df$moot == moot, ]
+    aastad <- sort(unique(d$aasta), decreasing = TRUE)
+    aasta <- Find(function(a) all(names(WGI_MOOTMED) %in% d$moode[d$aasta == a]), aastad)
+    if (is.null(aasta)) next
+    vaartus <- function(m, a) { x <- d$v[d$moode == m & d$aasta == a]; if (length(x)) x[1] else NULL }
+    on_eelmine <- any(d$aasta == aasta - 1L)
+    return(list(
+      moot = moot, aasta = aasta, eelmine_aasta = if (on_eelmine) aasta - 1L else NULL,
+      sambad = lapply(names(WGI_MOOTMED), function(m) list(WGI_MOOTMED[[m]], round(vaartus(m, aasta), 1),
+                                                           if (on_eelmine && !is.null(vaartus(m, aasta - 1L))) round(vaartus(m, aasta - 1L), 1) else NULL))))
+  }
+  stop("WGI: kuue mõõtme 0–100 skoori ega protsentiilkohta ei leitud. Leitud koodid: ", paste(head(unique(df$id), 20), collapse = ", "))
+}
+
+wgi_eesti <- function() {
+  alates <- as.integer(format(Sys.Date(), "%Y")) - 6L
+  df <- tryCatch(wgi_data360(alates), error = function(e) {
+    message("WGI: Data360 ei õnnestunud (", conditionMessage(e), "), proovin api.worldbank.org.")
+    wgi_vana_api(alates)
+  })
+  message("WGI: leitud näitajate koodid: ", paste(sort(unique(df$id)), collapse = ", "))
+  w <- tryCatch(wgi_vali(df), error = function(e) {
+    # Data360 andis vastuse, aga sealt ei leitud sobivat mõõdikut: proovi vanemat API-t
+    message("WGI: ", conditionMessage(e), " Proovin api.worldbank.org.")
+    wgi_vali(wgi_vana_api(alates))
+  })
+  message("WGI: kasutusel ", w$moot, ", aasta ", w$aasta, ".")
+  w
+}
+
 # ---- Maksu- ja Tolliamet: maksuvõla ülevaade ----------------------------------
 # EMTA avaldab iga kuu 1. kuupäeva seisu (võlgnike arv ja võlasumma). Fail laaditakse
 # EMTA lingilt; kui see ei õnnestu, kasutatakse repos olevat koopiat

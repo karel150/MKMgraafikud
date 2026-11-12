@@ -35,7 +35,7 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `R/vordlus.R` | Rahvusvahelise võrdluse andmed Eurostatist (`docs/data/vordlus.json`). Riike saab muuta muutujas `VORDLUS_RIIGID`. |
 | `R/indeksid.R` | Teeb edetabelite CSV-failidest JSON-i. |
 | `R/abi.R` | Ühised abifunktsioonid: päringud, kontrollid, JSON-i kirjutamine. |
-| `andmed/indeksid.csv` | Edetabelid, üks rida edetabeli kohta. **Uuendatakse käsitsi.** |
+| `andmed/indeksid.csv` | Edetabelid, üks rida edetabeli kohta. **Uuendatakse käsitsi.** Erand on WGI kuus mõõdet, mille robot laadib Maailmapanga API-st. |
 | `andmed/indeksid_vordlus.csv` | Võrdlusriikide kohad edetabelites. **Uuendatakse käsitsi.** |
 | `docs/data/kokkuvote.json` | Majanduse graafikute lehe sissejuhatav lõik. Kui väli `tekst` on tühi, koostab leht lõigu automaatselt viimastest andmetest; täidetuna näidatakse analüütiku teksti (lisaks `autor`, `kuupaev`). **Muudetakse käsitsi.** |
 | `andmed/maksuvola_ulevaade.csv` | Maksu- ja Tolliameti maksuvõla ülevaate koopia. Robot laadib värske faili EMTA lingilt; seda koopiat kasutatakse ainult siis, kui allalaadimine ebaõnnestub (siis tekib hoiatus). |
