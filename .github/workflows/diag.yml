@@ -1,0 +1,26 @@
+# Ajutine: Maailmapanga Data360 API ülesehituse uurimine. Haru kustutatakse pärast kasutamist.
+name: diag
+on:
+  push:
+    branches: [diag-wb]
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          B=https://data360api.worldbank.org/data360
+          echo "=== A1 WGI kõik riigid, filter COMP_BREAKDOWN_1"
+          curl -sS -m 60 "$B/data?DATABASE_ID=WB_WGI&INDICATOR=GOV_WGI_CC&COMP_BREAKDOWN_1=WGI_SC&timePeriodFrom=2025&timePeriodTo=2025" -o a1.json -w '%{http_code}\n' || true
+          jq -c '{count, n: (.value|length), cb: ([.value[].COMP_BREAKDOWN_1]|unique), tp: ([.value[].TIME_PERIOD]|unique), areas: ([.value[].REF_AREA]|unique|length), sample: (.value[0:3]|map({REF_AREA,COMP_BREAKDOWN_1,TIME_PERIOD,OBS_VALUE}))}' a1.json | cut -c1-900 || head -c 400 a1.json
+          jq -r '[.value[].REF_AREA]|unique|join(" ")' a1.json | cut -c1-1500 || true
+          echo "=== A2 EST skip"
+          curl -sS -m 60 "$B/data?DATABASE_ID=WB_WGI&INDICATOR=GOV_WGI_CC&timePeriodFrom=2025&timePeriodTo=2025&skip=1000" | jq -c '{count, n: (.value|length)}' || true
+          echo "=== B1 otsing B-READY"
+          curl -sS -m 60 -X POST "$B/searchv2" -H 'Content-Type: application/json' -d '{"count":true,"select":"series_description/idno, series_description/name, series_description/database_id","search":"Business Ready","top":40}' -o b1.json -w '%{http_code}\n' || true
+          jq -r '.value[]? | [.series_description.database_id, .series_description.idno, .series_description.name] | @tsv' b1.json | cut -c1-200 | head -60 || head -c 600 b1.json
+          for D in WB_BREADY IFC_BREADY WB_B_READY WB_BR; do
+            echo "=== B2 indicators $D"; curl -sS -m 60 "$B/indicators?datasetId=$D" | head -c 1500; echo
+            echo "=== B3 data $D EST"; curl -sS -m 60 "$B/data?DATABASE_ID=$D&REF_AREA=EST" -o b3.json -w '%{http_code}\n' || true
+            jq -c '{count, n: (.value|length), ind: ([.value[].INDICATOR]|unique|.[0:60]), tp: ([.value[].TIME_PERIOD]|unique), cb1: ([.value[].COMP_BREAKDOWN_1]|unique|.[0:30]), cb2: ([.value[].COMP_BREAKDOWN_2]|unique|.[0:30]), um: ([.value[].UNIT_MEASURE]|unique)}' b3.json | cut -c1-3000 || head -c 300 b3.json
+          done
