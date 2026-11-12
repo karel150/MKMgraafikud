@@ -1044,7 +1044,8 @@ function indeksiKaart(ix, nf1) {
   // Alaskoorid (nt B-READY sambad): praegune skoor ja muutus eelmisest väljaandest
   if (ix.pillars && ix.pillars.length) {
     const t = el('div', 'pillars');
-    t.innerHTML = `<div class="prow ph"><span></span><span>${ix.year || ''}</span><span>${ix.prevYear ? 'vs ' + ix.prevYear : ''}</span></div>` +
+    const onEelmine = ix.pillars.some((p) => p[2] != null); // võrdlusveeru päis ainult siis, kui eelmise väljaande alaskoorid on olemas
+    t.innerHTML = `<div class="prow ph"><span></span><span>${ix.year || ''}</span><span>${ix.prevYear && onEelmine ? 'vs ' + ix.prevYear : ''}</span></div>` +
       ix.pillars.map(([n, v, p]) => {
         const d = v != null && p != null ? v - p : null;
         return `<div class="prow"><span class="pn">${esc(n)}</span><span class="pv">${v != null ? v.toLocaleString('et-EE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '–'}</span><span class="chg${d > 0 ? ' up' : d < 0 ? ' dn' : ''}">${d == null ? '' : (d > 0 ? '+' : d < 0 ? '−' : '±') + nf1(Math.abs(d))}</span></div>`;
