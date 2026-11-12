@@ -65,10 +65,11 @@ px_paring <- function(tabel, ..., katseid = 3, api = PX_API) {
 # Kuus mõõdet Eesti kohta Maailmapanga API-st. Esmalt Data360 (andmebaas WB_WGI,
 # https://data360.worldbank.org/en/dataset/WB_WGI); kui see ei õnnestu, siis
 # Maailmapanga vanem API (api.worldbank.org, allikas 3).
-# Iga mõõtme kohta avaldab Maailmapank mitu arvu (hinnang, standardviga, allikate
-# arv, protsentiilkoht, 0–100 skoor). Lehel näidatakse 0–100 skoori, kui see on
-# kõigi kuue mõõtme kohta olemas, muidu protsentiilkohta (mitu protsenti riikidest
-# jääb Eestist tahapoole). Valik ja leitud näitajate koodid kirjutatakse logisse.
+# Data360-s on kuus näitajat (GOV_WGI_VA, _PV, _GE, _RQ, _RL, _CC) ja mõõdik on väljal
+# COMP_BREAKDOWN_1: WGI_SC = 0–100 skoor, WGI_EST = hinnang (-2,5…2,5), WGI_SE =
+# standardviga, WGI_SR = allikate arv, WGI_SC_LB / WGI_SC_UB = skoori usalduspiirid.
+# Lehel näidatakse 0–100 skoori; kui seda pole, siis protsentiilkohta (vanem API).
+# Valik ja väärtused kirjutatakse logisse.
 WGI_MOOTMED <- c(VA = "Kodanike hääl ja avalik vastutus", PV = "Poliitiline stabiilsus",
                  GE = "Valitsuse tulemuslikkus", RQ = "Regulatsioonide kvaliteet",
                  RL = "Õigusriik", CC = "Korruptsiooni ohjamine")
@@ -96,13 +97,21 @@ wgi_data360 <- function(alates) {
     names(d) <- toupper(names(d))
     puudu <- setdiff(c("INDICATOR", "TIME_PERIOD", "OBS_VALUE"), names(d))
     if (length(puudu)) stop("Data360 vastuses puuduvad väljad ", paste(puudu, collapse = ", "), ".")
-    osad[[length(osad) + 1]] <- data.frame(id = as.character(d$INDICATOR), aasta = suppressWarnings(as.integer(substr(d$TIME_PERIOD, 1, 4))),
-                                           v = suppressWarnings(as.numeric(d$OBS_VALUE)), stringsAsFactors = FALSE)
+    osad[[length(osad) + 1]] <- d[, vapply(d, is.atomic, logical(1)), drop = FALSE]
     skip <- skip + nrow(d)
     if (is.null(v$count) || skip >= v$count || length(osad) >= 20) break
   }
   if (!length(osad)) stop("Data360 ei tagastanud WB_WGI andmeid.")
-  do.call(rbind, osad)
+  veerud <- Reduce(intersect, lapply(osad, names))
+  d <- do.call(rbind, lapply(osad, function(x) x[, veerud, drop = FALSE]))
+  # Mõõdik (hinnang, protsentiilkoht, skoor jne) võib olla näitaja koodis või eraldi väljal
+  # (nt UNIT_MEASURE). Seepärast liidetakse koodile kõik väljad, mille väärtus ridade vahel erineb.
+  lisa <- setdiff(veerud[vapply(veerud, function(n) length(unique(d[[n]])) > 1, logical(1))],
+                  c("INDICATOR", "TIME_PERIOD", "OBS_VALUE", "DECIMALS", "LATEST_DATA", "OBS_STATUS", "OBS_CONF", "COMMENT_OBS", "COMMENT_TS", "DATA_SOURCE", "TIME_FORMAT"))
+  id <- do.call(paste, c(list(as.character(d$INDICATOR)), lapply(lisa, function(n) as.character(d[[n]])), sep = " "))
+  out <- data.frame(id = id, aasta = suppressWarnings(as.integer(substr(d$TIME_PERIOD, 1, 4))),
+                    v = suppressWarnings(as.numeric(d$OBS_VALUE)), stringsAsFactors = FALSE)
+  out
 }
 
 # Vanem API: protsentiilkohad (allikas 3 = Worldwide Governance Indicators)
@@ -150,13 +159,14 @@ wgi_eesti <- function() {
     message("WGI: Data360 ei õnnestunud (", conditionMessage(e), "), proovin api.worldbank.org.")
     wgi_vana_api(alates)
   })
-  message("WGI: leitud näitajate koodid: ", paste(sort(unique(df$id)), collapse = ", "))
+  message("WGI: leitud ", length(unique(df$id)), " näitajat, nt ", paste(head(sort(unique(df$id)), 6), collapse = ", "))
   w <- tryCatch(wgi_vali(df), error = function(e) {
     # Data360 andis vastuse, aga sealt ei leitud sobivat mõõdikut: proovi vanemat API-t
     message("WGI: ", conditionMessage(e), " Proovin api.worldbank.org.")
     wgi_vali(wgi_vana_api(alates))
   })
-  message("WGI: kasutusel ", w$moot, ", aasta ", w$aasta, ".")
+  message("WGI: kasutusel ", w$moot, ", aasta ", w$aasta, ": ",
+          paste(vapply(w$sambad, function(x) paste0(x[[1]], " ", x[[2]], if (!is.null(x[[3]])) paste0(" (", w$eelmine_aasta, ": ", x[[3]], ")") else ""), character(1)), collapse = "; "))
   w
 }
 
