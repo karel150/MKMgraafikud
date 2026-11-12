@@ -1041,12 +1041,17 @@ function indeksiKaart(ix, nf1) {
   if (ix.desc) head.append(el('p', 'note', esc(ix.desc)));
   c.append(head);
 
-  // Alaskoorid (nt B-READY sambad): praegune skoor ja muutus eelmisest väljaandest
+  // Alaread: kas alaskoorid (praegune skoor ja muutus) või kohad riikide seas (WGI mõõtmed, B-READY sambad)
   if (ix.pillars && ix.pillars.length) {
     const t = el('div', 'pillars');
-    const onEelmine = ix.pillars.some((p) => p[2] != null); // võrdlusveeru päis ainult siis, kui eelmise väljaande alaskoorid on olemas
-    t.innerHTML = `<div class="prow ph"><span></span><span>${ix.year || ''}</span><span>${ix.prevYear && onEelmine ? 'vs ' + ix.prevYear : ''}</span></div>` +
+    const kohad = ix.pillarsKind === 'koht';
+    const onEelmine = ix.pillars.some((p) => p[2] != null); // võrdlusveeru päis ainult siis, kui eelmise väljaande andmed on olemas
+    t.innerHTML = `<div class="prow ph"><span>${kohad ? `Koht${ix.pillarsOf ? ` ${ix.pillarsOf} riigi seas` : ''}` : ''}</span><span>${ix.year || ''}</span><span>${ix.prevYear && onEelmine ? 'vs ' + ix.prevYear : ''}</span></div>` +
       ix.pillars.map(([n, v, p]) => {
+        if (kohad) { // väiksem koht on parem
+          const d = v != null && p != null ? p - v : null;
+          return `<div class="prow"><span class="pn">${esc(n)}</span><span class="pv">${v != null ? v + '.' : '–'}</span><span class="chg${d > 0 ? ' up' : d < 0 ? ' dn' : ''}"${d ? ` title="${ix.prevYear}: ${p}. koht"` : ''}>${d == null ? '' : d > 0 ? '▲ ' + d : d < 0 ? '▼ ' + (-d) : 'sama'}</span></div>`;
+        }
         const d = v != null && p != null ? v - p : null;
         return `<div class="prow"><span class="pn">${esc(n)}</span><span class="pv">${v != null ? v.toLocaleString('et-EE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '–'}</span><span class="chg${d > 0 ? ' up' : d < 0 ? ' dn' : ''}">${d == null ? '' : (d > 0 ? '+' : d < 0 ? '−' : '±') + nf1(Math.abs(d))}</span></div>`;
       }).join('');
