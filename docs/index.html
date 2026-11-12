@@ -1579,7 +1579,8 @@ const INDEKSI_VALD = {
   itci: ['maksusüsteemi', 'maksude konkurentsivõime'], esss: ['iduettevõtluse', 'iduettevõtluse'], ief: ['majandusvabaduse', 'majandusvabaduse'],
   cpi: ['vähese korruptsiooni', 'korruptsioonitaju'], gii: ['innovatsiooni', 'globaalse innovatsiooni'],
   eis: ['innovatsiooni (Euroopa Liidu riikide võrdluses)', 'Euroopa Liidu innovatsiooni'], gtci: ['talentide', 'talentide konkurentsivõime'],
-  imd: ['üldise konkurentsivõime', 'üldise konkurentsivõime'], imdd: ['digitaalse konkurentsivõime', 'digitaalse konkurentsivõime'] };
+  imd: ['üldise konkurentsivõime', 'üldise konkurentsivõime'], imdd: ['digitaalse konkurentsivõime', 'digitaalse konkurentsivõime'],
+  idi: ['internetiühenduste', 'IKT arengu'] };
 function koostaIndeksiKokkuvote() {
   const loend = (l) => (l.length > 1 ? l.slice(0, -1).join(', ') + ' ja ' + l.at(-1) : l[0] || '');
   // suhteline koht: 0 = esimene, 1 = viimane; kui riikide arvu pole, loetakse esikümme tugevaks
