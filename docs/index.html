@@ -849,13 +849,17 @@ function headline(it) {
     const koht = vals.filter((x) => x > v).length + 1;
     return { big: it.pm ? sgn(v, fmt) : fmt(v), unit: it.unit.trim(), per, delta: vals.length > 1 ? `kõrguselt ${koht}. ${vals.length} riigi seas` : null };
   }
-  const i = lastIdx(it.y);
-  const v = it.y[i];
-  const per = it.per || (it.freq === 'Q' ? it.x[i] + ' kv' : it.x[i]);
+  // Kui näitajal on hinnanguline jätk (katkendjoon, nt majandususaldus pärast Eurostati viimast kuud),
+  // on pealkirjas kõige viimane väärtus koos hinnanguga; perioodi juures on siis märge „hinnang“.
+  const y = it.est ? it.y.map((w, k) => (w != null ? w : it.est[k])) : it.y;
+  const i = lastIdx(y);
+  const v = y[i];
+  const hinnang = it.est && it.y[i] == null ? ` (${(it.estName || 'hinnang').toLowerCase()})` : '';
+  const per = it.per || (it.freq === 'Q' ? it.x[i] + ' kv' : it.x[i]) + hinnang;
   let delta = null;
   const lag = { M: 12, Q: 4, H: 2, A: 1 }[it.freq];
-  if (it.head === 'level' && i - lag >= 0 && it.y[i - lag] != null) delta = sgn(v - it.y[i - lag], fmt) + (it.unit === '%' ? ' pp' : '') + ' aastaga';
-  if (it.head === 'levelpct' && i - lag >= 0 && it.y[i - lag]) delta = sgn((v / it.y[i - lag] - 1) * 100) + ' % aastaga';
+  if (it.head === 'level' && i - lag >= 0 && y[i - lag] != null) delta = sgn(v - y[i - lag], fmt) + (it.unit === '%' ? ' pp' : '') + ' aastaga';
+  if (it.head === 'levelpct' && i - lag >= 0 && y[i - lag]) delta = sgn((v / y[i - lag] - 1) * 100) + ' % aastaga';
   return { big: (it.head === 'yoy' || it.head === 'custom' ? sgn(v, fmt) : fmt(v)), unit: it.unit.trim(), per, delta };
 }
 
