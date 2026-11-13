@@ -1,0 +1,100 @@
+name: Uuenda indeksit
+description: Sisesta edetabeli uue väljaande andmed. Robot kirjutab need tabelisse ja leht uueneb mõne minutiga.
+title: "Indeksi uuendus: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Tühjaks jäetud lahtrit ei muudeta.** Lahtri sisu kustutamiseks kirjuta sinna `-` (sidekriips).
+        Pikad tekstid (kirjeldus, piirangud, „mida see näitab") on failis `andmed/indeksid.csv` ja siit neid muuta ei saa.
+        WGI ja B-READY kohad tulevad Maailmapangast automaatselt, seepärast neid siin ei ole.
+  - type: dropdown
+    id: indeks
+    attributes:
+      label: Indeks
+      options:
+        - imd – IMD maailma konkurentsivõime edetabel
+        - gii – Ülemaailmne innovatsiooniindeks (GII)
+        - eis – Euroopa innovatsiooni tulemustabel (EIS)
+        - itci – Rahvusvaheline maksukonkurentsivõime indeks
+        - cpi – Korruptsioonitajumise indeks (CPI)
+        - ief – Majandusvabaduse indeks
+        - esss – Euroopa iduettevõtete ja kasvufaasis ettevõtete tulemustabel (ESSS)
+        - idi – IKT arengu indeks (ITU IDI)
+        - imdd – IMD maailma digitaalse konkurentsivõime edetabel
+        - imdt – IMD maailma talentide edetabel
+        - gtci – Talentide konkurentsivõime indeks (GTCI)
+    validations:
+      required: true
+  - type: checkboxes
+    id: nihuta
+    attributes:
+      label: Uus väljaanne
+      description: Märgi, kui sisestad uue väljaande. Siis tõstetakse senine aasta, koht, skoor ja tulemusrühm ise „eelmise väljaande" alla ja sa ei pea neid allpool uuesti sisestama.
+      options:
+        - label: See on uus väljaanne – tõsta senised andmed eelmise väljaande alla
+  - type: input
+    id: aasta
+    attributes:
+      label: Väljaande aasta
+      placeholder: "2027"
+  - type: input
+    id: koht
+    attributes:
+      label: Eesti koht
+      placeholder: "28"
+  - type: input
+    id: riike
+    attributes:
+      label: Riikide arv edetabelis
+      placeholder: "70"
+  - type: input
+    id: skoor
+    attributes:
+      label: Skoor
+      description: Ainult siis, kui tahad skoori eraldi näidata (koma või punkt, mõlemad sobivad).
+      placeholder: "78,7"
+  - type: input
+    id: silt
+    attributes:
+      label: Silt kaardil
+      description: Lühike märkus koha all, nt „Skoor 78,7 · Euroopas 6. koht 44 riigi seas".
+  - type: input
+    id: ruhm
+    attributes:
+      label: Tulemusrühm
+      description: Ainult rühmadega edetabelitel (EIS, ESSS), nt „Tugev innovaator".
+  - type: textarea
+    id: vordlus
+    attributes:
+      label: Võrdlusriigid
+      description: |
+        Üks riik real kujul `Riik: koht`. Lisa ka Eesti. Kui tahad lisaks skoori, siis `Riik: koht / skoor`; ainult skoori korral `Riik: - / skoor`.
+        Täidetud lahter asendab selle indeksi senise võrdluse täielikult.
+      placeholder: |
+        Eesti: 9
+        Soome: 13
+        Leedu: 15
+        Läti: 25
+  - type: input
+    id: url
+    attributes:
+      label: Raporti link
+      placeholder: "https://…"
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        **Eelmine väljaanne.** Täida ainult siis, kui tahad eelmise väljaande andmeid käsitsi parandada. Uue väljaande puhul piisab ülal olevast linnukesest.
+  - type: input
+    id: eelmine_aasta
+    attributes:
+      label: Eelmise väljaande aasta
+  - type: input
+    id: eelmine_koht
+    attributes:
+      label: Eelmise väljaande koht
+  - type: input
+    id: eelmine_skoor
+    attributes:
+      label: Eelmise väljaande skoor
