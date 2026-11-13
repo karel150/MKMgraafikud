@@ -35,7 +35,7 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `R/vordlus.R` | Rahvusvahelise võrdluse andmed Eurostatist (`docs/data/vordlus.json`). Riike saab muuta muutujas `VORDLUS_RIIGID`. |
 | `R/indeksid.R` | Teeb edetabelite CSV-failidest JSON-i. |
 | `R/abi.R` | Ühised abifunktsioonid: päringud, kontrollid, JSON-i kirjutamine. |
-| `andmed/indeksid.csv` | Edetabelid, üks rida edetabeli kohta. **Uuendatakse käsitsi.** Erand on WGI kuus mõõdet, mille robot laadib Maailmapanga API-st. |
+| `andmed/indeksid.csv` | Edetabelid, üks rida edetabeli kohta. Arve ja silte muuda vormiga „Uuenda indeksit" (vt allpool); pikad tekstid muuda failis. WGI ja B-READY kohad laadib robot Maailmapanga API-st. |
 | `andmed/indeksid_vordlus.csv` | Võrdlusriikide kohad edetabelites. **Uuendatakse käsitsi.** |
 | `docs/data/kokkuvote.json` | Majanduse graafikute lehe sissejuhatav lõik. Kui väli `tekst` on tühi, koostab leht lõigu automaatselt viimastest andmetest; täidetuna näidatakse analüütiku teksti (lisaks `autor`, `kuupaev`). **Muudetakse käsitsi.** |
 | `andmed/maksuvola_ulevaade.csv` | Maksu- ja Tolliameti maksuvõla ülevaate koopia. Robot laadib värske faili EMTA lingilt; seda koopiat kasutatakse ainult siis, kui allalaadimine ebaõnnestub (siis tekib hoiatus). |
@@ -47,6 +47,20 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `tools/echarts-kooste.mjs` | ECharts'i kohandatud kooste kirjeldus: `docs/lib/echarts.min.js` sisaldab ainult lehel kasutatavaid graafikutüüpe. Uue tüübi lisamisel ehita fail uuesti (juhis faili päises). |
 | `.github/workflows/uuenda.yml` | Automaatne uuendamine ja avaldamine. |
 | `mkm-ee/manustamine.html` | Koodijupp mkm.ee veebimeeskonnale. |
+
+
+## Indeksite uuendamine vormiga
+
+Edetabeli uue väljaande andmeid ei pea CSV-faili käsitsi kirjutama.
+
+1. Ava repos **Issues → New issue → Uuenda indeksit**.
+2. Vali indeks ja täida lahtrid, mida tahad muuta. Tühjaks jäetud lahtrit ei muudeta; lahtri sisu kustutamiseks kirjuta `-`.
+3. Uue väljaande puhul märgi linnuke „See on uus väljaanne": senine aasta, koht ja skoor tõstetakse ise eelmise väljaande alla.
+4. Vajuta **Create**. Robot kirjutab muudatuse tabelisse, käivitab lehe uuenduse ja vastab sissekandele kokkuvõttega (mis väli muutus millest milleks). Kui vormis on viga, ütleb vastus, mis on valesti; paranda sissekanne (Edit) ja robot proovib uuesti.
+
+Vormi saavad kasutada ainult repo omanik ja liikmed. Vormis ei ole pikki tekste (kirjeldus, piirangud, „mida see näitab") ega WGI-d ja B-READY-d.
+
+Uue indeksi lisamisel lisa rida faili `andmed/indeksid.csv` ja sama lühend vormi rippmenüüsse (`.github/ISSUE_TEMPLATE/indeksi-uuendus.yml`). Vormi sisu töötleb `tools/indeksi_vorm.py`, tööd juhib `.github/workflows/indeksi-vorm.yml`.
 
 ## Esmakordne seadistamine
 

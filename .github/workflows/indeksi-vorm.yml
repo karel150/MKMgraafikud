@@ -1,0 +1,98 @@
+# Vorm „Uuenda indeksit" (Issues -> New issue): robot kirjutab vormi sisu failidesse
+# andmed/indeksid.csv ja andmed/indeksid_vordlus.csv, käivitab lehe uuenduse ja vastab
+# sissekandele kokkuvõttega. Vormi saavad kasutada ainult repo omanik ja liikmed.
+# Vormi tekst on kasutaja sisestatud: seda ei panda kunagi käsureale, skript loeb selle
+# sündmuse failist ($GITHUB_EVENT_PATH).
+name: Indeksi vorm
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: write   # muudatuse salvestamine
+  issues: write     # vastus ja sissekande sulgemine
+  actions: write    # lehe uuenduse käivitamine
+
+concurrency:
+  group: indeksi-vorm
+  cancel-in-progress: false
+
+jobs:
+  rakenda:
+    if: github.event.issue.state == 'open' && startsWith(github.event.issue.title, 'Indeksi uuendus')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NR: ${{ github.event.issue.number }}
+    steps:
+      - name: Kontrolli, kas sisestaja on repo liige
+        id: oigus
+        env:
+          SEOS: ${{ github.event.issue.author_association }}
+        run: |
+          case "$SEOS" in
+            OWNER|MEMBER|COLLABORATOR) echo "ok=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "ok=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - name: Keeldu, kui ei ole liige
+        if: steps.oigus.outputs.ok != 'true'
+        run: |
+          gh issue comment "$NR" --repo "$GITHUB_REPOSITORY" --body "Indekseid saavad selle vormi kaudu muuta ainult repo liikmed. Sissekannet ei rakendatud."
+          gh issue close "$NR" --repo "$GITHUB_REPOSITORY" --reason "not planned"
+
+      - uses: actions/checkout@v4
+        if: steps.oigus.outputs.ok == 'true'
+        with:
+          ref: main
+
+      - name: Kirjuta vormi sisu tabelisse
+        if: steps.oigus.outputs.ok == 'true'
+        id: vorm
+        run: |
+          set +e
+          python3 tools/indeksi_vorm.py --sundmus "$GITHUB_EVENT_PATH" --valjund kokkuvote.md > tulemus.txt
+          echo "kood=$?" >> "$GITHUB_OUTPUT"
+          grep '^muutus=' tulemus.txt >> "$GITHUB_OUTPUT"
+
+      - name: Salvesta muudatus
+        if: steps.vorm.outputs.kood == '0' && steps.vorm.outputs.muutus == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add andmed/indeksid.csv andmed/indeksid_vordlus.csv
+          git commit -m "Indeksi uuendus vormist (#$NR)"
+          for katse in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep 5
+          done
+          exit 1
+
+      # Roboti enda push teisi workflow'sid ei käivita, seepärast käivitatakse lehe uuendus eraldi.
+      - name: Käivita lehe uuendus
+        if: steps.vorm.outputs.kood == '0' && steps.vorm.outputs.muutus == 'true'
+        run: gh workflow run uuenda.yml --repo "$GITHUB_REPOSITORY" --ref main
+
+      - name: Vasta sissekandele
+        if: always() && steps.oigus.outputs.ok == 'true'
+        env:
+          KOOD: ${{ steps.vorm.outputs.kood }}
+          MUUTUS: ${{ steps.vorm.outputs.muutus }}
+          TOO: ${{ job.status }}
+        run: |
+          [ -f kokkuvote.md ] || echo "Vormi töötlemine ebaõnnestus enne, kui sisu sai loetud." > kokkuvote.md
+          if [ "$KOOD" = "0" ] && [ "$MUUTUS" = "true" ] && [ "$TOO" = "success" ]; then
+            printf '\nMuudatus on salvestatud. Leht uueneb mõne minuti pärast: [käivitused](%s/%s/actions/workflows/uuenda.yml).\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" >> kokkuvote.md
+            gh issue comment "$NR" --repo "$GITHUB_REPOSITORY" --body-file kokkuvote.md
+            gh issue close "$NR" --repo "$GITHUB_REPOSITORY" --reason completed
+          elif [ "$KOOD" = "0" ] && [ "$MUUTUS" = "false" ]; then
+            gh issue comment "$NR" --repo "$GITHUB_REPOSITORY" --body-file kokkuvote.md
+            gh issue close "$NR" --repo "$GITHUB_REPOSITORY" --reason "not planned"
+          elif [ "$KOOD" = "1" ]; then
+            gh issue comment "$NR" --repo "$GITHUB_REPOSITORY" --body-file kokkuvote.md
+          else
+            printf '\n**Salvestamine ebaõnnestus.** Vaata [käivituse logi](%s/%s/actions/runs/%s); sissekanne jääb avatuks.\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> kokkuvote.md
+            gh issue comment "$NR" --repo "$GITHUB_REPOSITORY" --body-file kokkuvote.md
+          fi
