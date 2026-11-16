@@ -111,13 +111,15 @@ async function kysi(sonum) {
   const vastus = await fetch(API, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': VOTI, 'anthropic-version': '2023-06-01' },
-    // temperature'i ei saadeta: uuemad mudelid seda enam ei toeta (API annab vea 400)
-    body: JSON.stringify({ model: MUDEL, max_tokens: 900, system: SYSTEM, messages: [{ role: 'user', content: sonum }] }),
+    // temperature'i ei saadeta: uuemad mudelid seda enam ei toeta (API annab vea 400).
+    // max_tokens on suur, sest mudeli mõttekäik läheb samasse arvestusse: väikese piiri
+    // korral saab vastus otsa enne, kui tekst on kirjutatud.
+    body: JSON.stringify({ model: MUDEL, max_tokens: 4000, system: SYSTEM, messages: [{ role: 'user', content: sonum }] }),
   });
   if (!vastus.ok) throw new Error(`API ${vastus.status}: ${(await vastus.text()).slice(0, 300)}`);
   const j = await vastus.json();
   const t = (j.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('\n').trim();
-  if (!t) throw new Error('API vastus oli tühi');
+  if (!t) throw new Error(`API vastus oli ilma tekstita (stop_reason: ${j.stop_reason}, plokid: ${(j.content || []).map((c) => c.type).join(',') || 'puuduvad'})`);
   return t;
 }
 
