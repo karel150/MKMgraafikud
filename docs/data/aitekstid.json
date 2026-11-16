@@ -1,5 +1,16 @@
 {
- "uuendatud": "2026-11-16T11:22:46.518Z",
+ "uuendatud": "2026-11-16T11:29:16.169Z",
  "mudel": "claude-sonnet-5-5",
- "tekstid": {}
+ "tekstid": {
+  "indeksid": {
+   "laused": [
+    "Eesti paistab rahvusvahelistes edetabelites silma eelkõige maksusüsteemi, iduettevõtluse ja internetiühenduste poolest.",
+    "Maailma parimate hulka kuulub ta ka majandusvabaduse, vähese korruptsiooni, innovatsiooni ja talentide edetabelis, kuid digitaalse konkurentsivõime, Euroopa Liidu innovatsiooni ja üldise konkurentsivõime edetabelis jääb ta riikide esimesse poolde, mitte tippu.",
+    "Võrreldes eelmise väljaandega on Eesti tõusnud korruptsioonitaju ja üldise konkurentsivõime edetabelis, kuid langenud majandusvabaduse, globaalse innovatsiooni, talentide konkurent"
+   ],
+   "rohk": "paistab rahvusvahelistes edetabelites silma",
+   "rasi": "7f5da09350c431c5",
+   "aeg": "2026-11-16"
+  }
+ }
 }
