@@ -1422,6 +1422,7 @@ function koostaUlevaade(D) {
     too: viim(S('tootlev_m_yoy')), eks: viim(eksY), eksSaba: saba(eksY, 24), jae: viim(jaeY),
     thi: viim(S('thi_m')), thi0: viim(S('thi_m'), 2), thiSaba: saba(S('thi_m'), 24),
     reg: viim(S('regtootud_m')), regA: viim(regY), regSaba: saba(S('regtootud_m'), 24),
+    tootus: viim(S('tootus_q')),
     palk: viim(S('palk_q_lvl')), palkA: viim(S('palk_q_yoy')), vabad: viim(S('tk_vabad_m')), esi };
 }
 // Suund: ▲/▼ ja värv selle järgi, kas tõus on selle näitaja puhul hea (hea = 1), halb (−1) või neutraalne (0)
@@ -1467,7 +1468,7 @@ function buildUlevaade() {
   if (u.eks) lisa('Eksport', u.eks, 1, pr(u.eks.v) + '%', `Kaupade eksport aastaga, ${silt(u.eks.p)}`);
   if (u.jae) lisa('Jaemüük', u.jae, 1, pr(u.jae.v) + '%', `Jaemüügi maht aastaga, ${silt(u.jae.p)}`);
   if (u.thi) lisa('Hinnad', u.thi, -1, pr(u.thi.v) + '%', `Tarbijahinnaindeks aastaga, ${silt(u.thi.p)}`);
-  if (u.regA) lisa('Töötud', u.regA, -1, pr(u.regA.v) + '%', `Registreeritud töötute arv aastaga, ${silt(u.regA.p)}`);
+  if (u.tootus) lisa('Töötus', u.tootus, null, pr(u.tootus.v) + '%', `Töötuse määr (Statistikaamet, tööjõu-uuring), ${silt(u.tootus.p)} kv`);
   if (u.palk) lisa('Palk', u.palk, null, f0(u.palk.v) + ' €', `Keskmine brutokuupalk, ${silt(u.palk.p)} kv`);
   if (u.vabad) lisa('Vabad töökohad', u.vabad, null, f0(u.vabad.v), `Töötukassa vahendatavad vabad töökohad, ${silt(u.vabad.p)}`);
   if (u.esi) lisa('Usaldus', u.esi, null, pr(u.esi.v), `Majandususaldusindeks, ${silt(u.esi.p)}${u.esi.hinnang ? ' (hinnang)' : ''}`);
