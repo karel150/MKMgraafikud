@@ -111,7 +111,8 @@ async function kysi(sonum) {
   const vastus = await fetch(API, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': VOTI, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MUDEL, max_tokens: 900, temperature: 0.4, system: SYSTEM, messages: [{ role: 'user', content: sonum }] }),
+    // temperature'i ei saadeta: uuemad mudelid seda enam ei toeta (API annab vea 400)
+    body: JSON.stringify({ model: MUDEL, max_tokens: 900, system: SYSTEM, messages: [{ role: 'user', content: sonum }] }),
   });
   if (!vastus.ok) throw new Error(`API ${vastus.status}: ${(await vastus.text()).slice(0, 300)}`);
   const j = await vastus.json();
