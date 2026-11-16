@@ -2,5 +2,5 @@
  "tekst": "",
  "autor": "",
  "kuupaev": "",
- "selgitus": "Kui 'tekst' on täidetud, näidatakse seda majanduse graafikute lehe alguses automaatse kokkuvõtte asemel. Tühjaks jättes koostatakse kokkuvõte automaatselt."
+ "selgitus": "Kui 'tekst' on täidetud, näidatakse seda analüütiku kokkuvõttena avalehel ja graafikute lehel. Tühjaks jättes kirjutab kokkuvõtte tehisaru (docs/data/aitekstid.json); kui ka seda pole, koostab leht teksti ise lihtsate reeglite järgi."
 }

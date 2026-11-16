@@ -398,6 +398,24 @@ const lastIdx = (a) => { for (let i = a.length - 1; i >= 0; i--) if (a[i] != nul
 let GROUPS = [];
 let KOKKUVOTE = null; // { tekst, meta } majanduse graafikute lehe sissejuhatav lõik
 let INDEXES = [];
+// Tehisaru koostatud kokkuvõtted (docs/data/aitekstid.json, vt tools/ai_kokkuvotted.mjs).
+// Tekst kirjutatakse andmete uuendamise ajal reeglipõhise kokkuvõtte ja viimaste arvude
+// põhjal. Kui faili või mõnda teksti pole, näitab leht endist reeglipõhist kokkuvõtet.
+let AITEKSTID = null;
+const aiTekst = (votme) => {
+  const t = AITEKSTID && AITEKSTID.tekstid && AITEKSTID.tekstid[votme];
+  return t && Array.isArray(t.laused) && t.laused.length ? t : null;
+};
+const aiMeta = (t) => {
+  const p = /^\d{4}-\d{2}-\d{2}$/.test(t.aeg || '') ? new Date(t.aeg).toLocaleDateString('et-EE') : '';
+  return `Selle kokkuvõtte kirjutas tehisaru${AITEKSTID.mudel ? ` (${esc(AITEKSTID.mudel)})` : ''} graafikute aluseks olevate andmete põhjal${p ? ' ' + esc(p) : ''}. Arvud pärinevad samadest andmetest ja kontrollitakse automaatselt üle, kuid tekst ei asenda analüütiku hinnangut.`;
+};
+// Kokkuvõttekaart: tehisaru tekst, kui see on olemas, muidu reeglipõhine (varu).
+function aiVoiVaru(votme, varu, silt) {
+  const t = aiTekst(votme);
+  const kv = t ? { laused: t.laused, rohk: t.rohk || '', meta: aiMeta(t), ai: true } : varu();
+  return kv ? kokkuvotteKaart(kv, `${t ? 'Tehisaru kokkuvõte' : 'Automaatne kokkuvõte'} · ${silt}`) : null;
+}
 // Valdkonnad indikaatorite tabeli järjekorras (mõlemal graafikute vahekaardil)
 const VALDKONNAD = ['Majanduskasv, tootmine ja tarbimine', 'Väliskaubandus', 'Investeeringud ja kapital', 'Teadmised ja tehnoloogia',
   'Tootlikkus ja kulud', 'Hinnad ja ostujõud', 'Energia ja kulud', 'Tööturg ja palgad', 'Kindlustunne ja ootused', 'Riigi rahandus'];
@@ -996,7 +1014,7 @@ function buildIndexes() {
   const root = document.getElementById('p-indeksid');
   root.innerHTML = '';
   const nf1 = (v) => v.toLocaleString('et-EE', { maximumFractionDigits: 1 });
-  try { const kv = koostaIndeksiKokkuvote(); if (kv) root.append(kokkuvotteKaart(kv, 'Automaatne kokkuvõte · Eesti koht edetabelites')); } catch (e) { console.error(e); }
+  try { const k = aiVoiVaru('indeksid', koostaIndeksiKokkuvote, 'Eesti koht edetabelites'); if (k) root.append(k); } catch (e) { console.error(e); }
   const osad = [[1, 'Põhiindeksid', 'Väiksem koht on parem. Võrdlus Soome ja Balti riikidega, kus andmed olemas.'],
                 [2, 'Täiendavad indeksid', 'Digitaalne areng, valitsemine ja talendid.']];
   osad.forEach(([prio, nimi, alam]) => {
@@ -1268,7 +1286,7 @@ function buildVordlus() {
     [['M', 'Kuu'], ['Q', 'Kvartal'], ['A', 'Aasta']].map(([k, n]) => `<button type="button" role="radio" data-f="${k}" aria-checked="${k === vrdFreq}" tabindex="${k === vrdFreq ? 0 : -1}">${n}</button>`).join('') +
     `</div><span class="fnote">Tulbad näitavad iga riigi väärtust viimasel perioodil, mille kohta on Eesti andmed. Kui riigil selle perioodi andmed puuduvad, on näidatud tema viimane periood (sulgudes). Aegrea leiad kaardi tabelist. Kõik andmed on Eurostatist, seetõttu võivad Eesti väärtused veidi erineda Statistikaameti omadest.</span>`;
   root.append(bar);
-  try { const kv = koostaVordluseKokkuvote(vrdFreq); if (kv) root.append(kokkuvotteKaart(kv, 'Automaatne kokkuvõte · Eesti võrdlusriikide seas')); } catch (e) { console.error(e); }
+  try { const k = aiVoiVaru(`vordlus_${vrdFreq}`, () => koostaVordluseKokkuvote(vrdFreq), 'Eesti võrdlusriikide seas'); if (k) root.append(k); } catch (e) { console.error(e); }
   const btns = [...bar.querySelectorAll('button[data-f]')];
   const vali = (f) => { vrdFreq = f; try { localStorage.setItem('vrdFreq', f); } catch (e) {} buildVordlus(); renderPanel('vordlus'); const b = root.querySelector(`button[data-f="${f}"]`); if (b) b.focus(); };
   btns.forEach((b, i) => {
@@ -1319,11 +1337,14 @@ function buildUlevaated(U) {
 const KUUD_ESS = ['jaanuaris', 'veebruaris', 'märtsis', 'aprillis', 'mais', 'juunis', 'juulis', 'augustis', 'septembris', 'oktoobris', 'novembris', 'detsembris'];
 const KUUD_GEN = ['jaanuari', 'veebruari', 'märtsi', 'aprilli', 'mai', 'juuni', 'juuli', 'augusti', 'septembri', 'oktoobri', 'novembri', 'detsembri'];
 function koostaKokkuvote(D, kasitsi) {
+  // Järjekord: analüütiku käsitsi kirjutatud tekst > tehisaru tekst > reeglipõhine tekst.
   if (kasitsi && kasitsi.tekst && kasitsi.tekst.trim()) {
     const t = kasitsi.tekst.trim(), lopp = t.search(/[.!?](\s|$)/);
     return { tekst: esc(t), laused: lopp < 0 ? [t] : [t.slice(0, lopp + 1), t.slice(lopp + 1).trim()].filter(Boolean), rohk: '', kasitsi: true,
       meta: `Analüütiku kokkuvõte${kasitsi.autor ? ', ' + esc(kasitsi.autor) : ''}${kasitsi.kuupaev ? ', ' + esc(kasitsi.kuupaev) : ''}.` };
   }
+  const ai = aiTekst('yldine');
+  if (ai) return { tekst: ai.laused.map(esc).join(' '), laused: ai.laused, rohk: ai.rohk || '', ai: true, meta: aiMeta(ai) };
   const S = (k) => D.seeriad[k] || { periods: [], values: [] };
   const last = (s, n = 1) => { const i = s.values.length - n; return i >= 0 ? { p: s.periods[i], v: s.values[i] } : null; };
   const yoyM = (s) => { const n = s.values.length; return n > 12 && s.values[n - 13] ? { p: s.periods[n - 1], v: (s.values[n - 1] / s.values[n - 13] - 1) * 100 } : null; };
@@ -1488,7 +1509,7 @@ function buildUlevaade() {
     if (KOKKUVOTE.rohk) juhtH = juhtH.replace(esc(KOKKUVOTE.rohk), `<em>${esc(KOKKUVOTE.rohk)}</em>`);
     const k = el('section', 'ul-kaart');
     k.setAttribute('aria-labelledby', 'ul-kv');
-    k.innerHTML = `<p class="ul-silt" id="ul-kv">${KOKKUVOTE.kasitsi ? 'Analüütiku kokkuvõte' : 'Automaatne kokkuvõte'} · ${esc(document.getElementById('seis').textContent)}</p>
+    k.innerHTML = `<p class="ul-silt" id="ul-kv">${KOKKUVOTE.kasitsi ? 'Analüütiku kokkuvõte' : KOKKUVOTE.ai ? 'Tehisaru kokkuvõte' : 'Automaatne kokkuvõte'} · ${esc(document.getElementById('seis').textContent)}</p>
       <p class="ul-juht">${juhtH}</p>${muu.length ? `<p class="ul-tekst">${muu.map(esc).join(' ')}</p>` : ''}
       <div class="ul-nupud"><button type="button" class="ul-nupp" data-ava="majandus">Vaata kõiki graafikuid</button><button type="button" class="ul-nupp" data-ava="vordlus">Võrdle naaberriikidega</button><button type="button" class="ul-nupp" data-ava="majandusplaan">Majandusplaaniindeks</button></div>
       <p class="ul-meta">${KOKKUVOTE.meta}</p>`;
@@ -1982,13 +2003,15 @@ const EHITA = {};
 // Andmete laadimine algab kohe, fontide laadimisega paralleelselt
 const ANDMED = Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json'),
       laeJson('data/vordlus.json').catch((e) => { console.error(e); return null; }), laeJson('data/ulevaated.json').catch((e) => { console.error(e); return null; }),
-      laeJson('data/kokkuvote.json').catch(() => null), laeJson('data/seis.json').catch(() => null)]);
+      laeJson('data/kokkuvote.json').catch(() => null), laeJson('data/seis.json').catch(() => null),
+      laeJson('data/aitekstid.json').catch(() => null)]);
 ANDMED.catch(() => {}); // viga käsitletakse kaivita() sees
 
 async function kaivita() {
   try {
-    const [nait, mp, ix, meta, vrd, ulv, kv, seis] = await ANDMED;
+    const [nait, mp, ix, meta, vrd, ulv, kv, seis, ait] = await ANDMED;
     ULEVAATED = ulv ? ulv.ulevaated : null;
+    AITEKSTID = ait;
     EHITA.vordlus = () => { if (vrd) VGROUPS = koostaVordlus(vrd, meta.naitajad); buildVordlus(); };
     GROUPS = koostaGrupid(nait, meta.naitajad);
     KOKKUVOTE = koostaKokkuvote(nait, kv);
