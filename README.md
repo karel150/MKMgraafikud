@@ -22,6 +22,7 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 * **Leht** loeb JSON-failid. Kvartali- ja aastavaated, aastamuutused ja z-skoorid arvutab leht ise.
 * **Eurostati päringud** tehakse kuni kolme katsega ja iga andmestik laaditakse käivituse jooksul üks kord (`get_eurostat`, `eurostat_plaan` failis `R/abi.R`).
 * **Andmefail kirjutatakse ainult siis, kui andmed muutusid.** Päeval, mil midagi uut ei avaldatud, commit'i ei teki. Viimase kontrolli aeg on failis `docs/data/seis.json`, mis avaldatakse koos lehega, kuid ei lähe repo ajalukku (`.gitignore`).
+* **Kokkuvõtvad lõigud kirjutab tehisaru** (vt „Tehisaru koostatud tekstid" allpool). Kui see ebaõnnestub või on välja lülitatud, koostab leht lõigud nagu varem lihtsate reeglite järgi.
 * **Kaitse vigase uuenduse vastu:** kui mõne seeria laadimine ebaõnnestub või andmed tunduvad valed (tühi seeria, väärtused väljaspool lubatud vahemikku, viimane periood varasem kui eelmisel korral), jääb alles eelmine töötav versioon. Hoiatus läheb faili `hoiatused.txt` ja GitHub saadab teavituse.
 
 ## Failid
@@ -37,17 +38,50 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `R/abi.R` | Ühised abifunktsioonid: päringud, kontrollid, JSON-i kirjutamine. |
 | `andmed/indeksid.csv` | Edetabelid, üks rida edetabeli kohta. Arve ja silte muuda vormiga „Uuenda indeksit" (vt allpool); pikad tekstid muuda failis. WGI ja B-READY kohad laadib robot Maailmapanga API-st. |
 | `andmed/indeksid_vordlus.csv` | Võrdlusriikide kohad edetabelites. **Uuendatakse käsitsi.** |
-| `docs/data/kokkuvote.json` | Majanduse graafikute lehe sissejuhatav lõik. Kui väli `tekst` on tühi, koostab leht lõigu automaatselt viimastest andmetest; täidetuna näidatakse analüütiku teksti (lisaks `autor`, `kuupaev`). **Muudetakse käsitsi.** |
+| `docs/data/kokkuvote.json` | Analüütiku kokkuvõte avalehele ja graafikute lehele. Täidetuna näidatakse seda (lisaks `autor`, `kuupaev`); tühjalt jäetuna kirjutab lõigu tehisaru ja selle puudumisel leht ise reeglite järgi. **Muudetakse käsitsi.** |
 | `andmed/maksuvola_ulevaade.csv` | Maksu- ja Tolliameti maksuvõla ülevaate koopia. Robot laadib värske faili EMTA lingilt; seda koopiat kasutatakse ainult siis, kui allalaadimine ebaõnnestub (siis tekib hoiatus). |
 | `andmed/ulevaated.csv` | Teiste asutuste ülevaadete lingid (veerud `grupp`, `pealkiri`, `url`). **Uuendatakse käsitsi**, ka GitHubi veebis. Read on lehel samas järjekorras. |
 | `docs/index.html` | Veebileht. |
 | `docs/data/` | Andmefailid. Neid kirjutab robot, käsitsi ei muuda (v.a `kirjeldused.json`). |
 | `docs/data/kirjeldused.json` | Näitajate nimed, valdkonnad, põhinäitaja märge ja selgitused (indikaatorite tabeli lehelt 2.1 AS-IS). **Muudetakse käsitsi.** |
 | `docs/lib/`, `docs/fonts/` | ECharts ja fondid. Asuvad samas kohas, et leht ei laadiks midagi välistest teenustest. |
+| `docs/data/aitekstid.json` | Tehisaru koostatud kokkuvõtvad lõigud (avaleht, graafikud, indeksid, rahvusvaheline võrdlus). Kirjutab robot, käsitsi ei muuda. |
+| `tools/ai_kokkuvotted.mjs` | Tellib tehisarult kokkuvõtvad lõigud ja kontrollib need üle (vt allpool). |
+| `tools/ai_test.mjs` | Kontrollfunktsioonide testid: `node tools/ai_test.mjs`. |
 | `tools/echarts-kooste.mjs` | ECharts'i kohandatud kooste kirjeldus: `docs/lib/echarts.min.js` sisaldab ainult lehel kasutatavaid graafikutüüpe. Uue tüübi lisamisel ehita fail uuesti (juhis faili päises). |
 | `.github/workflows/uuenda.yml` | Automaatne uuendamine ja avaldamine. |
 | `mkm-ee/manustamine.html` | Koodijupp mkm.ee veebimeeskonnale. |
 
+
+## Tehisaru koostatud tekstid
+
+Avalehe, graafikute, indeksite ja rahvusvahelise võrdluse kokkuvõtvad lõigud kirjutab iga uuenduse järel tehisaru (Anthropicu API). Lehel on nende juures silt „Tehisaru kokkuvõte" ja selgitus, et teksti koostas tehisaru.
+
+Mida skript `tools/ai_kokkuvotted.mjs` teeb:
+
+1. Avab lehe peata brauseris (sama kood, mida näeb lugeja) ja võtab sealt **reeglipõhise mustandi** ning viimaste perioodide arvud. Nii on tekstis täpselt need arvud, mis on graafikutel – mudel ise arve ei arvuta ega otsi mujalt.
+2. Küsib iga lõigu kohta ühe vastuse. Kui lähteandmed pole eelmisest korrast muutunud, vana tekst jääb ja päringut ei tehta.
+3. **Kontrollib vastuse üle:** iga arv peab esinema lähtematerjalis, lauseid peab olema kokkulepitud arv, prognoose ja soovitusi ei tohi olla. Esimese ebaõnnestumise järel küsitakse uuesti; kui ka see ei kõlba, jääb kehtima eelmine tekst.
+4. Kirjutab tulemuse faili `docs/data/aitekstid.json` ainult siis, kui tekst muutus.
+
+Kui midagi ebaõnnestub (API, brauser, kontroll), läheb hoiatus faili `hoiatused.txt` ja GitHub saadab teate; leht näitab eelmist teksti või reeglipõhist kokkuvõtet. Analüütiku käsitsi kirjutatud tekst failis `docs/data/kokkuvote.json` on alati tähtsam kui tehisaru oma.
+
+Seadistamine GitHubis (*Settings → Secrets and variables → Actions*):
+
+| Nimi | Kus | Mille jaoks |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Secrets | API võti. Ilma selleta tekste ei uuendata (tuleb hoiatus). |
+| `AI_MUDEL` | Variables (valikuline) | Mudeli nimi, vaikimisi `claude-sonnet-5-5`. |
+| `AI_TEKSTID` | Variables (valikuline) | Väärtus `0` lülitab tehisaru tekstid välja ja leht läheb tagasi reeglipõhistele. |
+
+Maht on väike (viis päringut päevas, ainult andmete muutumisel), seega kulu on sendid kuus.
+
+Oma arvutis proovimiseks (nõuab Chrome'i ja Node.js-i):
+
+```bash
+npm install --no-save puppeteer-core@25
+ANTHROPIC_API_KEY=... node tools/ai_kokkuvotted.mjs .
+```
 
 ## Indeksite uuendamine vormiga
 

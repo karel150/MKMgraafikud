@@ -59,6 +59,21 @@ jobs:
           TZ: Europe/Tallinn
           LANG: C.UTF-8
         run: Rscript R/uuenda.R
+      # Kokkuvõtvad lõigud kirjutab tehisaru juba uuendatud andmete põhjal (docs/data/aitekstid.json).
+      # Ebaõnnestumine ei peata uuendust: kehtima jääb eelmine tekst, selle puudumisel reeglipõhine.
+      # Lüliti: repo muutuja AI_TEKSTID=0 lülitab tehisaru tekstid välja, AI_MUDEL valib mudeli.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Koosta kokkuvõtete tekstid
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AI_MUDEL: ${{ vars.AI_MUDEL }}
+          AI_TEKSTID: ${{ vars.AI_TEKSTID }}
+          TZ: Europe/Tallinn
+        run: |
+          npm install --no-save --no-audit --no-fund puppeteer-core@25
+          node tools/ai_kokkuvotted.mjs .
       # Andmed salvestatakse ainult main-harusse. Teistes harudes (testkäivitused)
       # kirjutatakse viimased perioodid logisse, et vältida andmefailide konflikte.
       - name: Testharu kokkuvõte
