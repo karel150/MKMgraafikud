@@ -242,6 +242,7 @@ footer a { color: var(--muted); }
 .ul-riba span { white-space: nowrap; }
 .ul-riba b { font-weight: 500; color: var(--fg); margin-left: 4px; }
 .yles { color: var(--hea); } .alla { color: var(--neg); } .neutr { color: var(--muted); }
+.ul-riba b.yles { color: var(--hea); } .ul-riba b.alla { color: var(--neg); } .ul-riba b.neutr { color: var(--muted); }
 .ul-rida { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 18px; }
 @media (max-width: 900px) { .ul-rida { grid-template-columns: 1fr; } }
 .ul-kaart { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -1422,6 +1423,9 @@ function koostaUlevaade(D) {
     too: viim(S('tootlev_m_yoy')), eks: viim(eksY), eksSaba: saba(eksY, 24), jae: viim(jaeY),
     thi: viim(S('thi_m')), thi0: viim(S('thi_m'), 2), thiSaba: saba(S('thi_m'), 24),
     reg: viim(S('regtootud_m')), regA: viim(regY), regSaba: saba(S('regtootud_m'), 24),
+    tootus: viim(S('tootus_q')), tootusAasta: (() => { // sama kvartal aasta varem
+      const t = S('tootus_q'), p = t.periods.at(-1), i = p ? t.periods.indexOf((+p.slice(0, 4) - 1) + p.slice(4)) : -1;
+      return i >= 0 && t.values[i] != null ? t.values[i] : null; })(),
     palk: viim(S('palk_q_lvl')), palkA: viim(S('palk_q_yoy')), vabad: viim(S('tk_vabad_m')), esi };
 }
 // Suund: ▲/▼ ja värv selle järgi, kas tõus on selle näitaja puhul hea (hea = 1), halb (−1) või neutraalne (0)
@@ -1461,13 +1465,16 @@ function buildUlevaade() {
 
   // 1. Näitajate riba
   const riba = [];
-  const lisa = (nimi, x, hea, tekst, tiitel) => { if (!x) return; const s = hea == null ? null : suund(x.v, hea); riba.push(`<span title="${esc(tiitel)}">${nimi}<b${s ? ` class="${s.c}"` : ''}>${s ? s.m + ' ' : ''}${tekst}</b></span>`); };
+  // suunaV: arv, mille märgi järgi nool valitakse, kui see ei ole näidatav väärtus ise (nt tase, aga nool aastase muutuse järgi)
+  const lisa = (nimi, x, hea, tekst, tiitel, suunaV) => { if (!x) return; const s = hea == null || suunaV === null ? null : suund(suunaV ?? x.v, hea); riba.push(`<span title="${esc(tiitel)}">${nimi}<b${s ? ` class="${s.c}"` : ''}>${s ? s.m + ' ' : ''}${tekst}</b></span>`); };
   if (u.skp) lisa('SKP', u.skp, 1, pr(u.skp.v) + '%', `SKP reaalkasv aastaga, ${silt(u.skp.p)} kv${u.skp.kiir ? ' (kiirhinnang)' : ''}`);
   if (u.too) lisa('Töötlev tööstus', u.too, 1, pr(u.too.v) + '%', `Töötleva tööstuse toodangu maht aastaga, ${silt(u.too.p)}`);
   if (u.eks) lisa('Eksport', u.eks, 1, pr(u.eks.v) + '%', `Kaupade eksport aastaga, ${silt(u.eks.p)}`);
   if (u.jae) lisa('Jaemüük', u.jae, 1, pr(u.jae.v) + '%', `Jaemüügi maht aastaga, ${silt(u.jae.p)}`);
   if (u.thi) lisa('Hinnad', u.thi, -1, pr(u.thi.v) + '%', `Tarbijahinnaindeks aastaga, ${silt(u.thi.p)}`);
-  if (u.regA) lisa('Töötud', u.regA, -1, pr(u.regA.v) + '%', `Registreeritud töötute arv aastaga, ${silt(u.regA.p)}`);
+  if (u.tootus) lisa('Töötus', u.tootus, -1, pr(u.tootus.v) + '%',
+    `Töötuse määr (Statistikaamet, tööjõu-uuring), ${silt(u.tootus.p)} kv${u.tootusAasta == null ? '' : `; aasta varem ${pr(u.tootusAasta)}%`}`,
+    u.tootusAasta == null ? null : u.tootus.v - u.tootusAasta); // nool: kas määr on aastaga tõusnud või langenud
   if (u.palk) lisa('Palk', u.palk, null, f0(u.palk.v) + ' €', `Keskmine brutokuupalk, ${silt(u.palk.p)} kv`);
   if (u.vabad) lisa('Vabad töökohad', u.vabad, null, f0(u.vabad.v), `Töötukassa vahendatavad vabad töökohad, ${silt(u.vabad.p)}`);
   if (u.esi) lisa('Usaldus', u.esi, null, pr(u.esi.v), `Majandususaldusindeks, ${silt(u.esi.p)}${u.esi.hinnang ? ' (hinnang)' : ''}`);
