@@ -40,6 +40,9 @@ const AJUTINE = join(DOCS, 'data', '.aitekstid.json.tmp');
 const MUDEL = process.env.AI_MUDEL || 'claude-sonnet-5-5';
 const API = process.env.AI_URL || 'https://api.anthropic.com/v1/messages';
 const VOTI = process.env.ANTHROPIC_API_KEY || '';
+// Tõsta seda, kui juhiseid või kontrolle muudetakse: siis kirjutatakse kõik tekstid uuesti,
+// ka siis, kui andmed ise pole muutunud.
+const VERSIOON = 2;
 
 const logi = (...a) => console.log('[ai]', ...a);
 const hoiata = (m) => { console.log('[ai] HOIATUS:', m); hoiatused.push(m); };
@@ -73,6 +76,8 @@ Reeglid:
 - Jälgi hoolega suunda: kui materjalis on langus või miinusmärgiga arv, ei tohi kirjutada kasvust, ja vastupidi.
 - Ära ennusta tulevikku, ära anna poliitikasoovitusi ega hinda valitsuse või ametnike tööd. Kirjelda seda, mida andmed näitavad.
 - Kirjuta selges ja neutraalses eesti keeles, täislausetega. Väldi ametnikukeelt ja klišeesid ("oluline on märkida", "kokkuvõttes võib öelda", "jätkuvalt").
+- Hoia laused lühikesed: kuni umbes 25 sõna ja kuni kaks arvu lauses. Pikk arvude loetelu ühes lauses ei ole lubatud.
+- Terves kokkuvõttes on kuni kaheksa arvu. Ülejäänu ütle sõnadega – lugeja näeb kõiki arve graafikutelt.
 - Ära loetle kõiki näitajaid ega korda sama arvu kaks korda. Too esile see, mis on muutunud või eristub, ja seo näitajad omavahel.
 - Ära kasuta sõnu "tehisaru", "mudel" ega viita endale.
 
@@ -91,8 +96,10 @@ function kontrolli(tekst, lahtematerjal, lauseid) {
   const read = tekst.split('\n').map((r) => r.trim()).filter(Boolean);
   const [min, max] = lauseid.split('-').map(Number);
   if (read.length < min || read.length > max + 1) return `lauseid on ${read.length}, oodati ${lauseid}`;
-  if (read.some((r) => r.length < 15 || r.length > 320)) return 'mõni lause on liiga lühike või liiga pikk';
+  if (read.some((r) => r.length < 15 || r.length > 240)) return 'mõni lause on liiga lühike või liiga pikk';
+  if (read.some((r) => !/[.!?]$/.test(r))) return 'mõni lause jääb lõpetamata';  // nt vastus katkes poole pealt
   if (read.some((r) => /^[-*•\d]+[.)\s]/.test(r))) return 'lause algab loendimärgiga';
+  if (arvud(tekst).length > 9) return `arve on ${arvud(tekst).length}, lubatud kuni 9`;
   const keelatud = /prognoos|ennusta|eeldatavasti|tõenäoliselt|peaks valitsus|soovita|tulevikus/i.exec(tekst);
   if (keelatud) return `keelatud sõna "${keelatud[0]}" (prognoos või soovitus)`;
   const lubatud = new Set(arvud(lahtematerjal));
@@ -103,7 +110,7 @@ function kontrolli(tekst, lahtematerjal, lauseid) {
   if (tarnid.length !== 2) return `tärne on ${tarnid.length}, peab olema 2`;
   const rohk = /\*([^*]+)\*/.exec(t)[1].trim();
   if (!read[0].includes(`*${rohk}*`)) return 'rõhuasetus ei ole esimeses lauses';
-  if (rohk.length < 8 || rohk.length > 70) return 'rõhuasetus on liiga lühike või liiga pikk';
+  if (rohk.length < 6 || rohk.length > 100) return 'rõhuasetus on liiga lühike või liiga pikk';
   return null;
 }
 
@@ -118,6 +125,8 @@ async function kysi(sonum) {
   });
   if (!vastus.ok) throw new Error(`API ${vastus.status}: ${(await vastus.text()).slice(0, 300)}`);
   const j = await vastus.json();
+  // Pooleli jäänud vastus (tokenid said otsa) läheks lehele katkenud lausega – seda ei võeta vastu.
+  if (j.stop_reason === 'max_tokens') throw new Error('vastus katkes, tokenid said otsa (max_tokens)');
   const t = (j.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('\n').trim();
   if (!t) throw new Error(`API vastus oli ilma tekstita (stop_reason: ${j.stop_reason}, plokid: ${(j.content || []).map((c) => c.type).join(',') || 'puuduvad'})`);
   return t;
@@ -252,7 +261,7 @@ async function main() {
     const lisa = t.votme === 'yldine' ? `\n\nLisaandmed (viimased perioodid, varasem kõigepealt):\n${leht.lisaandmed}` : '';
     const lahtematerjal = `Ülesanne: kirjuta ${t.lauseid} lauset kokkuvõtet. Teema: ${t.mida}\n${t.lisaks}\n\n`
       + `Reeglipõhiselt koostatud mustand – kõik faktid ja arvud selles on õiged, aga sõnastus on kohmakas ja järjekord juhuslik:\n${mustand}${lisa}`;
-    const r = rasi(`${MUDEL}\n${SYSTEM}\n${lahtematerjal}`);
+    const r = rasi(`${VERSIOON}\n${MUDEL}\n${SYSTEM}\n${lahtematerjal}`);
     if (vanaT && vanaT.rasi === r) { logi(`${t.votme}: lähteandmed ei muutunud, vana tekst jääb`); tekstid[t.votme] = vanaT; continue; }
 
     try {

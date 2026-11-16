@@ -27,5 +27,9 @@ katse('rõhk teises lauses ei läbi', /rõhuasetus/.test(viga('Eesti majandus ka
 katse('loendimärk ei läbi', /loendimärgiga/.test(viga('Eesti *majandus kasvas kolmandas kvartalis* 2,2 %.\n- Töötus oli 7,9 %.')));
 katse('aastaarv lähtematerjalist läbib', ok('*Eesti majandus kasvas* 2026. aasta III kvartalis.\nTöötus oli 7,9 %.'));
 
+katse('katkenud lause ei läbi', /lõpetamata/.test(viga('Eesti *majandus kasvas kolmandas kvartalis* 2,2 %.\nTöötus oli 7,9 % ja palk')));
+katse('liiga pikk lause ei läbi', /liiga pikk/.test(viga('Eesti *majandus kasvas* 2,2 %.\n' + 'Töötuse määr oli 7,9 protsenti ja see on tõusnud, '.repeat(6) + 'nii on.')));
+katse('liiga palju arve ei läbi', /arve on/.test(viga('Eesti *majandus kasvas kolmandas kvartalis* 2,2 %.\nTöötus 7,9 %, varem 7,1 %, palk 2 243 eurot, 2026, 2,2 %, 7,9 %, 7,1 %, 2 243, 2026 ja 2,2 %.')));
+
 console.log(vigu ? `\n${vigu} viga` : '\nkõik katsed läbitud');
 process.exit(vigu ? 1 : 0);
