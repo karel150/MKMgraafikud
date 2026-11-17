@@ -230,6 +230,13 @@ footer a { color: var(--muted); }
 .uus-kast .uk-info { color: var(--muted); font-size: 12.5px; }
 .uus-kast .uk-info b { font-weight: 500; color: var(--fg); font-family: var(--f-mono); }
 .uus-kast .uk-tyhi { margin: 8px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+/* TAIE mõõdik ilma aegreata: viimane teada olev tase ja sihttase kõrvuti */
+.taie-tase { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px 16px 2px; }
+.taie-tase > div { display: flex; flex-direction: column; gap: 3px; }
+.taie-tase .tl { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.taie-tase .tv { font-family: var(--f-display); font-size: 22px; font-weight: 700; line-height: 1.2; }
+.taie-tase .tv-siht { color: var(--accent); }
+.taie-tase .tp { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); }
 .freqbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .freqbar .fl { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .seg { display: inline-flex; background: var(--chip); border-radius: 8px; padding: 3px; gap: 2px; }
@@ -324,6 +331,7 @@ footer a { color: var(--muted); }
       <button class="tab" role="tab" id="tab-ulevaade" aria-controls="p-ulevaade" aria-selected="true" data-key="ulevaade"><span class="tname">Ülevaade</span></button>
       <button class="tab" role="tab" id="tab-majandusplaan" aria-controls="p-majandusplaan" aria-selected="false" data-key="majandusplaan"><span class="tname">Majandusplaan</span></button>
       <button class="tab" role="tab" id="tab-majandus" aria-controls="p-majandus" aria-selected="false" data-key="majandus"><span class="tname">Majanduse graafikud</span></button>
+      <button class="tab" role="tab" id="tab-taie" aria-controls="p-taie" aria-selected="false" data-key="taie"><span class="tname">TAIE mõõdikud</span></button>
       <button class="tab" role="tab" id="tab-indeksid" aria-controls="p-indeksid" aria-selected="false" data-key="indeksid"><span class="tname">Eesti indeksites</span></button>
       <button class="tab" role="tab" id="tab-vordlus" aria-controls="p-vordlus" aria-selected="false" data-key="vordlus"><span class="tname">Rahvusvaheline võrdlus</span></button>
       <button class="tab" role="tab" id="tab-ulevaated" aria-controls="p-ulevaated" aria-selected="false" data-key="ulevaated"><span class="tname">Teiste ülevaated</span></button>
@@ -375,6 +383,8 @@ footer a { color: var(--muted); }
     </section>
 
     <section class="panel" id="p-majandus" role="tabpanel" aria-labelledby="tab-majandus" hidden></section>
+
+    <section class="panel" id="p-taie" role="tabpanel" aria-labelledby="tab-taie" hidden></section>
 
     <section class="panel" id="p-indeksid" role="tabpanel" aria-labelledby="tab-indeksid" hidden></section>
 
@@ -849,7 +859,87 @@ function T() {
 function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-const charts = { ulevaade: [], majandus: [], indeksid: [], vordlus: [] };
+const charts = { ulevaade: [], majandus: [], indeksid: [], vordlus: [], taie: [] };
+
+// ---- TAIE arengukava mõõdikud (docs/data/taie.json) -------------------------
+// Mõõdikud pärinevad arengukava lisast 3. Osal pole masinloetavat aegrida –
+// need näitavad ainult viimast teada olevat taset ja sihti, ilma graafikuta.
+let TAIE = null;
+
+function buildTaie() {
+  const root = document.getElementById('p-taie');
+  tyhjenda('taie');
+  root.innerHTML = '';
+  if (!TAIE || !Array.isArray(TAIE.moodikud) || !TAIE.moodikud.length) {
+    root.append(el('p', 'tyhi', 'TAIE mõõdikute andmeid ei õnnestunud laadida.'));
+    return;
+  }
+  const sisse = el('section', 'kokkuvote');
+  sisse.innerHTML = '<h2>TAIE arengukava mõõdikud</h2>'
+    + '<p>Teadus- ja arendustegevuse, innovatsiooni ning ettevõtluse arengukava 2021–2035 seirenäitajad arengukava lisast 3. '
+    + 'Graafiku katkendjoon on 2035. aasta sihttase. Osal mõõdikutest ei ole avaandmetena aegrida – nende juures on viimane teada olev tase.</p>';
+  root.append(sisse);
+  TAIE.eesmargid.forEach((e) => {
+    const list = TAIE.moodikud.filter((m) => m.eesmark === e.id);
+    if (!list.length) return;
+    const sec = el('div', 'group');
+    sec.append(el('div', 'group-h', `<h2>${esc(e.nimi)}</h2><span>${esc(e.tekst)}</span>`));
+    const grid = el('div', 'grid');
+    list.forEach((m) => grid.append(taieKaart(m)));
+    sec.append(grid);
+    root.append(sec);
+  });
+}
+
+function taieKaart(m) {
+  const c = el('article', 'card');
+  c.id = `taie-n-${m.id}`;
+  const koht = m.yhik === 'koht';
+  const dec = koht ? 0 : Math.abs(m.siht || 0) >= 1000 ? 0 : 1;
+  const vorm = (v) => (v == null ? '–' : koht ? `${nf(0).format(v)}. koht`
+    : v.toLocaleString('et-EE', { maximumFractionDigits: dec }) + (m.yhik || ''));
+  const s = m.seeria && m.seeria.periods && m.seeria.periods.length ? m.seeria : null;
+  const i = s ? lastIdx(s.values) : -1;
+  const viimV = i >= 0 ? s.values[i] : m.kasitsi ? m.kasitsi.v : null;
+  const viimP = i >= 0 ? s.periods[i] : m.kasitsi ? String(m.kasitsi.aasta) : '';
+  const viimT = (m.kasitsi && m.kasitsi.tekst) || vorm(viimV);
+
+  const head = el('div', 'card-head');
+  head.append(el('div', 'card-title', `<h3>${esc(m.nimi)}</h3>`));
+  head.append(el('div', 'chips', (m.skaala ? `<span class="chip">${esc(m.skaala)}</span>` : '')
+    + `<span class="chip">${esc(m.allikas)}</span>`
+    + (m.riike ? `<span class="chip">${esc(nf(0).format(m.riike))} riiki</span>` : '')));
+  c.append(head);
+
+  if (s && s.periods.length >= 2) {
+    head.append(el('div', 'headline', `<span class="big">${esc(vorm(viimV))}</span><span class="per">${esc(viimP)}</span>`
+      + `<span class="delta">Siht 2035: ${esc(m.siht_tekst)}</span>`));
+    const ch = el('div', 'chart');
+    ch.setAttribute('role', 'img');
+    ch.setAttribute('aria-label', `${m.nimi}: ${viimT} (${viimP}), sihttase 2035 on ${m.siht_tekst}.`);
+    c.append(ch);
+    const it = { kind: 'line', x: s.periods.slice(), y: s.values.slice(), unit: m.yhik || '', dec, scale: true,
+                 ref: m.siht == null ? undefined : m.siht };
+    charts.taie.push({ dom: ch, opt: () => economyOption(it), inst: null });
+  } else {
+    // ilma aegreata mõõdik: ainult viimane teada olev tase ja siht
+    const t = el('div', 'taie-tase');
+    t.innerHTML = `<div><span class="tl">Viimane teada olev tase</span><span class="tv">${esc(viimT)}</span>`
+      + `${viimP || m.silt ? `<span class="tp">${esc([viimP, m.silt].filter(Boolean).join(' · '))}</span>` : ''}</div>`
+      + `<div><span class="tl">Sihttase 2035</span><span class="tv tv-siht">${esc(m.siht_tekst)}</span></div>`;
+    c.append(t);
+  }
+  if (m.markus) c.append(el('div', 'note', esc(m.markus)));
+  if (m.kirjeldus) {
+    const d = el('details', 'kirj');
+    d.innerHTML = `<summary>Mida see näitab?</summary><p>${esc(m.kirjeldus)}</p>`;
+    c.append(d);
+  }
+  const foot = el('div', 'card-foot');
+  foot.append(el('span', '', m.url ? `Allikas: <a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.allikas)}</a>` : `Allikas: ${esc(m.allikas)}`));
+  c.append(foot);
+  return c;
+}
 
 // Kast "Viimati uuenenud": mis näitajad on viimastel päevadel uue perioodi saanud
 // või mille varasem väärtus on parandatud. Kirjed tulevad failist uuendused.json.
@@ -1092,7 +1182,11 @@ function economyOption(it) {
     if (it.ref != null) s.markLine = { silent: true, symbol: 'none', label: { show: false }, lineStyle: { color: t.muted, type: 'dashed' }, data: [{ yAxis: it.ref }] };
     base.series = [s];
     if (it.est) base.series.push({ type: 'line', name: it.estName || 'Hinnang', data: it.est, showSymbol: false, connectNulls: false, lineStyle: { color: t.s2, width: 2, type: 'dashed' }, itemStyle: { color: t.s2 } });
-    if (it.ref != null) { base.yAxis.min = (v) => Math.floor(Math.min(v.min, it.ref) - 2); base.yAxis.max = (v) => Math.ceil(Math.max(v.max, it.ref) + 2); }
+    // Sihtjoon mahub skaalale; positiivse rea puhul ei lasta telge alla nulli
+    if (it.ref != null) {
+      base.yAxis.min = (v) => { const m = Math.min(v.min, it.ref) - 2; return v.min >= 0 && m < 0 ? 0 : Math.floor(m); };
+      base.yAxis.max = (v) => Math.ceil(Math.max(v.max, it.ref) + 2);
+    }
   } else if (it.kind === 'stack') {
     base.legend = { ...legend, itemHeight: 8, icon: 'roundRect' };
     base.tooltip.axisPointer = { type: 'shadow', shadowStyle: { color: 'rgba(128,140,160,.12)' } };
@@ -2138,15 +2232,17 @@ const EHITA = {};
 const ANDMED = Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json'),
       laeJson('data/vordlus.json').catch((e) => { console.error(e); return null; }), laeJson('data/ulevaated.json').catch((e) => { console.error(e); return null; }),
       laeJson('data/kokkuvote.json').catch(() => null), laeJson('data/seis.json').catch(() => null),
-      laeJson('data/aitekstid.json').catch(() => null), laeJson('data/uuendused.json').catch(() => null)]);
+      laeJson('data/aitekstid.json').catch(() => null), laeJson('data/uuendused.json').catch(() => null),
+      laeJson('data/taie.json').catch(() => null)]);
 ANDMED.catch(() => {}); // viga käsitletakse kaivita() sees
 
 async function kaivita() {
   try {
-    const [nait, mp, ix, meta, vrd, ulv, kv, seis, ait, uus] = await ANDMED;
+    const [nait, mp, ix, meta, vrd, ulv, kv, seis, ait, uus, taie] = await ANDMED;
     ULEVAATED = ulv ? ulv.ulevaated : null;
     AITEKSTID = ait;
     UUENDUSED = uus;
+    TAIE = taie;
     EHITA.vordlus = () => { if (vrd) VGROUPS = koostaVordlus(vrd, meta.naitajad); buildVordlus(); };
     GROUPS = koostaGrupid(nait, meta.naitajad);
     KOKKUVOTE = koostaKokkuvote(nait, kv);
@@ -2165,6 +2261,7 @@ async function kaivita() {
   EHITA.ulevaade = buildUlevaade;
   EHITA.majandus = buildEconomy;
   EHITA.indeksid = buildIndexes;
+  EHITA.taie = buildTaie;
   EHITA.ulevaated = () => buildUlevaated(ULEVAATED);
   mpInitControls();
   show(['ulevaade', 'majandusplaan', 'majandus', 'indeksid', 'vordlus', 'ulevaated'].includes(start) ? start : 'ulevaade');

@@ -16,6 +16,7 @@ source("R/abi.R", encoding = "UTF-8")
 source("R/naitajad.R", encoding = "UTF-8")
 source("R/indeksid.R", encoding = "UTF-8")
 source("R/vordlus.R", encoding = "UTF-8")
+source("R/taie.R", encoding = "UTF-8")
 
 # ---- 1. Majandusplaaniindeks (sinu metoodika, sh ESI hinnang) ----------------
 message("== Majandusplaaniindeks ==")
@@ -43,6 +44,11 @@ kirjuta_json(naitajad, "naitajad.json")
 message("== Edetabelid ==")
 tryCatch(kirjuta_json(koosta_indeksid(), "indeksid.json"),
          error = function(e) hoiata("Edetabelid: ", conditionMessage(e), ". Jäetakse alles eelmine versioon."))
+
+# ---- 3b. TAIE arengukava mõõdikud ----------------------------------------------
+message("== TAIE mõõdikud ==")
+tryCatch(kirjuta_json(koosta_taie(naitajad), "taie.json"),
+         error = function(e) hoiata("TAIE mõõdikud: ", conditionMessage(e), ". Jäetakse alles eelmine versioon."))
 
 # ---- 4. Rahvusvaheline võrdlus (Eurostat) ---------------------------------------
 message("== Rahvusvaheline võrdlus ==")
