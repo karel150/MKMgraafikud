@@ -34,6 +34,9 @@ icu_kv  <- if (mp_ok && !is.null(mp$icu_bar03)) as.data.frame(mp$icu_bar03) else
 # ---- 2. Eesti majanduse näitajad --------------------------------------------
 message("== Majandusnäitajad ==")
 naitajad <- koosta_naitajad(esi_kuu, icu_kv)
+# Muudatuste logi tuleb teha enne kirjutamist: võrdluseks on vaja veel eelmist faili
+tryCatch(logi_muudatused(naitajad),
+         error = function(e) hoiata("Muudatuste logi: ", conditionMessage(e)))
 kirjuta_json(naitajad, "naitajad.json")
 
 # ---- 3. Edetabelid -------------------------------------------------------------

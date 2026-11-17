@@ -213,6 +213,19 @@ footer a { color: var(--muted); }
 .kokkuvote h2 { font-family: var(--f-display); font-size: 18px; margin: 0 0 8px; }
 .kokkuvote p { margin: 0; line-height: 1.6; max-width: 95ch; }
 .kokkuvote .kv-meta { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+/* Kokkuvõte ja värskenduste kast kõrvuti; kitsal ekraanil üksteise all */
+.kv-rida { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 330px); gap: 14px; align-items: start; }
+@media (max-width: 860px) { .kv-rida { grid-template-columns: 1fr; } }
+.uus-kast { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.uus-kast h2 { font-family: var(--f-display); font-size: 14px; margin: 0 0 2px; }
+.uus-kast .uk-vahemik { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.uus-kast ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.uus-kast li { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 8px; font-size: 13px; line-height: 1.4; }
+.uus-kast .uk-paev { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); padding-top: 2px; }
+.uus-kast .uk-nimi { display: block; }
+.uus-kast .uk-info { color: var(--muted); font-size: 12.5px; }
+.uus-kast .uk-info b { font-weight: 500; color: var(--fg); font-family: var(--f-mono); }
+.uus-kast .uk-tyhi { margin: 8px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
 .freqbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .freqbar .fl { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .seg { display: inline-flex; background: var(--chip); border-radius: 8px; padding: 3px; gap: 2px; }
@@ -402,6 +415,29 @@ let INDEXES = [];
 // Tekst kirjutatakse andmete uuendamise ajal reeglipõhise kokkuvõtte ja viimaste arvude
 // põhjal. Kui faili või mõnda teksti pole, näitab leht endist reeglipõhist kokkuvõtet.
 let AITEKSTID = null;
+// Andmemuudatuste logi (docs/data/uuendused.json, kirjutab R). Kirjed on seeriate kaupa,
+// see tabel seob seeria võtme näitaja numbriga – nime ja ühiku võtab leht siis GROUPS-ist.
+// Siin puuduvad seeriad (nt panus_*, *_cur) jäävad kastist välja.
+let UUENDUSED = null;
+const SEERIA_NAITAJA = {
+  skp_q: '1', skp_q_sa: '1', skp_q_kiir: '1', skp_a: '1',
+  tootlev_m_lvl: '2', tootlev_m_yoy: '2', eksp_q: '3', eksp_a: '3',
+  kaup_m: '4', ekspK_q: '4', ekspK_a: '4', kaupEE_m: '4b', ekspT_q: '5', ekspT_a: '5',
+  fdi_q: '6', berd_a: '7', tootl_q: '8', tootl_a: '8', thi_m: '9', thi_a: '9', elekter_h: '10',
+  palk_q_lvl: '11', palk_a_lvl: '11', palk_q_yoy: '11', mediaan_q: '12', mediaan_a: '12',
+  esi_m: '13', esi_m_hinnang: '13', tootus_q: '14', regtootud_m: '14b', volg_a: '15',
+  vab_maar_q: '16', vab_arv_q: '16', tk_vabad_m: '16b', tk_vabad_c_m: '16c',
+  ulc_nom_q: '17', ulc_real_q: '17', ulc_nom_a: '17', ulc_real_a: '17',
+  kapital_q_osa: '18', kapital_a_osa: '18', kapital_q_yoy: '18', kapital_a_yoy: '18',
+  ai_a_ee: '19', jae_q_G45_47: '20', jae_q_G45: '20', jae_q_G47: '20',
+  jaem_m_idx: '20b', jaem_m_eur: '20b', hoive_q_1574: '21', hoive_q_2064: '21', mitteakt_q: '22',
+  ppi_m_kokku: '23', ppi_m_c: '23', ppi_a_kokku: '23', ppi_a_c: '23',
+  saast_a: '26', ehitusload_q: '27',
+  vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
+  eluase_q: '29', autod_m: '30', krt_q_cur: '31', krt_a_cur: '31', laenuintress_m: '32',
+  voimsus_q: '33', voimsus_q_stat: '33',
+  maksuvolg_arv_m: '34', maksuvolg_fi_m: '34', maksuvolg_ji_m: '34', maksuvolg_summa_m: '35',
+};
 const aiTekst = (votme) => {
   const t = AITEKSTID && AITEKSTID.tekstid && AITEKSTID.tekstid[votme];
   return t && Array.isArray(t.laused) && t.laused.length ? t : null;
@@ -802,6 +838,49 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 
 const charts = { ulevaade: [], majandus: [], indeksid: [], vordlus: [] };
 
+// Kast "Viimati uuenenud": mis näitajad on viimastel päevadel uue perioodi saanud
+// või mille varasem väärtus on parandatud. Kirjed tulevad failist uuendused.json.
+function uuendusteKast(paevi = 7, mahub = 7) {
+  const kirjed = (UUENDUSED && UUENDUSED.kirjed) || [];
+  if (!kirjed.length) return null;
+  const periSilt = (p) => silt(p) + (/Q\d$/.test(p) ? ' kv' : /S\d$/.test(p) ? ' pa' : '');
+  const vaart = (it, v) => nf(it.dec === 0 ? 0 : 1).format(v) + (it.unit || '');
+  const paevSilt = (d) => `${+d.slice(8, 10)}.${+d.slice(5, 7)}.`;
+  // seeria -> näitaja; ühe näitaja mitu seeriat samal päeval koondatakse üheks reaks
+  const kaup = new Map();
+  kirjed.forEach((k) => {
+    const nr = SEERIA_NAITAJA[k.seeria];
+    const it = nr && GROUPS.flatMap((g) => g.items).find((i) => i.nr === nr);
+    if (!it) return;
+    const v = kaup.get(`${k.paev}|${nr}`);
+    // eelistus: uus periood enne parandust, värskem periood enne vanemat
+    if (!v || (k.liik === 'uus' && v.liik !== 'uus') || (k.liik === v.liik && k.periood > v.periood)) kaup.set(`${k.paev}|${nr}`, { ...k, it });
+  });
+  const jrk = (a, b) => (a.paev !== b.paev ? (a.paev < b.paev ? 1 : -1) : a.liik !== b.liik ? (a.liik === 'uus' ? -1 : 1) : a.it.title.localeCompare(b.it.title, 'et'));
+  const koik = [...kaup.values()].sort(jrk);
+  if (!koik.length) return null;
+  const piir = new Date(Date.now() - paevi * 864e5).toISOString().slice(0, 10);
+  const read = koik.filter((k) => k.paev >= piir);
+
+  const kast = el('aside', 'uus-kast');
+  kast.setAttribute('aria-labelledby', 'uk-h');
+  let sisu = `<h2 id="uk-h">Viimati uuenenud</h2><span class="uk-vahemik">Viimased ${paevi} päeva</span>`;
+  if (!read.length) {
+    const v = koik[0];
+    sisu += `<p class="uk-tyhi">Uusi andmeid ei ole lisandunud. Viimane muudatus: ${esc(v.it.title)}, ${paevSilt(v.paev)}</p>`;
+  } else {
+    sisu += '<ul>' + read.slice(0, mahub).map((k) => {
+      const info = k.liik === 'uus'
+        ? `uus periood ${esc(periSilt(k.periood))}: <b>${esc(vaart(k.it, k.v))}</b>`
+        : `${esc(periSilt(k.periood))} parandatud${k.vana == null ? '' : ` ${esc(vaart(k.it, k.vana))} →`} <b>${esc(vaart(k.it, k.v))}</b>`;
+      return `<li><span class="uk-paev">${paevSilt(k.paev)}</span><span><span class="uk-nimi">${esc(k.it.title)}</span><span class="uk-info">${info}</span></span></li>`;
+    }).join('') + '</ul>';
+    if (read.length > mahub) sisu += `<p class="uk-tyhi">Lisaks ${read.length - mahub} muud muudatust.</p>`;
+  }
+  kast.innerHTML = sisu;
+  return kast;
+}
+
 function buildEconomy() {
   const root = document.getElementById('p-majandus');
   tyhjenda('majandus');
@@ -810,7 +889,8 @@ function buildEconomy() {
     const k = el('section', 'kokkuvote');
     k.setAttribute('aria-labelledby', 'kv-h');
     k.innerHTML = `<h2 id="kv-h">Eesti majandus praegu</h2><p>${KOKKUVOTE.tekst}</p><p class="kv-meta">${KOKKUVOTE.meta}</p>`;
-    root.append(k);
+    const uk = uuendusteKast();
+    if (uk) { const rida = el('div', 'kv-rida'); rida.append(k, uk); root.append(rida); } else root.append(k);
   }
   const bar = el('div', 'freqbar');
   bar.innerHTML = `<span class="fl" id="freq-l">Sagedus</span><div class="seg" role="radiogroup" aria-labelledby="freq-l">` +
@@ -2016,14 +2096,15 @@ const EHITA = {};
 const ANDMED = Promise.all([laeJson('data/naitajad.json'), laeJson('data/majandusplaan.json'), laeJson('data/indeksid.json'), laeJson('data/kirjeldused.json'),
       laeJson('data/vordlus.json').catch((e) => { console.error(e); return null; }), laeJson('data/ulevaated.json').catch((e) => { console.error(e); return null; }),
       laeJson('data/kokkuvote.json').catch(() => null), laeJson('data/seis.json').catch(() => null),
-      laeJson('data/aitekstid.json').catch(() => null)]);
+      laeJson('data/aitekstid.json').catch(() => null), laeJson('data/uuendused.json').catch(() => null)]);
 ANDMED.catch(() => {}); // viga käsitletakse kaivita() sees
 
 async function kaivita() {
   try {
-    const [nait, mp, ix, meta, vrd, ulv, kv, seis, ait] = await ANDMED;
+    const [nait, mp, ix, meta, vrd, ulv, kv, seis, ait, uus] = await ANDMED;
     ULEVAATED = ulv ? ulv.ulevaated : null;
     AITEKSTID = ait;
+    UUENDUSED = uus;
     EHITA.vordlus = () => { if (vrd) VGROUPS = koostaVordlus(vrd, meta.naitajad); buildVordlus(); };
     GROUPS = koostaGrupid(nait, meta.naitajad);
     KOKKUVOTE = koostaKokkuvote(nait, kv);
