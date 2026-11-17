@@ -1652,7 +1652,8 @@ function buildUlevaade() {
     const m = el('section', 'ul-kaart ul-moodik');
     m.setAttribute('aria-label', `Majandususaldus ${silt(u.esi.p)}: ${f1(u.esi.v)} punkti, pikaajaline keskmine on 100.`);
     m.innerHTML = `<p class="ul-silt">Majandususaldus · ${esc(silt(u.esi.p))}${u.esi.hinnang ? ' (hinnang)' : ''}</p>${moodik(u.esi.v)}<div class="mv">${f1(u.esi.v)}</div>
-      <p>Pikaajaline keskmine on 100.<br>${u.esi.v >= 100 ? 'Kindlustunne on keskmisest kõrgem.' : 'Kindlustunne on keskmisest madalam.'}</p>`;
+      <p>Pikaajaline keskmine on 100.<br>${u.esi.v >= 100 ? 'Kindlustunne on keskmisest kõrgem.' : 'Kindlustunne on keskmisest madalam.'}</p>
+      <p class="ul-meta">Euroopa Komisjoni koondnäitaja ettevõtjate ja tarbijate küsitlustest tööstuses, teeninduses, jaekaubanduses ja ehituses.</p>`;
     rida1.append(m);
   }
   if (rida1.children.length) root.append(rida1);
