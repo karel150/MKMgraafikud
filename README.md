@@ -46,6 +46,8 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `docs/data/kirjeldused.json` | Näitajate nimed, valdkonnad, põhinäitaja märge ja selgitused (indikaatorite tabeli lehelt 2.1 AS-IS). **Muudetakse käsitsi.** |
 | `docs/lib/`, `docs/fonts/` | ECharts ja fondid. Asuvad samas kohas, et leht ei laadiks midagi välistest teenustest. |
 | `docs/data/aitekstid.json` | Tehisaru koostatud kokkuvõtvad lõigud (avaleht, graafikud, indeksid, rahvusvaheline võrdlus). Kirjutab robot, käsitsi ei muuda. |
+| `andmed/taie.csv` | TAIE arengukava mõõdikute nimed, sihttasemed, allikad ja käsitsi hoitavad väärtused. **Muudetakse käsitsi.** |
+| `docs/data/taie.json` | TAIE mõõdikute leht: aegread koos sihttasemetega. Kirjutab robot (`R/taie.R`). |
 | `docs/data/uuendused.json` | Andmemuudatuste logi: mis seeria sai uue perioodi ja mille varasem väärtus parandati. Sellest tehakse graafikute lehel kast „Viimati uuenenud". Kirjutab robot (`logi_muudatused`), hoitakse 21 päeva. Kui logi on kadunud või tühi, saab selle git-ajaloost taastada: `python3 tools/uuenduste_logi_ajaloost.py`. |
 | `tools/ai_kokkuvotted.mjs` | Tellib tehisarult kokkuvõtvad lõigud ja kontrollib need üle (vt allpool). |
 | `tools/ai_test.mjs` | Kontrollfunktsioonide testid: `node tools/ai_test.mjs`. |
@@ -53,6 +55,16 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `.github/workflows/uuenda.yml` | Automaatne uuendamine ja avaldamine. |
 | `mkm-ee/manustamine.html` | Koodijupp mkm.ee veebimeeskonnale. |
 
+
+## TAIE mõõdikud
+
+Vahekaart „TAIE mõõdikud" näitab teadus- ja arendustegevuse, innovatsiooni ning ettevõtluse arengukava 2021–2035 seirenäitajaid (arengukava lisa 3) nelja eesmärgi kaupa. Graafiku katkendjoon on 2035. aasta sihttase.
+
+Kuue mõõdiku aegrea laeb `R/taie.R` ise: riigieelarveline TA rahastus ja tööjõu tootlikkus Eurostatist, erasektori TA kulutused ja eksport majandusnäitajate failist, mittemateriaalne põhivara ja teadlaste arv Statistikaametist. Euroopa innovatsiooni tulemustabeli koht võetakse indeksite failist, nii et see uueneb koos indeksite lehega.
+
+Ülejäänud neljal mõõdikul masinloetavat allikat ei ole (lepingulise TA maht tuleb baasfinantseerimise alusandmetest, enamtsiteeritud artiklite osakaal innovatsiooni tulemustabelist, Harjumaa-väline SKP nõuab piirkondlike andmete kokkupanekut ja Doing Business'i lõpetas Maailmapank 2021. aastal). Nende viimane teada olev tase on failis `andmed/taie.csv` veergudes `aasta` ja `vaartus`; leht näitab neid ilma graafikuta koos selgitusega.
+
+Uue mõõdiku või uue käsitsi väärtuse lisamiseks muuda `andmed/taie.csv`-d; aegrea lisamiseks tuleb `R/taie.R`-i kirjutada ka päring.
 
 ## Tehisaru koostatud tekstid
 
