@@ -46,7 +46,7 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `docs/data/kirjeldused.json` | Näitajate nimed, valdkonnad, põhinäitaja märge ja selgitused (indikaatorite tabeli lehelt 2.1 AS-IS). **Muudetakse käsitsi.** |
 | `docs/lib/`, `docs/fonts/` | ECharts ja fondid. Asuvad samas kohas, et leht ei laadiks midagi välistest teenustest. |
 | `docs/data/aitekstid.json` | Tehisaru koostatud kokkuvõtvad lõigud (avaleht, graafikud, indeksid, rahvusvaheline võrdlus). Kirjutab robot, käsitsi ei muuda. |
-| `docs/data/uuendused.json` | Andmemuudatuste logi: mis seeria sai uue perioodi ja mille varasem väärtus parandati. Sellest tehakse graafikute lehel kast „Viimati uuenenud". Kirjutab robot (`logi_muudatused`), hoitakse 21 päeva. |
+| `docs/data/uuendused.json` | Andmemuudatuste logi: mis seeria sai uue perioodi ja mille varasem väärtus parandati. Sellest tehakse graafikute lehel kast „Viimati uuenenud". Kirjutab robot (`logi_muudatused`), hoitakse 21 päeva. Kui logi on kadunud või tühi, saab selle git-ajaloost taastada: `python3 tools/uuenduste_logi_ajaloost.py`. |
 | `tools/ai_kokkuvotted.mjs` | Tellib tehisarult kokkuvõtvad lõigud ja kontrollib need üle (vt allpool). |
 | `tools/ai_test.mjs` | Kontrollfunktsioonide testid: `node tools/ai_test.mjs`. |
 | `tools/echarts-kooste.mjs` | ECharts'i kohandatud kooste kirjeldus: `docs/lib/echarts.min.js` sisaldab ainult lehel kasutatavaid graafikutüüpe. Uue tüübi lisamisel ehita fail uuesti (juhis faili päises). |
