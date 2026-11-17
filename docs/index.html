@@ -222,7 +222,11 @@ footer a { color: var(--muted); }
 .uus-kast ul { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .uus-kast li { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 8px; font-size: 13px; line-height: 1.4; }
 .uus-kast .uk-paev { font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); padding-top: 2px; }
-.uus-kast .uk-nimi { display: block; }
+.uus-kast .uk-nimi { display: block; background: none; border: 0; padding: 0; font: inherit; text-align: left; color: var(--accent); cursor: pointer; }
+.uus-kast .uk-nimi:hover { text-decoration: underline; }
+/* Lingilt tulles jääb kaart hetkeks esile, et silm leiaks selle üles */
+.card.esile { animation: esile 2.4s ease-out; }
+@keyframes esile { 0%, 55% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: 0 0 0 3px transparent; } }
 .uus-kast .uk-info { color: var(--muted); font-size: 12.5px; }
 .uus-kast .uk-info b { font-weight: 500; color: var(--fg); font-family: var(--f-mono); }
 .uus-kast .uk-tyhi { margin: 8px 0 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
@@ -889,13 +893,32 @@ function uuendusteKast(paevi = 7, mahub = 7, vahim = 3) {
       const info = k.liik === 'uus'
         ? (uusV ? `uus periood ${per}: <b>${esc(uusV)}</b>` : `uus periood <b>${per}</b>`)
         : (uusV ? `${per} parandatud${vanaV ? ` ${esc(vanaV)} →` : ''} <b>${esc(uusV)}</b>` : `<b>${per}</b> andmed parandatud`);
-      return `<li><span class="uk-paev">${paevSilt(k.paev)}</span><span><span class="uk-nimi">${esc(k.it.title)}</span><span class="uk-info">${info}</span></span></li>`;
+      return `<li><span class="uk-paev">${paevSilt(k.paev)}</span><span><button type="button" class="uk-nimi" data-nr="${esc(k.it.nr)}">${esc(k.it.title)}</button><span class="uk-info">${info}</span></span></li>`;
     }).join('') + '</ul>';
     const yle = read.length - mahub;
     if (yle > 0) sisu += `<p class="uk-tyhi">${yle === 1 ? 'Lisaks veel üks muudatus.' : `Lisaks veel ${yle} muudatust.`}</p>`;
   }
   kast.innerHTML = sisu;
+  kast.addEventListener('click', (e) => { const b = e.target.closest('.uk-nimi'); if (b) naitaNaitaja(b.dataset.nr); });
   return kast;
+}
+
+// Kerib valitud näitaja kaardi juurde ja jätab selle hetkeks esile. Kui kaart on
+// peidus sellepärast, et vaates on ainult põhinäitajad, lülitatakse vaade ümber.
+function naitaNaitaja(nr) {
+  const it = GROUPS.flatMap((g) => g.items).find((i) => i.nr === nr);
+  if (!it) return;
+  // vaade vahetatakse ainult selleks korraks, kasutaja salvestatud valikut ei muudeta
+  if (econValik === 'pohi' && !it.peamine) setValik('koik', false);
+  const c = document.getElementById(`majandus-n-${nr}`);
+  if (!c) return;
+  c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  c.tabIndex = -1;
+  c.focus({ preventScroll: true });         // klaviatuuriga liikujale jääb fookus kaardile
+  c.classList.remove('esile');
+  void c.offsetWidth;                       // sunnib animatsiooni uuesti käima
+  c.classList.add('esile');
+  setTimeout(() => c.classList.remove('esile'), 2600);
 }
 
 function buildEconomy() {
@@ -937,9 +960,9 @@ function buildEconomy() {
     root.append(sec);
   });
 }
-function setValik(v) {
+function setValik(v, salvesta = true) {
   econValik = v;
-  try { localStorage.setItem('econValik', v); } catch (e) {}
+  if (salvesta) try { localStorage.setItem('econValik', v); } catch (e) {}
   buildEconomy();
   renderPanel('majandus');
   const b = document.querySelector(`.freqbar button[data-v="${v}"]`); if (b) b.focus();
@@ -981,6 +1004,7 @@ function headline(it) {
 
 function buildCard(it, key = 'majandus') {
   const c = el('article', 'card');
+  c.id = `${key}-n-${it.nr}`;   // sihtmärk kastist "Viimati uuenenud" tulevale lingile
   const h = headline(it);
   const head = el('div', 'card-head');
   head.append(el('div', 'card-title', `<span class="nr">${esc(it.nr)}</span><h3>${esc(it.title)}</h3>${it.peamine ? '<span class="pohi" title="Põhinäitaja">põhinäitaja</span>' : ''}`));
