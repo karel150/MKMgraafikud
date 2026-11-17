@@ -492,6 +492,7 @@ kirjuta_json <- function(x, fail) {
 MUUD_PAEVI <- 21    # kui vanu kirjeid alles hoitakse
 MUUD_MAX   <- 300   # ülempiir, et fail ei kasvaks piiramatult
 MUUD_VAATA <- 6     # mitut viimast perioodi paranduste osas vaadatakse
+MUUD_UUSI  <- 15    # rohkem uusi seeriaid korraga = töölaua muudatus, mitte andmeuudis
 
 # Kas erinevus on päris muudatus või ümardamismüra?
 oluline_vahe <- function(uus, vana) {
@@ -503,11 +504,19 @@ logi_muudatused <- function(uued, vana_fail = "naitajad.json", logi_fail = "uuen
   vana <- loe_json(vana_fail)
   if (is.null(vana) || is.null(vana$seeriad)) return(invisible(FALSE))  # esimene käivitus: võrrelda pole millegagi
   paev <- format(Sys.Date())
-  kirjed <- list()
+  kirjed <- list(); uued_seeriad <- list()
   for (k in names(uued$seeriad)) {
     u <- uued$seeriad[[k]]; v <- vana$seeriad[[k]]
-    if (is.null(u) || is.null(v) || !length(v$periods)) next           # päris uut seeriat ei logita
+    if (is.null(u) || !length(u$periods)) next
     up <- as.character(u$periods); uv <- as.numeric(u$values)
+    # Failis uus seeria (uus näitaja või ümber nimetatud rida): kogu ajalugu ei logita,
+    # ainult viimane periood, sest sealt tuleb tegelik uudis.
+    if (is.null(v) || !length(v$periods)) {
+      i <- utils::tail(which(!is.na(uv)), 1)
+      if (length(i)) uued_seeriad[[length(uued_seeriad) + 1]] <-
+        list(paev = paev, seeria = k, liik = "uus", periood = up[i], v = uv[i])
+      next
+    }
     vp <- as.character(v$periods); vv <- as.numeric(v$values)
     # uued perioodid: kuni kaks kõige värskemat
     for (p in utils::tail(sort(setdiff(up, vp)), 2)) {
@@ -524,6 +533,12 @@ logi_muudatused <- function(uued, vana_fail = "naitajad.json", logi_fail = "uuen
         break
       }
     }
+  }
+  # Korraga palju uusi seeriaid tähendab töölaua enda muudatust, mitte uusi andmeid
+  if (length(uued_seeriad) > MUUD_UUSI) {
+    message("Uusi seeriaid ", length(uued_seeriad), " – logisse ei lisata")
+  } else {
+    kirjed <- c(kirjed, uued_seeriad)
   }
   tee <- file.path(DATA_DIR, logi_fail)
   olemas <- if (file.exists(tee)) tryCatch(fromJSON(tee, simplifyVector = FALSE)$kirjed, error = function(e) NULL) else NULL

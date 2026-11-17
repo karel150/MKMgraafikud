@@ -416,27 +416,36 @@ let INDEXES = [];
 // põhjal. Kui faili või mõnda teksti pole, näitab leht endist reeglipõhist kokkuvõtet.
 let AITEKSTID = null;
 // Andmemuudatuste logi (docs/data/uuendused.json, kirjutab R). Kirjed on seeriate kaupa,
-// see tabel seob seeria võtme näitaja numbriga – nime ja ühiku võtab leht siis GROUPS-ist.
-// Siin puuduvad seeriad (nt panus_*, *_cur) jäävad kastist välja.
+// see tabel seob seeria võtme näitaja numbriga – nime võtab leht siis GROUPS-ist.
+// Kuju: [number, ühik] või number üksi. Ühik käib seeria enda väärtuse kohta, mitte
+// graafiku oma (graafik võib näidata muutust, seeria aga taset). Ilma ühikuta kirje
+// puhul näidatakse ainult perioodi. Siin puuduvad seeriad (panus_*, *_cur) jäävad välja.
 let UUENDUSED = null;
 const SEERIA_NAITAJA = {
-  skp_q: '1', skp_q_sa: '1', skp_q_kiir: '1', skp_a: '1',
-  tootlev_m_lvl: '2', tootlev_m_yoy: '2', eksp_q: '3', eksp_a: '3',
-  kaup_m: '4', ekspK_q: '4', ekspK_a: '4', kaupEE_m: '4b', ekspT_q: '5', ekspT_a: '5',
-  fdi_q: '6', berd_a: '7', tootl_q: '8', tootl_a: '8', thi_m: '9', thi_a: '9', elekter_h: '10',
-  palk_q_lvl: '11', palk_a_lvl: '11', palk_q_yoy: '11', mediaan_q: '12', mediaan_a: '12',
-  esi_m: '13', esi_m_hinnang: '13', tootus_q: '14', regtootud_m: '14b', volg_a: '15',
-  vab_maar_q: '16', vab_arv_q: '16', tk_vabad_m: '16b', tk_vabad_c_m: '16c',
-  ulc_nom_q: '17', ulc_real_q: '17', ulc_nom_a: '17', ulc_real_a: '17',
-  kapital_q_osa: '18', kapital_a_osa: '18', kapital_q_yoy: '18', kapital_a_yoy: '18',
-  ai_a_ee: '19', jae_q_G45_47: '20', jae_q_G45: '20', jae_q_G47: '20',
-  jaem_m_idx: '20b', jaem_m_eur: '20b', hoive_q_1574: '21', hoive_q_2064: '21', mitteakt_q: '22',
+  skp_q: ['1', '%'], skp_q_sa: ['1', '%'], skp_q_kiir: ['1', '%'], skp_a: ['1', '%'],
+  tootlev_m_lvl: '2', tootlev_m_yoy: ['2', '%'],
+  eksp_q: ['3', '%'], eksp_a: ['3', '%'],
+  kaup_m: ['4', ' mln €'], ekspK_q: ['4', '%'], ekspK_a: ['4', '%'], kaupEE_m: ['4b', ' mln €'],
+  ekspT_q: ['5', '%'], ekspT_a: ['5', '%'], fdi_q: ['6', ' mln €'], berd_a: ['7', '%'],
+  tootl_q: ['8', '%'], tootl_a: ['8', '%'], thi_m: ['9', '%'], thi_a: ['9', '%'], elekter_h: '10',
+  palk_q_lvl: ['11', ' €'], palk_a_lvl: ['11', ' €'], palk_q_yoy: ['11', '%'],
+  mediaan_q: ['12', ' €'], mediaan_a: ['12', ' €'],
+  esi_m: ['13', ' punkti'], esi_m_hinnang: ['13', ' punkti'],
+  tootus_q: ['14', '%'], regtootud_m: ['14b', ''], volg_a: ['15', '%'],
+  vab_maar_q: ['16', '%'], vab_arv_q: ['16', ''], tk_vabad_m: ['16b', ''], tk_vabad_c_m: ['16c', ''],
+  ulc_nom_q: ['17', '%'], ulc_real_q: ['17', '%'], ulc_nom_a: ['17', '%'], ulc_real_a: ['17', '%'],
+  kapital_q_osa: ['18', '%'], kapital_a_osa: ['18', '%'], kapital_q_yoy: '18', kapital_a_yoy: '18',
+  ai_a_ee: ['19', '%'],
+  jae_q_G45_47: ['20', '%'], jae_q_G45: ['20', '%'], jae_q_G47: ['20', '%'],
+  jaem_m_idx: '20b', jaem_m_eur: ['20b', ' mln €'],
+  hoive_q_1574: ['21', '%'], hoive_q_2064: ['21', '%'], mitteakt_q: ['22', '%'],
   ppi_m_kokku: '23', ppi_m_c: '23', ppi_a_kokku: '23', ppi_a_c: '23',
-  saast_a: '26', ehitusload_q: '27',
+  saast_a: ['26', '%'], ehitusload_q: ['27', ''],
   vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
-  eluase_q: '29', autod_m: '30', krt_q_cur: '31', krt_a_cur: '31', laenuintress_m: '32',
-  voimsus_q: '33', voimsus_q_stat: '33',
-  maksuvolg_arv_m: '34', maksuvolg_fi_m: '34', maksuvolg_ji_m: '34', maksuvolg_summa_m: '35',
+  eluase_q: '29', autod_m: ['30', ''], krt_q_cur: ['31', ' mln €'], krt_a_cur: ['31', ' mln €'],
+  laenuintress_m: ['32', '%'], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
+  maksuvolg_arv_m: ['34', ''], maksuvolg_fi_m: ['34', ''], maksuvolg_ji_m: ['34', ''],
+  maksuvolg_summa_m: ['35', ' mln €'],
 };
 const aiTekst = (votme) => {
   const t = AITEKSTID && AITEKSTID.tekstid && AITEKSTID.tekstid[votme];
@@ -840,27 +849,33 @@ const charts = { ulevaade: [], majandus: [], indeksid: [], vordlus: [] };
 
 // Kast "Viimati uuenenud": mis näitajad on viimastel päevadel uue perioodi saanud
 // või mille varasem väärtus on parandatud. Kirjed tulevad failist uuendused.json.
-function uuendusteKast(paevi = 7, mahub = 7) {
+function uuendusteKast(paevi = 7, mahub = 7, vahim = 3) {
   const kirjed = (UUENDUSED && UUENDUSED.kirjed) || [];
   if (!kirjed.length) return null;
   const periSilt = (p) => silt(p) + (/Q\d$/.test(p) ? ' kv' : /S\d$/.test(p) ? ' pa' : '');
-  const vaart = (it, v) => nf(it.dec === 0 ? 0 : 1).format(v) + (it.unit || '');
+  const vaart = (k, v) => (k.yhik == null || v == null ? null : nf(Number.isInteger(v) ? 0 : 1).format(v) + k.yhik);
   const paevSilt = (d) => `${+d.slice(8, 10)}.${+d.slice(5, 7)}.`;
   // seeria -> näitaja; ühe näitaja mitu seeriat samal päeval koondatakse üheks reaks
   const kaup = new Map();
   kirjed.forEach((k) => {
-    const nr = SEERIA_NAITAJA[k.seeria];
+    const def = SEERIA_NAITAJA[k.seeria];
+    const nr = Array.isArray(def) ? def[0] : def;
     const it = nr && GROUPS.flatMap((g) => g.items).find((i) => i.nr === nr);
     if (!it) return;
+    const uus = { ...k, it, yhik: Array.isArray(def) ? def[1] : null };
     const v = kaup.get(`${k.paev}|${nr}`);
-    // eelistus: uus periood enne parandust, värskem periood enne vanemat
-    if (!v || (k.liik === 'uus' && v.liik !== 'uus') || (k.liik === v.liik && k.periood > v.periood)) kaup.set(`${k.paev}|${nr}`, { ...k, it });
+    // eelistus: uus periood enne parandust, väärtusega kirje enne väärtuseta, värskem periood enne vanemat
+    const parem = !v || (uus.liik === 'uus' && v.liik !== 'uus')
+      || (uus.liik === v.liik && ((uus.yhik != null && v.yhik == null) || (uus.yhik != null) === (v.yhik != null) && uus.periood > v.periood));
+    if (parem) kaup.set(`${k.paev}|${nr}`, uus);
   });
   const jrk = (a, b) => (a.paev !== b.paev ? (a.paev < b.paev ? 1 : -1) : a.liik !== b.liik ? (a.liik === 'uus' ? -1 : 1) : a.it.title.localeCompare(b.it.title, 'et'));
   const koik = [...kaup.values()].sort(jrk);
   if (!koik.length) return null;
-  const piir = new Date(Date.now() - paevi * 864e5).toISOString().slice(0, 10);
-  const read = koik.filter((k) => k.paev >= piir);
+  // Vaikimisi seitse päeva; vaiksel nädalal pikem aken, et kast ei jääks peaaegu tühjaks
+  const akna = (p) => koik.filter((k) => k.paev >= new Date(Date.now() - p * 864e5).toISOString().slice(0, 10));
+  let read = akna(paevi);
+  if (read.length < vahim && akna(paevi * 2).length > read.length) { paevi *= 2; read = akna(paevi); }
 
   const kast = el('aside', 'uus-kast');
   kast.setAttribute('aria-labelledby', 'uk-h');
@@ -870,12 +885,14 @@ function uuendusteKast(paevi = 7, mahub = 7) {
     sisu += `<p class="uk-tyhi">Uusi andmeid ei ole lisandunud. Viimane muudatus: ${esc(v.it.title)}, ${paevSilt(v.paev)}</p>`;
   } else {
     sisu += '<ul>' + read.slice(0, mahub).map((k) => {
+      const uusV = vaart(k, k.v), vanaV = vaart(k, k.vana), per = esc(periSilt(k.periood));
       const info = k.liik === 'uus'
-        ? `uus periood ${esc(periSilt(k.periood))}: <b>${esc(vaart(k.it, k.v))}</b>`
-        : `${esc(periSilt(k.periood))} parandatud${k.vana == null ? '' : ` ${esc(vaart(k.it, k.vana))} →`} <b>${esc(vaart(k.it, k.v))}</b>`;
+        ? (uusV ? `uus periood ${per}: <b>${esc(uusV)}</b>` : `uus periood <b>${per}</b>`)
+        : (uusV ? `${per} parandatud${vanaV ? ` ${esc(vanaV)} →` : ''} <b>${esc(uusV)}</b>` : `<b>${per}</b> andmed parandatud`);
       return `<li><span class="uk-paev">${paevSilt(k.paev)}</span><span><span class="uk-nimi">${esc(k.it.title)}</span><span class="uk-info">${info}</span></span></li>`;
     }).join('') + '</ul>';
-    if (read.length > mahub) sisu += `<p class="uk-tyhi">Lisaks ${read.length - mahub} muud muudatust.</p>`;
+    const yle = read.length - mahub;
+    if (yle > 0) sisu += `<p class="uk-tyhi">${yle === 1 ? 'Lisaks veel üks muudatus.' : `Lisaks veel ${yle} muudatust.`}</p>`;
   }
   kast.innerHTML = sisu;
   return kast;

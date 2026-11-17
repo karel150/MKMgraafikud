@@ -42,13 +42,23 @@ def seeriaks(s):
     return dict(zip(s.get("periods", []), s.get("values", []))), list(s.get("periods", []))
 
 
+UUSI_MAX = 15   # rohkem uusi seeriaid korraga = töölaua muudatus, mitte andmeuudis
+
+
 def muudatused(uus, vana, paev):
-    kirjed = []
+    kirjed, uued_seeriad = [], []
     for v6ti, u in sorted(uus.get("seeriad", {}).items()):
-        v = vana.get("seeriad", {}).get(v6ti)
-        if not v or not v.get("periods"):
+        if not u or not u.get("periods"):
             continue
         uv, up = seeriaks(u)
+        v = vana.get("seeriad", {}).get(v6ti)
+        if not v or not v.get("periods"):
+            # failis uus seeria: ainult viimane periood, mitte kogu ajalugu
+            olemas = [p for p in up if uv[p] is not None]
+            if olemas:
+                uued_seeriad.append({"paev": paev, "seeria": v6ti, "liik": "uus",
+                                     "periood": olemas[-1], "v": uv[olemas[-1]]})
+            continue
         vv, vp = seeriaks(v)
         for p in sorted(set(up) - set(vp))[-2:]:
             if uv[p] is not None:
@@ -58,7 +68,10 @@ def muudatused(uus, vana, paev):
                 kirjed.append({"paev": paev, "seeria": v6ti, "liik": "parandus",
                                "periood": p, "v": uv[p], "vana": vv[p]})
                 break
-    return kirjed
+    if len(uued_seeriad) > UUSI_MAX:
+        print(f"  {paev}: {len(uued_seeriad)} uut seeriat – töölaua muudatus, jäetakse logist välja")
+        uued_seeriad = []
+    return kirjed + uued_seeriad
 
 
 def main():
