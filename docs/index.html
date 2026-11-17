@@ -1432,6 +1432,8 @@ function koostaUlevaade(D) {
   const viim = (s, n = 1) => { const i = s.values.length - n; return i >= 0 && s.values[i] != null ? { p: s.periods[i], v: s.values[i] } : null; };
   const aastaga = (s) => ({ periods: s.periods.slice(12), values: s.values.slice(12).map((v, i) => (v == null || !s.values[i] ? null : (v / s.values[i] - 1) * 100)) });
   const saba = (s, n) => s.values.slice(-n).filter((v) => v != null);
+  // Väärtus täpselt aasta varem samas perioodis (nii 2026Q3 kui 2026M09 puhul)
+  const aastaTagasi = (s, p) => { if (!p) return null; const i = s.periods.indexOf((+p.slice(0, 4) - 1) + p.slice(4)); return i >= 0 && s.values[i] != null ? s.values[i] : null; };
   // SKP: lõplik (korrigeeritud) rida ja selle järel kiirhinnang, kui see on uuem
   const skpF = S('skp_q_sa').periods.length ? S('skp_q_sa') : S('skp_q'), kh = S('skp_q_kiir');
   const skpX = skpF.periods.slice(), skpY = skpF.values.slice(); let kiirN = 0;
@@ -1440,14 +1442,18 @@ function koostaUlevaade(D) {
   const eksY = aastaga(S('kaup_m')), jaeY = aastaga(S('jaem_m_idx')), regY = aastaga(S('regtootud_m'));
   const esiA = viim(S('esi_m')), esiH = viim(S('esi_m_hinnang'));
   const esi = esiH && (!esiA || esiH.p > esiA.p) ? { ...esiH, hinnang: true } : esiA;
+  // Aastataguse võrdluse jaoks: teadaolevad väärtused ja nende järel hinnangud (indexOf eelistab teadaolevat)
+  const esiK = { periods: S('esi_m').periods.concat(S('esi_m_hinnang').periods), values: S('esi_m').values.concat(S('esi_m_hinnang').values) };
+  const tootus = viim(S('tootus_q')), palk = viim(S('palk_q_lvl')), vabad = viim(S('tk_vabad_m'));
   return { skp, skpX, skpY, kiirN,
     too: viim(S('tootlev_m_yoy')), eks: viim(eksY), eksSaba: saba(eksY, 24), jae: viim(jaeY),
     thi: viim(S('thi_m')), thi0: viim(S('thi_m'), 2), thiSaba: saba(S('thi_m'), 24),
     reg: viim(S('regtootud_m')), regA: viim(regY), regSaba: saba(S('regtootud_m'), 24),
-    tootus: viim(S('tootus_q')), tootusAasta: (() => { // sama kvartal aasta varem
-      const t = S('tootus_q'), p = t.periods.at(-1), i = p ? t.periods.indexOf((+p.slice(0, 4) - 1) + p.slice(4)) : -1;
-      return i >= 0 && t.values[i] != null ? t.values[i] : null; })(),
-    palk: viim(S('palk_q_lvl')), palkA: viim(S('palk_q_yoy')), vabad: viim(S('tk_vabad_m')), esi };
+    // Aastatagused väärtused: riba nooled näitavad, kas näitaja on aastaga tõusnud või langenud
+    tootus, tootusAasta: aastaTagasi(S('tootus_q'), tootus && tootus.p),
+    palk, palkAasta: aastaTagasi(S('palk_q_lvl'), palk && palk.p), palkA: viim(S('palk_q_yoy')),
+    vabad, vabadAasta: aastaTagasi(S('tk_vabad_m'), vabad && vabad.p),
+    esi, esiAasta: aastaTagasi(esiK, esi && esi.p) };
 }
 // Suund: ▲/▼ ja värv selle järgi, kas tõus on selle näitaja puhul hea (hea = 1), halb (−1) või neutraalne (0)
 function suund(v, hea = 1) {
@@ -1496,9 +1502,15 @@ function buildUlevaade() {
   if (u.tootus) lisa('Töötus', u.tootus, -1, pr(u.tootus.v) + '%',
     `Töötuse määr (Statistikaamet, tööjõu-uuring), ${silt(u.tootus.p)} kv${u.tootusAasta == null ? '' : `; aasta varem ${pr(u.tootusAasta)}%`}`,
     u.tootusAasta == null ? null : u.tootus.v - u.tootusAasta); // nool: kas määr on aastaga tõusnud või langenud
-  if (u.palk) lisa('Palk', u.palk, null, f0(u.palk.v) + ' €', `Keskmine brutokuupalk, ${silt(u.palk.p)} kv`);
-  if (u.vabad) lisa('Vabad töökohad', u.vabad, null, f0(u.vabad.v), `Töötukassa vahendatavad vabad töökohad, ${silt(u.vabad.p)}`);
-  if (u.esi) lisa('Usaldus', u.esi, null, pr(u.esi.v), `Majandususaldusindeks, ${silt(u.esi.p)}${u.esi.hinnang ? ' (hinnang)' : ''}`);
+  if (u.palk) lisa('Palk', u.palk, 1, f0(u.palk.v) + ' €',
+    `Keskmine brutokuupalk, ${silt(u.palk.p)} kv${u.palkAasta == null ? '' : `; aasta varem ${f0(u.palkAasta)} €`}`,
+    u.palkAasta == null ? null : u.palk.v - u.palkAasta);
+  if (u.vabad) lisa('Vabad töökohad', u.vabad, 1, f0(u.vabad.v),
+    `Töötukassa vahendatavad vabad töökohad, ${silt(u.vabad.p)}${u.vabadAasta == null ? '' : `; aasta varem ${f0(u.vabadAasta)}`}`,
+    u.vabadAasta == null ? null : u.vabad.v - u.vabadAasta);
+  if (u.esi) lisa('Usaldus', u.esi, 1, pr(u.esi.v),
+    `Majandususaldusindeks, ${silt(u.esi.p)}${u.esi.hinnang ? ' (hinnang)' : ''}${u.esiAasta == null ? '' : `; aasta varem ${pr(u.esiAasta)}`}`,
+    u.esiAasta == null ? null : u.esi.v - u.esiAasta);
   if (riba.length) { const r = el('div', 'ul-riba', riba.join('')); r.setAttribute('aria-label', 'Viimased näitajad'); root.append(r); }
 
   // 2. Kokkuvõte ja majandususaldus
