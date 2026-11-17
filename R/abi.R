@@ -484,6 +484,58 @@ kirjuta_json <- function(x, fail) {
   invisible(TRUE)
 }
 
+# ---- Muudatuste logi ---------------------------------------------------------
+# Võrdleb värskelt arvutatud näitajaid eelmise failiga ja kirjutab muudatused
+# faili uuendused.json: mis seeria sai uue perioodi ja mille varasem väärtus
+# parandati. Veebileht teeb neist kirjetest kasti "Viimati uuenenud".
+# Seeriate nimesid siin ei teata – leht seob seeria võtme näitajaga ise.
+MUUD_PAEVI <- 21    # kui vanu kirjeid alles hoitakse
+MUUD_MAX   <- 300   # ülempiir, et fail ei kasvaks piiramatult
+MUUD_VAATA <- 6     # mitut viimast perioodi paranduste osas vaadatakse
+
+# Kas erinevus on päris muudatus või ümardamismüra?
+oluline_vahe <- function(uus, vana) {
+  if (is.na(uus) || is.na(vana)) return(xor(is.na(uus), is.na(vana)))
+  abs(uus - vana) > max(0.05, abs(vana) * 0.001)
+}
+
+logi_muudatused <- function(uued, vana_fail = "naitajad.json", logi_fail = "uuendused.json") {
+  vana <- loe_json(vana_fail)
+  if (is.null(vana) || is.null(vana$seeriad)) return(invisible(FALSE))  # esimene käivitus: võrrelda pole millegagi
+  paev <- format(Sys.Date())
+  kirjed <- list()
+  for (k in names(uued$seeriad)) {
+    u <- uued$seeriad[[k]]; v <- vana$seeriad[[k]]
+    if (is.null(u) || is.null(v) || !length(v$periods)) next           # päris uut seeriat ei logita
+    up <- as.character(u$periods); uv <- as.numeric(u$values)
+    vp <- as.character(v$periods); vv <- as.numeric(v$values)
+    # uued perioodid: kuni kaks kõige värskemat
+    for (p in utils::tail(sort(setdiff(up, vp)), 2)) {
+      i <- match(p, up)
+      if (!is.na(uv[i])) kirjed[[length(kirjed) + 1]] <-
+        list(paev = paev, seeria = k, liik = "uus", periood = p, v = uv[i])
+    }
+    # parandused: ainult viimastes perioodides ja seeria kohta kõige värskem
+    for (p in rev(intersect(utils::tail(vp, MUUD_VAATA), up))) {
+      iu <- match(p, up); iv <- match(p, vp)
+      if (!is.na(uv[iu]) && oluline_vahe(uv[iu], vv[iv])) {
+        kirjed[[length(kirjed) + 1]] <- list(paev = paev, seeria = k, liik = "parandus",
+                                             periood = p, v = uv[iu], vana = vv[iv])
+        break
+      }
+    }
+  }
+  tee <- file.path(DATA_DIR, logi_fail)
+  olemas <- if (file.exists(tee)) tryCatch(fromJSON(tee, simplifyVector = FALSE)$kirjed, error = function(e) NULL) else NULL
+  koik <- c(if (is.null(olemas)) list() else olemas, kirjed)
+  # vanad kirjed välja, uuemad lõppu, ülempiir peale
+  alates <- format(Sys.Date() - MUUD_PAEVI)
+  koik <- Filter(function(r) !is.null(r$paev) && r$paev >= alates, koik)
+  if (length(koik) > MUUD_MAX) koik <- utils::tail(koik, MUUD_MAX)
+  if (length(kirjed)) message("Muudatusi: ", length(kirjed))
+  kirjuta_json(list(uuendatud = aeg_utc(), kirjed = koik), logi_fail)
+}
+
 # Seeria JSON-iks: perioodid ja väärtused jäävad alati massiivideks
 seeria_json <- function(s) {
   if (is.null(s)) return(NULL)
