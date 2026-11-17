@@ -104,6 +104,13 @@ koosta_taie <- function(naitajad = NULL, indeksid = NULL) {
   }, c(0, 200))
 
   # ---- Kokkupanek -------------------------------------------------------------
+  # Viimased väärtused logisse: nii on käivituse logist näha, kas numbrid on mõistlikud
+  for (id in names(tul)) {
+    s <- tul[[id]]
+    if (!is.null(s) && length(s$periods))
+      message(sprintf("  %s: %s perioodi, viimane %s = %s", id, length(s$periods),
+                      utils::tail(s$periods, 1), signif(utils::tail(s$values, 1), 4)))
+  }
   arv <- function(x) if (is.na(x) || !nzchar(x)) NULL else as.numeric(x)
   tekst <- function(x) if (is.na(x) || !nzchar(x)) NULL else x
   moodikud <- lapply(seq_len(nrow(def)), function(i) {
