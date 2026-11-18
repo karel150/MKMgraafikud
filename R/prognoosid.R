@@ -46,6 +46,7 @@ koosta_prognoosid <- function() {
   # Näidatakse ainult jooksva ja tulevaste aastate prognoose
   see_aasta <- as.integer(format(Sys.Date(), "%Y"))
   d <- d[d$aasta >= see_aasta, ]
+  csv_jarjekord <- unique(d$asutus)
   aastad <- see_aasta + 0:2
 
   # IMF automaatselt. Avaldamise kuupäeva API ei anna: kui arvud muutuvad,
@@ -74,7 +75,7 @@ koosta_prognoosid <- function() {
                           markus = "Laetakse automaatselt IMF DataMapperist."))
   }
 
-  jarjekord <- unique(d$asutus)
+  jarjekord <- c(intersect(csv_jarjekord, d$asutus), setdiff(unique(d$asutus), csv_jarjekord))
   asutused <- lapply(jarjekord, function(a) {
     r <- d[d$asutus == a, ]
     vaartused <- stats::setNames(lapply(names(PROGN_VAHEMIK), function(n) {
