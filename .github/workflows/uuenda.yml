@@ -91,7 +91,10 @@ jobs:
             echo "Andmed ei muutunud."
           else
             git commit -m "Andmed $(date +%F)"
-            git pull --rebase
+            # Jooks arvutab andmed oma käivitamise hetke commit'ist. Kui vahepeal jõudis main'i
+            # eelmise jooksu andmecommit, tekib samades JSON-failides konflikt: siis jäävad
+            # kehtima selle jooksu värskelt arvutatud failid (-X theirs = taasesitatav commit).
+            git pull --rebase -X theirs
             git push
           fi
       - name: Loe hoiatused
