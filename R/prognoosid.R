@@ -55,7 +55,10 @@ koosta_prognoosid <- function() {
     hoiata("IMF-i prognoos: ", conditionMessage(e), ". Kasutatakse CSV varuridu."); NULL })
   if (!is.null(imf)) {
     varu <- d[d$asutus == "IMF", ][1, ]
-    vanaImf <- if (is.data.frame(vana$asutused)) which(vana$asutused$asutus == "IMF") else integer()
+    message("IMF: ", paste(sprintf("%s %d = %.1f", imf$naitaja, imf$aasta, imf$vaartus), collapse = "; "))
+    # Võrreldakse ainult eelmise automaatse laadimisega; CSV varurea järel kehtib CSV kuupäev
+    vanaImf <- if (is.data.frame(vana$asutused) && isTRUE("automaatne" %in% names(vana$asutused)))
+      which(vana$asutused$asutus == "IMF" & vana$asutused$automaatne %in% TRUE) else integer()
     kuup <- varu$avaldatud
     if (length(vanaImf)) {
       vv <- vana$asutused$vaartused[vanaImf[1], , drop = FALSE]
