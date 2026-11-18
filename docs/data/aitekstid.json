@@ -1,5 +1,5 @@
 {
- "uuendatud": "2026-11-16T12:10:00.862Z",
+ "uuendatud": "2026-11-18T11:48:14.149Z",
  "mudel": "claude-sonnet-5-5",
  "tekstid": {
   "yldine": {
@@ -27,14 +27,14 @@
   },
   "vordlus_M": {
    "laused": [
-    "Eesti on võrdlusriikide seas enamasti keskel, kuid tööstuse kasvus ja laenude hinnas jääb tagasi.",
-    "Töötuse määr on Eestis 8,0%, mis on Soome 11,0% näitajast madalam.",
-    "Tarbijahinnad tõusevad Eestis kiiremini kui Lätis, kuid aeglasemalt kui Leedus.",
-    "Töötleva tööstuse toodang kasvab viie riigi seas kasvult neljandana ning uute laenude intressimäär 4,71% on euroala keskmisest 3,90% kõrgem."
+    "Eesti majandus ja tööstus jäävad võrdlusriikidest tagapool, hinnatõus on aga Leedu järel kiireim.",
+    "Majandus kasvas aastaga 2,2%, aeglasemalt kasvas vaid Soome 2,1%, ning tööstustoodangu kasvult on Eesti viiest riigist neljandal kohal.",
+    "Tarbijahinnad tõusid 3,6%, Leedus aga 6,1%, nii et kõrge hinnatõus ei ole siin eelis.",
+    "Töötuse määr 8,0% jääb viie riigi keskele ja on madalam kui Soomes, kus see on 11,0%."
    ],
-   "rohk": "enamasti keskel",
-   "rasi": "b8ad50daaf579a67",
-   "aeg": "2026-11-16"
+   "rohk": "majandus ja tööstus jäävad võrdlusriikidest tagapool",
+   "rasi": "6972d7847cfe185a",
+   "aeg": "2026-11-18"
   },
   "vordlus_Q": {
    "laused": [
