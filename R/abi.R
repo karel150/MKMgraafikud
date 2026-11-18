@@ -31,8 +31,30 @@ valik <- function(code, values, filter = if (identical(values, "*")) "all" else 
   list(code = code, selection = list(filter = filter, values = as.list(values)))
 }
 
+# Kui Statistikaamet ei vasta, kulub iga päringu kolmele katsele ~5 minutit ja kümnete
+# seeriate puhul jõuab töö ajapiiranguni enne, kui ülejäänud andmed (Eurostat, IMF jm)
+# kirja saavad. Seepärast loetakse järjestikuseid ebaõnnestunud päringuid: pärast
+# STATEE_PIIR-i jäetakse ülejäänud Statistikaameti päringud vahele (nende seeriate
+# eelmised väärtused jäävad alles) ja ühe ebaõnnestumise järel proovitakse vaid korra.
+# Õnnestunud päring nullib loenduri. HTTP 4xx (vigane päring) ei loe – server vastas.
+STATEE_PIIR <- 3
+statee_vigu <- 0
+statee_kontroll <- function(tabel) {
+  if (statee_vigu >= STATEE_PIIR)
+    stop(tabel, ": Statistikaamet ei vastanud ", STATEE_PIIR, " järjestikusele päringule, päring jäeti vahele")
+}
+statee_tulemus <- function(ok) {
+  if (ok) { statee_vigu <<- 0; return(invisible()) }
+  statee_vigu <<- statee_vigu + 1
+  if (statee_vigu == STATEE_PIIR)
+    hoiata("Statistikaamet ei vasta: ülejäänud Statistikaameti päringud jäetakse selles jooksus vahele, ",
+           "nende näitajate eelmised väärtused jäävad alles.")
+}
+
 # Tagastab data.frame'i: üks veerg iga dimensiooni koodiga + veerg value.
 px_paring <- function(tabel, ..., katseid = 3, api = PX_API) {
+  statee_kontroll(tabel)
+  if (statee_vigu > 0) katseid <- 1
   keha <- list(query = list(...), response = list(format = "json"))
   vastus <- NULL
   for (k in seq_len(katseid)) {
@@ -42,8 +64,9 @@ px_paring <- function(tabel, ..., katseid = 3, api = PX_API) {
       error = function(e) e
     )
     if (!inherits(vastus, "error") && status_code(vastus) == 200) break
-    Sys.sleep(5 * k)
+    if (k < katseid) Sys.sleep(5 * k)
   }
+  statee_tulemus(!inherits(vastus, "error") && status_code(vastus) < 500)
   if (inherits(vastus, "error")) stop(tabel, ": ", conditionMessage(vastus))
   stop_for_status(vastus, task = paste("laadida tabelit", tabel))
   Sys.sleep(0.5)  # Statistikaameti API piirab päringute arvu
