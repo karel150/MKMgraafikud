@@ -271,6 +271,9 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     stk_flow = "L_LE", partner = "WRL_REST", freq = "Q")), c(1, 1e6))
   lisa("elekter_h", function() eurostat_seeria("nrg_pc_205", list(
     geo = "EE", nrg_cons = "TOT_KWH", tax = "X_TAX", currency = "EUR", unit = "KWH")), c(0, 2))
+  # Tööjõu tootlikkus hõivatu kohta, % EL-27 keskmisest (ostujõu standardis)
+  lisa("tootl_el_a", function() eurostat_seeria("nama_10_lp_ulc", list(
+    geo = "EE", na_item = "NLPR_PER", unit = "PC_EU27_2020_MPPS_CP", freq = "A")), c(20, 200))
   # Kodumajapidamiste säästumäär (brutosäästu määr, %): ainult aasta, Eurostat ei avalda Eesti kohta kvartalirida
   lisa("saast_a", function() eurostat_seeria("nasa_10_ki", list(geo = "EE", na_item = "SRG_S14_S15", unit = "PC", freq = "A")), c(-50, 60))
   # Tehisintellekti kasutavad ettevõtted (>= 10 hõivatut), % ettevõtetest

@@ -184,6 +184,8 @@ koosta_vordlus <- function(icu = NULL) {
   # 8 tootlikkus töötatud tunni kohta, 17 nominaalne tööjõu ühikukulu (tunnipõhine)
   andmestik("tootl_q", "namq_10_lp_ulc", Q_(na_item = "RLPR_HW", unit = "PCH_SM", s_adj = "SCA"), YOY)
   andmestik("tootl_a", "nama_10_lp_ulc", A_(na_item = "RLPR_HW", unit = "PCH_PRE"), YOY)
+  # 36 tootlikkus hõivatu kohta, % EL-27 keskmisest (ostujõu standardis)
+  andmestik("tootl_el_a", "nama_10_lp_ulc", A_(na_item = "NLPR_PER", unit = "PC_EU27_2020_MPPS_CP"), c(10, 300))
   andmestik("ulc_q",   "namq_10_lp_ulc", Q_(na_item = "NULC_HW", unit = "PCH_SM", s_adj = "SCA"), YOY)
   andmestik("ulc_a",   "nama_10_lp_ulc", A_(na_item = "NULC_HW", unit = "PCH_PRE"), YOY)
   # 7 ettevõtlussektori T&A, % SKP-st
