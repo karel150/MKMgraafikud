@@ -273,6 +273,13 @@
    "nimi": "Maksuvõla summa",
    "kirjeldus": "Maksu- ja Tolliametile tasumata maksuvõla kogusumma kuu lõpu seisuga, miljonites eurodes; sisaldab ka ajatatud võlga",
    "miks": "Maksuvõla kasv viitab ettevõtete ja inimeste makseraskustele ning on riigieelarvesse laekumata tulu; aasta alguses väheneb summa aegunud võlgade kustutamise tõttu"
+  },
+  "36": {
+   "valdkond": "Tootlikkus ja kulud",
+   "peamine": false,
+   "nimi": "Tööjõu tootlikkus hõivatu kohta, % EL-27 keskmisest",
+   "kirjeldus": "Ühe hõivatu kohta loodud lisandväärtus ostujõu standardis, võrrelduna Euroopa Liidu keskmisega (EL-27 = 100)",
+   "miks": "Näitab, kui kaugel on Eesti majanduse tootlikkus Euroopa keskmisest; sama näitaja on nii arengustrateegia „Eesti 2035“ kui ka TAIE arengukava siht"
   }
  }
 }
