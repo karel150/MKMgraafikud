@@ -188,7 +188,7 @@ def rakenda(tekst, kuiv=False, tana=None):
         kirjuta_csv(PROGNOOSID, ylej[:koht] + uued_read + ylej[koht:])
 
     def kuva(d):
-        return "–" if not d else ", ".join(f"{a}: {x.replace('.', ',')}" for a, x in sorted(d.items()))
+        return "–" if not d else ", ".join(f"{a}: {float(x):.1f}".replace(".", ",") for a, x in sorted(d.items()))
     md = [f"**{asutus}**: {prognoos} ({datetime.date.fromisoformat(kp):%d.%m.%Y})", ""]
     if not muutus:
         md.append("Midagi ei muutunud: sisestatud andmed on tabelis juba olemas.")
