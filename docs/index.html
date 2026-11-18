@@ -913,7 +913,7 @@ function taieKaart(m) {
 
   if (s && s.periods.length >= 2) {
     head.append(el('div', 'headline', `<span class="big">${esc(vorm(viimV))}</span><span class="per">${esc(viimP)}</span>`
-      + `<span class="delta">Siht 2035: ${esc(m.siht_tekst)}</span>`));
+      + (m.siht_tekst ? `<span class="delta">Siht 2035: ${esc(m.siht_tekst)}</span>` : '')));
     const ch = el('div', 'chart');
     ch.setAttribute('role', 'img');
     ch.setAttribute('aria-label', `${m.nimi}: ${viimT} (${viimP}), sihttase 2035 on ${m.siht_tekst}.`);
@@ -926,7 +926,7 @@ function taieKaart(m) {
     const t = el('div', 'taie-tase');
     t.innerHTML = `<div><span class="tl">Viimane teada olev tase</span><span class="tv">${esc(viimT)}</span>`
       + `${viimP || m.silt ? `<span class="tp">${esc([viimP, m.silt].filter(Boolean).join(' · '))}</span>` : ''}</div>`
-      + `<div><span class="tl">Sihttase 2035</span><span class="tv tv-siht">${esc(m.siht_tekst)}</span></div>`;
+      + (m.siht_tekst ? `<div><span class="tl">Sihttase 2035</span><span class="tv tv-siht">${esc(m.siht_tekst)}</span></div>` : '');
     c.append(t);
   }
   if (m.markus) c.append(el('div', 'note', esc(m.markus)));

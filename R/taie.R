@@ -12,6 +12,14 @@
 
 TAIE_CSV <- "andmed/taie.csv"
 
+# Rida arengustrateegia "Eesti 2035" tegevuskava mõõdikute tabelist (Statistikaamet EE01).
+# Mitu TAIE mõõdikut on seal juba kokku arvutatud, nii et neid ei pea ise kokku panema.
+ee2035 <- function(kood) {
+  d <- px_paring("EE01", valik("Näitaja", kood), valik("Vaatlusperiood", "*"))
+  d <- d[!is.na(d$value), ]
+  seeria(d$Vaatlusperiood, d$value)
+}
+
 koosta_taie <- function(naitajad = NULL, indeksid = NULL) {
   # Eelmise faili seeriad: jsonlite teeb neist pesastatud loendiveerud, mis tuleb lahti pakkida
   vana <- loe_json("taie.json")
@@ -75,26 +83,18 @@ koosta_taie <- function(naitajad = NULL, indeksid = NULL) {
     seeria(d$Aasta, d$value)
   }, c(0, 20))
 
-  # Teadlased ja insenerid ettevõtlussektoris ja kasumitaotluseta erasektoris,
-  # täistööajale taandatud, tuhande elaniku kohta
-  lisa("t2", function() {
-    d <- px_paring("TD01", valik("Näitaja", "EMPLOYEES_FTE"),
-                   valik("Institutsionaalne sektor", c("BES", "PNP")),
-                   valik("Ametikoha liik", "RSE"), valik("Sugu", "_T"),
-                   valik("Vaatlusperiood", "*"))
-    d <- d[!is.na(d$value), ]
-    arv <- stats::aggregate(value ~ Vaatlusperiood, data = d, FUN = sum)
-    # mõlema sektori andmed peavad olemas olema, muidu jääks aasta poolikuks
-    taielik <- stats::aggregate(value ~ Vaatlusperiood, data = d, FUN = length)
-    arv <- arv[arv$Vaatlusperiood %in% taielik$Vaatlusperiood[taielik$value == 2], ]
-
-    r <- px_paring("RV0291U", valik("Elukoht", "1"), valik("Aasta", "*"), valik("Näitaja", "1"))
-    rahvas <- stats::setNames(r$value, as.character(r$Aasta))
-    aastad <- intersect(as.character(arv$Vaatlusperiood), names(rahvas))
-    seeria(aastad, arv$value[match(aastad, as.character(arv$Vaatlusperiood))] / rahvas[aastad] * 1000)
-  }, c(0, 20))
+  # Erasektori teadlaste ja inseneride arv tuhande elaniku kohta.
+  # Sama rida, mida kasutab arengustrateegia "Eesti 2035" (mõõdik 9.1).
+  lisa("t2", function() ee2035("EE35_CEC_RESEARCH"), c(0, 20))
 
   # ---- Ettevõtluskeskkond -----------------------------------------------------
+  # Eesti koht IMD konkurentsivõime indeksis: Eesti 2035 kasutab seda lõpetatud
+  # Doing Business'i asemel, seepärast on see TAIE lehel kõrval
+  lisa("e1b", function() ee2035("EE35_CEC_DBI"), c(1, 100))
+
+  # Väljaspool Harjumaad elaniku kohta loodud SKP, % EL-i keskmisest (Eesti 2035 mõõdik 4.3)
+  lisa("e2", function() ee2035("EE35_GE_GDP_AVG"), c(10, 200))
+
   # Kaupade ja teenuste eksport jooksevhindades, mld eurot
   lisa("e3", function() {
     k <- olemas("ekspK_a_cur"); t <- olemas("ekspT_a_cur")
