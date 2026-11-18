@@ -66,6 +66,21 @@ Kuue mõõdiku aegrea laeb `R/taie.R` ise: riigieelarveline TA rahastus ja töö
 
 Uue mõõdiku või uue käsitsi väärtuse lisamiseks muuda `andmed/taie.csv`-d; aegrea lisamiseks tuleb `R/taie.R`-i kirjutada ka päring.
 
+## Majandusprognoosid
+
+Vahekaart „Prognoosid“ võrdleb Rahandusministeeriumi, Eesti Panga, Euroopa Komisjoni, IMF-i,
+Swedbanki, SEB ja LHV viimaseid prognoose majanduskasvu, inflatsiooni ja töötuse määra kohta.
+Andmed koostab `R/prognoosid.R` failiks `docs/data/prognoosid.json`.
+
+* **IMF** laetakse automaatselt DataMapperi API-st (`NGDP_RPCH`, `PCPIPCH`, `LUR`). Kui arvud
+  muutuvad, loetakse avaldamise kuupäevaks muutuse päev. API rikke korral kasutatakse CSV varurida.
+* **Ülejäänud asutused** on käsitsi failis `andmed/prognoosid.csv` (üks rida = asutus × aasta ×
+  näitaja). Uue prognoosi ilmudes asenda selle asutuse read: uus `avaldatud` (AAAA-KK-PP),
+  väärtused ja link. Näitajad: `skp`, `inflatsioon`, `tootus`. Kui asutus mõnda arvu ei avalda,
+  jäta rida lisamata – leht näitab tühja lahtrit, mitte hinnangut.
+* Näidatakse jooksva ja kahe järgmise aasta prognoose; „Keskmine“ arvutatakse, kui arv on
+  vähemalt kolmelt asutuselt.
+
 ## Tehisaru koostatud tekstid
 
 Avalehe, graafikute, indeksite ja rahvusvahelise võrdluse kokkuvõtvad lõigud kirjutab iga uuenduse järel tehisaru (Anthropicu API). Lehel on nende juures silt „Tehisaru kokkuvõte" ja selgitus, et teksti koostas tehisaru.
