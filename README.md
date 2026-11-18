@@ -56,6 +56,19 @@ andmed/indeksid*.csv     ──┘   (GitHub Actions,                  (GitHub P
 | `mkm-ee/manustamine.html` | Koodijupp mkm.ee veebimeeskonnale. |
 
 
+## Elektri börsihind
+
+Näitaja 37 on Nord Pooli järgmise päeva turu hind (€/MWh), mis laaditakse Eleringi avalikust
+API-st (`dashboard.elering.ee/api/nps/price`, võtit pole vaja). Eleringi andmetes on Eesti, Läti,
+Leedu ja Soome hinnapiirkond; Rootsi hindu seal ei ole, seetõttu Rootsit võrdluses pole.
+Rootsi lisamiseks on vaja ENTSO-E läbipaistvusplatvormi API-võtit.
+
+* Veerandtunni- ja tunnihinnad keskmistatakse esmalt tunniks, kuu keskmine on tundide keskmine
+  (Eesti aja järgi). Jooksvat kuud ei näidata; kvartal ja aasta on kuude keskmised.
+* Avalehe ribal on Eesti tänase päeva keskmine hind (`naitajad.json` väli `elekter_paev`, viimased
+  45 päeva). Kui tänast hinda failis pole (nt nädalavahetusel), näidatakse viimast päeva koos kuupäevaga.
+* Nord Pooli enda andmeportaalist andmeid ei võeta: avalik edasilevitamine vajab tasulist litsentsi.
+
 ## TAIE mõõdikud
 
 Vahekaart „TAIE mõõdikud" näitab teadus- ja arendustegevuse, innovatsiooni ning ettevõtluse arengukava 2021–2035 seirenäitajaid (arengukava lisa 3) nelja eesmärgi kaupa. Graafiku katkendjoon on 2035. aasta sihttase.

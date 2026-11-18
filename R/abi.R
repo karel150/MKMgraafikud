@@ -325,6 +325,75 @@ ecb_laenuintress <- function() {
   ecb_riigid("MIR", ECB_LAENUINTRESS, unique(c("EE", get0("VORDLUS_RIIGID", ifnotfound = character()), "U2")))
 }
 
+# ---- Elering: elektri börsihind ----------------------------------------------
+# Nord Pooli järgmise päeva turu hinnad (€/MWh) Eleringi avaliku API kaudu: Eesti,
+# Läti, Leedu ja Soome hinnapiirkond. Rootsi hindu Elering ei avalda.
+# Alates 1.10.2025 on hinnad veerandtunni kaupa, varem tunni kaupa: mõlemad
+# keskmistatakse kõigepealt tunniks, et kuu keskmine oleks ajaga kaalutud.
+# Päevad ja kuud on Eesti aja järgi. Laaditakse aasta kaupa; tulemus jäetakse
+# meelde, sest seda kasutavad nii naitajad.json kui ka vordlus.json.
+ELERING_HIND <- "https://dashboard.elering.ee/api/nps/price"
+ELERING_ALAD <- c(ee = "EE", lv = "LV", lt = "LT", fi = "FI")
+.elering_malu <- new.env(parent = emptyenv())
+
+elering_tunnid <- function() {
+  if (!is.null(.elering_malu$tunnid)) return(.elering_malu$tunnid)
+  tz <- "Europe/Tallinn"
+  utc <- function(x) format(x, "%Y-%m-%dT%H:%M:%S.000Z", tz = "UTC")
+  aastad <- ALGUS:as.integer(format(Sys.Date(), "%Y"))
+  osad <- lapply(aastad, function(a) {
+    algus <- as.POSIXct(sprintf("%d-01-01 00:00:00", a), tz = tz)
+    lopp <- min(as.POSIXct(sprintf("%d-01-01 00:00:00", a + 1), tz = tz), Sys.time() + 3 * 86400) - 1
+    v <- http_json(ELERING_HIND, list(start = utc(algus), end = utc(lopp)))
+    if (!isTRUE(v$success)) stop("Elering ei tagastanud andmeid aastaks ", a)
+    do.call(rbind, lapply(names(ELERING_ALAD), function(k) {
+      d <- v$data[[k]]
+      if (!is.data.frame(d) || !nrow(d)) return(NULL)
+      data.frame(ala = ELERING_ALAD[[k]], ts = as.numeric(d$timestamp), hind = as.numeric(d$price))
+    }))
+  })
+  d <- do.call(rbind, osad)
+  if (is.null(d) || !nrow(d)) stop("Eleringi hinnaandmed puuduvad")
+  d <- d[!is.na(d$hind) & !duplicated(d[, c("ala", "ts")]), ]
+  # tunni keskmine (UTC tund, et suveaja üleminek ei liidaks kaht tundi kokku)
+  d$tund <- floor(d$ts / 3600) * 3600
+  t <- stats::aggregate(hind ~ ala + tund, data = d, FUN = mean)
+  aeg <- as.POSIXct(t$tund, origin = "1970-01-01", tz = "UTC")
+  t$paev <- format(aeg, "%Y-%m-%d", tz = tz)
+  t$kuu <- format(aeg, "%YM%m", tz = tz)
+  message("Elering: ", nrow(d), " hinda, ", nrow(t), " tundi, ", min(t$paev), " … ", max(t$paev))
+  .elering_malu$tunnid <- t
+  t
+}
+
+# Täiskuude keskmised hinnad riigiti: list(EE = seeria, LV = …). Jooksev kuu jääb välja.
+elering_kuud <- function() {
+  t <- elering_tunnid()
+  jooksev <- format(Sys.time(), "%YM%m", tz = "Europe/Tallinn")
+  t <- t[t$kuu < jooksev, ]
+  k <- stats::aggregate(hind ~ ala + kuu, data = t, FUN = mean)
+  n <- stats::aggregate(hind ~ ala + kuu, data = t, FUN = length)
+  k <- k[n$hind >= 24 * 27, ]   # kuu peab olema peaaegu täielik
+  viim <- k[k$kuu == max(k$kuu), ]
+  message("Elering, kuu keskmine ", viim$kuu[1], ": ", paste(sprintf("%s %.1f", viim$ala, viim$hind), collapse = ", "), " €/MWh")
+  stats::setNames(lapply(unname(ELERING_ALAD), function(g) {
+    x <- k[k$ala == g, ]
+    if (!nrow(x)) NULL else seeria(x$kuu, round(x$hind, 2))
+  }), unname(ELERING_ALAD))
+}
+
+# Eesti viimaste päevade keskmine hind (koos homsega, kui see on juba teada)
+elering_paevad <- function(paevi = 45) {
+  t <- elering_tunnid()
+  t <- t[t$ala == "EE", ]
+  p <- stats::aggregate(hind ~ paev, data = t, FUN = mean)
+  n <- stats::aggregate(hind ~ paev, data = t, FUN = length)
+  p <- p[n$hind >= 23, ]
+  p <- utils::tail(p[order(p$paev), ], paevi)
+  message("Elering, Eesti päevahinnad: ", paste(sprintf("%s %.1f", utils::tail(p$paev, 3), utils::tail(p$hind, 3)), collapse = ", "))
+  list(paevad = p$paev, ee = round(p$hind, 2))
+}
+
 # ---- Eurostat ---------------------------------------------------------------
 # get_eurostat: paketi eurostat samanimeline funktsioon koos korduskatsete ja
 # vahemäluga. Kuna see on defineeritud töökeskkonnas, kasutavad seda ka

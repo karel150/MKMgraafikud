@@ -280,6 +280,13 @@
    "nimi": "Tööjõu tootlikkus hõivatu kohta, % EL-27 keskmisest",
    "kirjeldus": "Ühe hõivatu kohta loodud lisandväärtus ostujõu standardis, võrrelduna Euroopa Liidu keskmisega (EL-27 = 100)",
    "miks": "Näitab, kui kaugel on Eesti majanduse tootlikkus Euroopa keskmisest; sama näitaja on nii arengustrateegia „Eesti 2035“ kui ka TAIE arengukava siht"
+  },
+  "37": {
+   "valdkond": "Energia ja kulud",
+   "peamine": true,
+   "nimi": "Elektri börsihind",
+   "kirjeldus": "Nord Pooli järgmise päeva turu (day-ahead) keskmine elektrihind hinnapiirkonnas eurodes megavatt-tunni kohta, ilma käibemaksu, võrgutasude ja aktsiisita. Kuu keskmine on arvutatud tunnihindadest",
+   "miks": "Börsihind on ettevõtete ja kodumajapidamiste elektrikulu peamine muutuv osa; võrdlus naaberriikidega näitab, kuidas Eesti hinnapiirkonna hind erineb lähiturgudest"
   }
  }
 }
