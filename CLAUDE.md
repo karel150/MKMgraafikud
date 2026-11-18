@@ -77,6 +77,7 @@ siis kirjutatakse tekstid uuesti ka muutumatute andmete korral.
 Rscript R/uuenda.R          # terve uuendus (vajab võrguühendust allikatele)
 node tools/ai_test.mjs      # tehisaru vastuste kontrollfunktsioonid
 python3 tools/indeksi_vorm.py --help
+python3 tools/prognoosi_vorm.py --tekst vorm.md --kuiv   # prognoosivormi proov
 ```
 
 Lehe muudatusi kontrolli päriselt brauseris (peata Chrome, `docs/` kaust serveerituna) –
@@ -90,5 +91,5 @@ ainult koodi lugemisest ei piisa, sest vead tulevad välja alles joonistamisel.
 * **GitHubi `schedule` hilineb** selles repos tundide kaupa, seetõttu käivitab hommikuse jooksu
   väline ajastatud ülesanne. `uuenda.yml`-i `kell` töö valib kahest cron-ist selle, mis vastab
   Eesti aja järgi kella 8.05-le.
-* `tools/indeksi_vorm.py` kirjutab CSV-d reavahetusega `\r\n`, ülejäänud failid on `\n`-ga.
+* `tools/indeksi_vorm.py` kirjutab CSV-d reavahetusega `\r\n`, ülejäänud failid (ka `tools/prognoosi_vorm.py` kirjutatav `andmed/prognoosid.csv`) on `\n`-ga.
 * Kasutaja e-posti aadress on isiklik info: ära kasuta seda mujal kui tema enda töö tuvastamiseks.
