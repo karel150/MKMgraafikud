@@ -74,10 +74,24 @@ Andmed koostab `R/prognoosid.R` failiks `docs/data/prognoosid.json`.
 
 * **IMF** laetakse automaatselt DataMapperi API-st (`NGDP_RPCH`, `PCPIPCH`, `LUR`). Kui arvud
   muutuvad, loetakse avaldamise kuupäevaks muutuse päev. API rikke korral kasutatakse CSV varurida.
-* **Ülejäänud asutused** on käsitsi failis `andmed/prognoosid.csv` (üks rida = asutus × aasta ×
-  näitaja). Uue prognoosi ilmudes asenda selle asutuse read: uus `avaldatud` (AAAA-KK-PP),
-  väärtused ja link. Näitajad: `skp`, `inflatsioon`, `tootus`. Kui asutus mõnda arvu ei avalda,
-  jäta rida lisamata – leht näitab tühja lahtrit, mitte hinnangut.
+* **Ülejäänud asutused** on failis `andmed/prognoosid.csv`, mida uuendatakse vormiga
+  (vt allpool). Kui asutus mõnda arvu ei avalda, jääb see lehel tühjaks, mitte hinnatuks.
+
+### Prognoosi uuendamine vormiga
+
+1. Ava repo **Issues → New issue → Uuenda prognoosi**.
+2. Vali asutus, sisesta avaldamise kuupäev (nt `22.09.2026`), link ja arvud – iga aasta eraldi
+   reale kujul `2026: 2,5`.
+3. **Uus kuupäev = uus prognoos:** asutuse senised arvud asendatakse ja tühjaks jäetud näitajat
+   asutus ei avaldanud. **Sama kuupäev = parandus:** muudetakse ainult sisestatud aastaid;
+   `2027: -` kustutab ühe aasta, lahtris ainult `-` terve näitaja.
+4. Vajuta **Create**. Robot kirjutab muudatuse tabelisse, käivitab lehe uuenduse ja vastab
+   kokkuvõttega (mis muutus millest milleks). Vea korral ütleb, mis on valesti; paranda
+   sissekanne (Edit) ja robot proovib uuesti.
+
+Vormi saavad kasutada ainult repo omanik ja liikmed. Vormi sisu töötleb `tools/prognoosi_vorm.py`,
+tööd juhib `.github/workflows/prognoosi-vorm.yml`. Uue asutuse lisamiseks lisa see skripti
+nimekirja `ASUTUSED` ja vormi rippmenüüsse.
 * Näidatakse jooksva ja kahe järgmise aasta prognoose; „Keskmine“ arvutatakse, kui arv on
   vähemalt kolmelt asutuselt.
 

@@ -1,0 +1,72 @@
+name: Uuenda prognoosi
+description: Sisesta asutuse uus majandusprognoos. Robot kirjutab selle tabelisse ja leht uueneb mõne minutiga.
+title: "Prognoosi uuendus: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Uus kuupäev = uus prognoos:** asutuse senised arvud asendatakse täielikult. Tühjaks jäetud näitajat asutus siis ei avaldanud.
+        **Sama kuupäev = parandus:** muudetakse ainult sisestatud aastaid, teised jäävad alles. Ühe aasta kustutamiseks kirjuta `2027: -`, terve näitaja kustutamiseks lahtrisse ainult `-`.
+        IMF-i prognoos tuleb automaatselt, seepärast seda siin ei ole.
+  - type: dropdown
+    id: asutus
+    attributes:
+      label: Asutus
+      options:
+        - Rahandusministeerium
+        - Eesti Pank
+        - Euroopa Komisjon
+        - Swedbank
+        - SEB
+        - LHV
+    validations:
+      required: true
+  - type: input
+    id: kuupaev
+    attributes:
+      label: Avaldamise kuupäev
+      placeholder: "22.09.2026"
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Link prognoosile
+      description: Pressiteade või prognoosi dokument. Uue prognoosi puhul kohustuslik.
+      placeholder: "https://…"
+  - type: input
+    id: nimi
+    attributes:
+      label: Prognoosi nimi
+      description: Tühjaks jättes jääb senine (nt „Suvine majandusprognoos“).
+      placeholder: "Talvine majandusprognoos"
+  - type: textarea
+    id: skp
+    attributes:
+      label: Majanduskasv
+      description: SKP reaalkasv, %. Iga aasta eraldi real. Koma või punkt sobivad mõlemad.
+      placeholder: |
+        2026: 2,5
+        2027: 2,3
+        2028: 2,4
+  - type: textarea
+    id: inflatsioon
+    attributes:
+      label: Inflatsioon
+      description: Tarbijahindade aastane muutus, %.
+      placeholder: |
+        2026: 3,2
+        2027: 2,8
+  - type: textarea
+    id: tootus
+    attributes:
+      label: Töötuse määr
+      description: Töötute osakaal tööjõus, %.
+      placeholder: |
+        2026: 6,7
+        2027: 6,4
+  - type: input
+    id: markus
+    attributes:
+      label: Märkus
+      description: Lühike märkus lehe allikate plokki (nt „Harmoneeritud tarbijahinnaindeks“). Uue prognoosi puhul jääb vana märkus ära, kui seda uuesti ei sisesta.
