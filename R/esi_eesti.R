@@ -119,8 +119,13 @@ esi_lae_statee_tabel <- function(tabel, koodid, api = esi_seaded$statee_api) {
     ),
     response = list(format = "json-stat2")
   )
-  vastus <- POST(paste0(api, tabel), body = toJSON(paring, auto_unbox = TRUE),
-                 content_type_json(), encode = "raw")
+  # Töölaua jooksus (R/abi.R laetud) jagab see Statistikaameti katkestit px_paring()-uga
+  jagatud <- exists("statee_kontroll", mode = "function")
+  if (jagatud) statee_kontroll(tabel)
+  vastus <- tryCatch(POST(paste0(api, tabel), body = toJSON(paring, auto_unbox = TRUE),
+                          content_type_json(), encode = "raw", timeout(90)), error = function(e) e)
+  if (jagatud) statee_tulemus(!inherits(vastus, "error") && status_code(vastus) < 500)
+  if (inherits(vastus, "error")) stop(tabel, ": ", conditionMessage(vastus))
   stop_for_status(vastus, task = paste("laadida tabelit", tabel))
   js <- fromJSON(content(vastus, as = "text", encoding = "UTF-8"), simplifyVector = FALSE)
 
