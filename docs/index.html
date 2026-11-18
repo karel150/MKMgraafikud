@@ -415,7 +415,7 @@ footer a { color: var(--muted); }
 
 <footer class="gutter">
   <div class="inner">
-    <p>Allikad: Statistikaamet (andmed.stat.ee, CC BY 4.0), Eurostat, Euroopa Keskpank, Maksu- ja Tolliamet, Euroopa Komisjon, IMD, WIPO, Tax Foundation, Transparency International, Heritage Foundation. Lingid on iga kaardi all.</p>
+    <p>Allikad: Statistikaamet (andmed.stat.ee, CC BY 4.0), Eurostat, Euroopa Keskpank, Elering (Nord Pooli elektrihinnad), Maksu- ja Tolliamet, Euroopa Komisjon, IMD, WIPO, Tax Foundation, Transparency International, Heritage Foundation. Lingid on iga kaardi all.</p>
     <p>Andmeid uuendatakse automaatselt tööpäeviti. Edetabelid uuendatakse käsitsi pärast nende avaldamist.</p>
   </div>
 </footer>
@@ -476,7 +476,7 @@ const SEERIA_NAITAJA = {
   saast_a: ['26', '%'], ehitusload_q: ['27', ''],
   vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
   eluase_q: '29', autod_m: ['30', ''], krt_q_cur: ['31', ' mln €'], krt_a_cur: ['31', ' mln €'],
-  laenuintress_m: ['32', '%'], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
+  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
   maksuvolg_arv_m: ['34', ''], maksuvolg_fi_m: ['34', ''], maksuvolg_ji_m: ['34', ''],
   maksuvolg_summa_m: ['35', ' mln €'],
 };
@@ -775,6 +775,12 @@ function koostaGrupid(D, META) {
     { nr: '10', unitChip: 'senti/kWh', kind: 'line', unit: ' s/kWh', dec: 2, head: 'level',
       F: { H: xy(elH, { per: silt(elH.periods.at(-1) || '') + ' poolaasta' }), A: xy(elA, { note: 'Aasta väärtus on kahe poolaasta keskmine.' }) },
       src: 'Eurostat nrg_pc_205', url: 'https://doi.org/10.2908/NRG_PC_205', note: 'Mittekodutarbijad, kõik tarbimisgrupid, ilma maksude ja tasudeta.' },
+    { nr: '37', unitChip: '€/MWh', kind: 'line', unit: ' €/MWh', dec: 1, head: 'level', scale: true,
+      F: { M: xy(Q('elekter_m'), { note: 'Kuu keskmine. Jooksvat kuud ei näidata.' }),
+           Q: xy(koonda(Q('elekter_m'), kvKey, 3, (v) => r2(mean(v))), { note: 'Kvartali kuude keskmine.' }),
+           A: xy(koonda(S('elekter_m'), aKey, 12, (v) => r2(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
+      src: 'Elering (Nord Pool)', url: 'https://dashboard.elering.ee/et/nps/price',
+      note: 'Nord Pooli järgmise päeva turu hind Eesti hinnapiirkonnas, käibemaksu ja võrgutasudeta.' },
 
     { nr: '11', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'custom',
       F: { Q: xy(palkY, pais(f0(lp.v), '€', `keskmine palk, ${silt(lp.p || '')} kv`, sgn(ly.v) + ' % aastaga')),
@@ -1200,7 +1206,7 @@ function headline(it) {
   const per = it.per || (it.freq === 'Q' ? it.x[i] + ' kv' : it.x[i]) + hinnang;
   let delta = null;
   const lag = { M: 12, Q: 4, H: 2, A: 1 }[it.freq];
-  if (it.head === 'level' && i - lag >= 0 && y[i - lag] != null) delta = sgn(v - y[i - lag], fmt) + (it.unit === '%' ? ' pp' : '') + ' aastaga';
+  if (it.head === 'level' && i - lag >= 0 && y[i - lag] != null) delta = sgn(v - y[i - lag], fmt) + (it.unit === '%' ? ' pp' : it.unit || '') + ' aastaga';
   if (it.head === 'levelpct' && i - lag >= 0 && y[i - lag]) delta = sgn((v / y[i - lag] - 1) * 100) + ' % aastaga';
   return { big: (it.head === 'yoy' || it.head === 'custom' ? sgn(v, fmt) : fmt(v)), unit: it.unit.trim(), per, delta };
 }
@@ -1559,6 +1565,12 @@ function koostaVordlus(V, META) {
              [{ name: 'Euroala', c: '--peer', s: koonda(S('laenuintress_m_U2'), aKey, 12, (v) => r2(mean(v))) }]) },
       src: 'Euroopa Keskpank, MIR', url: 'https://data.ecb.europa.eu/data/datasets/MIR/MIR.M.EE.B.A2I.AM.R.A.2240.EUR.N',
       note: 'Mittefinantsettevõtete uute eurolaenude keskmine intressimäär. Euroopa Keskpank avaldab näitaja ainult euroala riikide kohta, seega Rootsit võrdluses pole. Katkendjoonega tulp: euroala.' },
+    { nr: '37', unitChip: '€/MWh', kind: 'lines', unit: ' €/MWh', dec: 1, head: 'vrd',
+      F: { M: riigid((g) => alates(S('elekter_m_' + g), ALGUS), { note: 'Kuu keskmine. Jooksvat kuud ei näidata.' }),
+           Q: riigid((g) => alates(koonda(S('elekter_m_' + g), kvKey, 3, (v) => r2(mean(v))), ALGUS), { note: 'Kvartali kuude keskmine.' }),
+           A: riigid((g) => koonda(S('elekter_m_' + g), aKey, 12, (v) => r2(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
+      src: 'Elering (Nord Pool)', url: 'https://dashboard.elering.ee/et/nps/price',
+      note: 'Nord Pooli järgmise päeva turu hind hinnapiirkonniti. Elering ei avalda Rootsi hindu, seega Rootsit võrdluses pole.' },
     { nr: '7', unitChip: '% SKP-st', kind: 'lines', unit: '%', dec: 2, head: 'vrd', F: { A: riigid((g) => S('berd_a_' + g)) },
       src: 'Eurostat rd_e_gerdtot', url: EUSTAT('rd_e_gerdtot') },
     { nr: '8', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'vrd', pm: true,
@@ -1785,7 +1797,16 @@ function koostaUlevaade(D) {
     tootus, tootusAasta: aastaTagasi(S('tootus_q'), tootus && tootus.p),
     palk, palkAasta: aastaTagasi(S('palk_q_lvl'), palk && palk.p), palkA: viim(S('palk_q_yoy')),
     vabad, vabadAasta: aastaTagasi(S('tk_vabad_m'), vabad && vabad.p),
-    esi, esiAasta: aastaTagasi(esiK, esi && esi.p) };
+    esi, esiAasta: aastaTagasi(esiK, esi && esi.p), elekter: elektriPaev(D.elekter_paev) };
+}
+// Eesti elektri börsihinna päeva keskmine: tänane, kui see on failis, muidu viimane varasem päev
+function elektriPaev(E) {
+  if (!E || !Array.isArray(E.paevad) || !E.paevad.length) return null;
+  const d = new Date(), tana = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  let i = -1;
+  E.paevad.forEach((p, j) => { if (p <= tana && E.ee[j] != null) i = j; });
+  if (i < 0) return null;
+  return { p: E.paevad[i], v: E.ee[i], tana: E.paevad[i] === tana, eile: i > 0 ? E.ee[i - 1] : null };
 }
 // Suund: ▲/▼ ja värv selle järgi, kas tõus on selle näitaja puhul hea (hea = 1), halb (−1) või neutraalne (0)
 function suund(v, hea = 1) {
@@ -1843,6 +1864,11 @@ function buildUlevaade() {
   if (u.esi) lisa('Usaldus', u.esi, 1, pr(u.esi.v),
     `Majandususaldusindeks, ${silt(u.esi.p)}${u.esi.hinnang ? ' (hinnang)' : ''}${u.esiAasta == null ? '' : `; aasta varem ${pr(u.esiAasta)}`}`,
     u.esiAasta == null ? null : u.esi.v - u.esiAasta);
+  if (u.elekter) {
+    const e = u.elekter, kp = `${+e.p.slice(8)}.${+e.p.slice(5, 7)}.`;
+    lisa(e.tana ? 'Elekter täna' : `Elekter ${kp}`, e, null, f0(e.v) + ' €/MWh',
+      `Elektri börsihind Eestis, päeva keskmine ${kp}${e.p.slice(0, 4)} (Nord Pool, Eleringi andmed)${e.eile == null ? '' : `; eelmisel päeval ${f0(e.eile)} €/MWh`}`);
+  }
   if (riba.length) { const r = el('div', 'ul-riba', riba.join('')); r.setAttribute('aria-label', 'Viimased näitajad'); root.append(r); }
 
   // 2. Kokkuvõte ja majandususaldus

@@ -299,6 +299,13 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     s
   }, c(-2, 30))
 
+  # ---- Elektri börsihind (Elering / Nord Pool), €/MWh ---------------------------
+  lisa("elekter_m", function() {
+    s <- elering_kuud()[["EE"]]
+    if (is.null(s)) stop("Eleringi andmetes pole Eesti hinda.")
+    s
+  }, c(-50, 1000))
+
   # ---- Majandususaldus ---------------------------------------------------------
   # Kui majandusplaaniindeksi arvutus õnnestus, kasutatakse sealset ESI-t
   # (Eurostat + hinnang Statistikaameti baromeetritest). Muidu ainult Eurostat.
@@ -314,8 +321,16 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     tul$esi_m_hinnang <- list(seeria = vana$esi_m_hinnang, staatus = "vana")
   }
 
+  # Avalehe tänane elektrihind: päevad eraldi väljal, mitte seeriana, et iga päev ei
+  # tekiks muudatuste logisse uut kirjet. Vea korral jääb eelmine.
+  elekter_paev <- tryCatch(elering_paevad(), error = function(e) {
+    hoiata("elekter_paev: ", conditionMessage(e), ". Jäetakse alles eelmine versioon.")
+    loe_json("naitajad.json")$elekter_paev
+  })
+
   list(
     uuendatud = aeg_utc(),
+    elekter_paev = elekter_paev,
     seeriad   = lapply(tul, function(r) seeria_json(r$seeria)),
     staatus   = lapply(tul, function(r) list(
       staatus = r$staatus,

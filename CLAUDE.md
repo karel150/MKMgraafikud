@@ -16,7 +16,7 @@ prognoosi ega poliitikasoovitust.
 ## Kuidas asjad liiguvad
 
 ```
-andmeallikad (Statistikaamet, Eurostat, ECB, EMTA, Maailmapank)
+andmeallikad (Statistikaamet, Eurostat, ECB, EMTA, Maailmapank, Elering)
    → R/uuenda.R ja selle osad       → docs/data/*.json
    → tools/ai_kokkuvotted.mjs       → docs/data/aitekstid.json
    → docs/index.html loeb JSON-id   → graafikud brauseris

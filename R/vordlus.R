@@ -131,6 +131,9 @@ koosta_vordlus <- function(icu = NULL) {
   andmestik("laenuintress_m", "ecb", list(), c(-2, 30), geos = c(VORDLUS_RIIGID, "U2"),
             fn = function(geos) ecb_laenuintress()[geos])
 
+  # 37 Elektri börsihind, €/MWh (Elering). Rootsi hindu Elering ei avalda.
+  andmestik("elekter_m", "elering", list(), c(-50, 1000), fn = function(geos) elering_kuud()[geos])
+
   # 13 Majandususaldus (ESI), SA
   andmestik("esi_m", "ei_bssi_m_r2", list(indic = "BS-ESI-I", s_adj = "SA", freq = "M"), c(30, 170))
   # 6 Otseinvesteeringute kohustiste positsioon, mln €, ja nominaalne SKP (suhte jaoks)
