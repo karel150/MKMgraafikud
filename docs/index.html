@@ -420,7 +420,7 @@ footer a { color: var(--muted); }
 
 <footer class="gutter">
   <div class="inner">
-    <p>Allikad: Statistikaamet (andmed.stat.ee, CC BY 4.0), Eurostat, Euroopa Keskpank, Elering (Nord Pooli elektrihinnad), Maksu- ja Tolliamet, Euroopa Komisjon, IMD, WIPO, Tax Foundation, Transparency International, Heritage Foundation. Lingid on iga kaardi all.</p>
+    <p>Allikad: Statistikaamet (andmed.stat.ee, CC BY 4.0), Eurostat, Euroopa Keskpank, Elering (Nord Pooli elektrihinnad), IMF PortWatch (UN Global Platform), Maksu- ja Tolliamet, Euroopa Komisjon, IMD, WIPO, Tax Foundation, Transparency International, Heritage Foundation. Lingid on iga kaardi all.</p>
     <p>Andmeid uuendatakse automaatselt tööpäeviti. Edetabelid uuendatakse käsitsi pärast nende avaldamist.</p>
   </div>
 </footer>
@@ -481,7 +481,7 @@ const SEERIA_NAITAJA = {
   saast_a: ['26', '%'], ehitusload_q: ['27', ''],
   vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
   eluase_q: '29', autod_m: ['30', ''], krt_q_cur: ['31', ' mln €'], krt_a_cur: ['31', ' mln €'],
-  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
+  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
   maksuvolg_arv_m: ['34', ''], maksuvolg_fi_m: ['34', ''], maksuvolg_ji_m: ['34', ''],
   maksuvolg_summa_m: ['35', ' mln €'],
 };
@@ -554,6 +554,11 @@ function koostaGrupid(D, META) {
   // joondab mitu seeriat sama perioodide loendi peale
   const joonda = (per, s) => per.map((p) => { const i = s.periods.indexOf(p); return i < 0 ? null : s.values[i]; });
   const kuuKv = (s) => koonda(s, kvKey, 3, sum);
+  // Sadamate kaubamaht: pealkiri on eksport + import, joontena mõlemad eraldi
+  const sadamF = (alg, kooS, extra = {}) => {
+    const e = kooS(alg('sadam_eksport_m')), im = kooS(alg('sadam_import_m')), k = sumS(e, im);
+    return xy(k, { series: [{ name: 'Eksport', y: joonda(k.periods, e), c: '--s1' }, { name: 'Import', y: joonda(k.periods, im), c: '--s2' }], ...extra });
+  };
   const lvlPais = (lvlS, chgS, fmt, unit, prefix, kv) => {
     const l = viimane(lvlS), c = chgS.values.length ? chgS.values.at(-1) : null;
     return pais(fmt(l.v), unit, `${prefix}${kv ? silt(l.p) + ' kv' : silt(l.p)}`, c == null ? '' : sgn(c) + ' % aastaga');
@@ -786,6 +791,14 @@ function koostaGrupid(D, META) {
            A: xy(koonda(S('elekter_m'), aKey, 12, (v) => r2(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
       src: 'Elering (Nord Pool)', url: 'https://dashboard.elering.ee/et/nps/price',
       note: 'Nord Pooli järgmise päeva turu hind Eesti hinnapiirkonnas, käibemaksu ja võrgutasudeta.' },
+    { nr: '38', unitChip: 'tuhat tonni, hinnang', kind: 'lines', unit: '', dec: 0, head: 'levelpct',
+      F: { M: sadamF(Q, (s) => s), Q: sadamF(Q, kuuKv, { note: 'Kvartal on kuude summa.' }), A: sadamF(S, (s) => koonda(s, aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
+      src: 'UN Global Platform; IMF PortWatch', url: 'https://portwatch.imf.org/',
+      note: 'Pealkirjas eksport ja import kokku. Eesti sadamate hinnanguline kaubamaht laevade satelliitandmete (AIS) põhjal, esialgne ja võib muutuda; ei ole ametlik kaubandusstatistika.' },
+    { nr: '39', unitChip: 'laevakülastuste arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
+      F: { M: xy(Q('sadam_laevu_m')), Q: xy(kuuKv(Q('sadam_laevu_m')), { note: 'Kvartal on kuude summa.' }), A: xy(koonda(S('sadam_laevu_m'), aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
+      src: 'UN Global Platform; IMF PortWatch', url: 'https://portwatch.imf.org/',
+      note: 'Kaubalaevade külastused Eesti sadamates laevade satelliitandmete (AIS) põhjal, kõik sadamad kokku.' },
 
     { nr: '11', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'custom',
       F: { Q: xy(palkY, pais(f0(lp.v), '€', `keskmine palk, ${silt(lp.p || '')} kv`, sgn(ly.v) + ' % aastaga')),
@@ -1510,6 +1523,11 @@ function koostaVordlus(V, META) {
     M: riigid((g) => alates(muutus(S(k + g), 12), ALGUS)),
     Q: riigid((g) => alates(muutus(koonda(S(k + g), kvKey, 3, mean), 4), ALGUS), { note: 'Kvartalimuutus kuuindeksite keskmisest.' }),
     A: riigid((g) => muutus(koonda(S(k + g), aKey, 12, mean), 1), { note: 'Aastamuutus kuuindeksite keskmisest.' }) });
+  // Kuusummad -> muutus aasta varem (kuu, kvartali- ja aastasumma)
+  const summaF = (k) => ({
+    M: riigid((g) => alates(muutus(S(k + g), 12), ALGUS)),
+    Q: riigid((g) => alates(muutus(koonda(S(k + g), kvKey, 3, sum), 4), ALGUS), { note: 'Kvartal on kuude summa.' }),
+    A: riigid((g) => muutus(koonda(S(k + g), aKey, 12, sum), 1), { note: 'Aasta on kuude summa.' }) });
   // Kvartalisumma (mln €) -> nominaalmuutus
   const kvAasta = (s) => koonda(s, aKey, 4, sum);
   const nomF = (k) => ({ Q: riigid((g) => alates(muutus(S(k + g), 4), ALGUS)), A: riigid((g) => muutus(kvAasta(S(k + g)), 1), { note: 'Aasta väärtus on kvartalite summa.' }) });
@@ -1576,6 +1594,12 @@ function koostaVordlus(V, META) {
            A: riigid((g) => koonda(S('elekter_m_' + g), aKey, 12, (v) => r2(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
       src: 'Elering (Nord Pool)', url: 'https://dashboard.elering.ee/et/nps/price',
       note: 'Nord Pooli järgmise päeva turu hind hinnapiirkonniti. Elering ei avalda Rootsi hindu, seega Rootsit võrdluses pole.' },
+    { nr: '38', nimi: 'Sadamate kaubamaht (hinnang)', unitChip: 'muutus aasta varem, %', kind: 'lines', unit: '%', head: 'vrd', F: summaF('sadam_t_m_'),
+      src: 'UN Global Platform; IMF PortWatch', url: 'https://portwatch.imf.org/',
+      note: 'Sadamate hinnanguline eksport ja import kokku (tonnid) laevade satelliitandmete põhjal, muutus aasta varasemaga. Esialgne, ei ole ametlik kaubandusstatistika.' },
+    { nr: '39', nimi: 'Laevakülastused sadamates', unitChip: 'muutus aasta varem, %', kind: 'lines', unit: '%', head: 'vrd', F: summaF('sadam_laevu_m_'),
+      src: 'UN Global Platform; IMF PortWatch', url: 'https://portwatch.imf.org/',
+      note: 'Kaubalaevade külastused riigi sadamates kokku, muutus aasta varasemaga.' },
     { nr: '7', unitChip: '% SKP-st', kind: 'lines', unit: '%', dec: 2, head: 'vrd', F: { A: riigid((g) => S('berd_a_' + g)) },
       src: 'Eurostat rd_e_gerdtot', url: EUSTAT('rd_e_gerdtot') },
     { nr: '8', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'vrd', pm: true,
@@ -1802,7 +1826,7 @@ function koostaUlevaade(D) {
     tootus, tootusAasta: aastaTagasi(S('tootus_q'), tootus && tootus.p),
     palk, palkAasta: aastaTagasi(S('palk_q_lvl'), palk && palk.p), palkA: viim(S('palk_q_yoy')),
     vabad, vabadAasta: aastaTagasi(S('tk_vabad_m'), vabad && vabad.p),
-    esi, esiAasta: aastaTagasi(esiK, esi && esi.p), elekter: elektriPaev(D.elekter_paev) };
+    esi, esiAasta: aastaTagasi(esiK, esi && esi.p), elekter: elektriPaev(D.elekter_paev), sadamad: D.sadamad_kiire || null };
 }
 // Eesti elektri börsihinna päeva keskmine: tänane, kui see on failis, muidu viimane varasem päev
 function elektriPaev(E) {
@@ -1880,6 +1904,14 @@ function buildUlevaade() {
   if (u.esi) lisa('Usaldus', u.esi, 1, pr(u.esi.v),
     `Majandususaldusindeks, ${silt(u.esi.p)}${u.esi.hinnang ? ' (hinnang)' : ''}${u.esiAasta == null ? '' : `; aasta varem ${pr(u.esiAasta)}`}`,
     u.esiAasta == null ? null : u.esi.v - u.esiAasta);
+  if (u.sadamad && u.sadamad.eksport_varem > 0) {
+    // Kiire näitaja: sadamate hinnanguline eksport viimase 28 päeva jooksul aastaga
+    const s = u.sadamad, d = (s.eksport / s.eksport_varem - 1) * 100, kp = (x) => `${+x.slice(8)}.${+x.slice(5, 7)}.`;
+    const lm = s.laevu_varem > 0 ? (s.laevu / s.laevu_varem - 1) * 100 : null;
+    lisa('Sadamate eksport', { v: d }, 1, pr(d) + '%',
+      `Eesti sadamate hinnanguline eksport ${kp(s.algus)}–${kp(s.lopp)}${s.lopp.slice(0, 4)} (${s.paevi} päeva): ${f0(s.eksport)} tuh t, aasta varem ${f0(s.eksport_varem)} tuh t`
+      + (lm == null ? '' : `; laevakülastusi ${f0(s.laevu)} (${lm >= 0 ? '+' : '−'}${pr(lm)}%)`) + '. IMF PortWatch, satelliitandmete põhine hinnang.');
+  }
   if (riba.length) { const r = el('div', 'ul-riba', riba.join('')); r.setAttribute('aria-label', 'Viimased näitajad'); root.append(r); }
 
   // 2. Kokkuvõte ja majandususaldus

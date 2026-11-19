@@ -287,6 +287,20 @@
    "nimi": "Elektri börsihind",
    "kirjeldus": "Nord Pooli järgmise päeva turu (day-ahead) keskmine elektrihind hinnapiirkonnas eurodes megavatt-tunni kohta, ilma käibemaksu, võrgutasude ja aktsiisita. Kuu keskmine on arvutatud tunnihindadest",
    "miks": "Börsihind on ettevõtete ja kodumajapidamiste elektrikulu peamine muutuv osa; võrdlus naaberriikidega näitab, kuidas Eesti hinnapiirkonna hind erineb lähiturgudest"
+  },
+  "38": {
+   "valdkond": "Väliskaubandus",
+   "peamine": false,
+   "nimi": "Sadamate kaubamaht (hinnang)",
+   "kirjeldus": "Eesti sadamates laaditud (eksport) ja lossitud (import) kauba hinnanguline kogus tuhandetes tonnides. IMF PortWatch arvutab selle laevade satelliitpositsioonide (AIS), laevatüübi, kandevõime ja süvise muutuse põhjal",
+   "miks": "Ametlikust kaubandusstatistikast märksa kiirem signaal: andmed uuenevad kord nädalas ja hõlmavad ka eelmise nädala, kuigi tegu on hinnanguga"
+  },
+  "39": {
+   "valdkond": "Väliskaubandus",
+   "peamine": false,
+   "nimi": "Laevakülastused sadamates",
+   "kirjeldus": "Kaubalaevade (konteiner-, puistlasti-, üldkauba-, ro-ro- ja tankerlaevad) külastuste arv Eesti sadamates laevade satelliitpositsioonide (AIS) põhjal",
+   "miks": "Näitab sadamate aktiivsust ja laevaliikluse muutust kiiremini kui ametlik statistika"
   }
  }
 }
