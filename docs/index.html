@@ -1901,9 +1901,6 @@ function buildUlevaade() {
   if (u.vabad) lisa('Vabad töökohad', u.vabad, 1, f0(u.vabad.v),
     `Töötukassa vahendatavad vabad töökohad, ${silt(u.vabad.p)}${u.vabadAasta == null ? '' : `; aasta varem ${f0(u.vabadAasta)}`}`,
     u.vabadAasta == null ? null : u.vabad.v - u.vabadAasta);
-  if (u.esi) lisa('Usaldus', u.esi, 1, pr(u.esi.v),
-    `Majandususaldusindeks, ${silt(u.esi.p)}${u.esi.hinnang ? ' (hinnang)' : ''}${u.esiAasta == null ? '' : `; aasta varem ${pr(u.esiAasta)}`}`,
-    u.esiAasta == null ? null : u.esi.v - u.esiAasta);
   if (u.sadamad && u.sadamad.eksport_varem > 0) {
     // Kiire näitaja: sadamate hinnanguline eksport viimase 28 päeva jooksul aastaga
     const s = u.sadamad, d = (s.eksport / s.eksport_varem - 1) * 100, kp = (x) => `${+x.slice(8)}.${+x.slice(5, 7)}.`;
