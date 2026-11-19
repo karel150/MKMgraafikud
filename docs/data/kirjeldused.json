@@ -301,6 +301,41 @@
    "nimi": "Laevakülastused sadamates",
    "kirjeldus": "Kaubalaevade (konteiner-, puistlasti-, üldkauba-, ro-ro- ja tankerlaevad) külastuste arv Eesti sadamates laevade satelliitpositsioonide (AIS) põhjal",
    "miks": "Näitab sadamate aktiivsust ja laevaliikluse muutust kiiremini kui ametlik statistika"
+  },
+  "40": {
+   "valdkond": "Kindlustunne ja ootused",
+   "peamine": false,
+   "nimi": "Tööstuse kindlustunne",
+   "kirjeldus": "Tööstusettevõtete kindlustunde indikaator: tootmise ootuste, tellimuste taseme ja valmistoodangu varude hinnangute saldode keskmine",
+   "miks": "Tööstus on ekspordi ja tsükli suhtes tundlik; indikaator näitab tootmise suunda enne tööstustoodangu statistikat"
+  },
+  "41": {
+   "valdkond": "Kindlustunne ja ootused",
+   "peamine": false,
+   "nimi": "Teeninduse kindlustunne",
+   "kirjeldus": "Teenindusettevõtete kindlustunde indikaator: viimase kolme kuu äriolukorra ja nõudluse ning järgmise kolme kuu nõudluse ootuste saldode keskmine",
+   "miks": "Teenindus on suurim tegevusala; indikaator näitab sisenõudluse ja teenuste ekspordi meeleolu"
+  },
+  "42": {
+   "valdkond": "Kindlustunne ja ootused",
+   "peamine": false,
+   "nimi": "Tarbijate kindlustunne",
+   "kirjeldus": "Tarbijate kindlustunde indikaator: leibkonna rahalise olukorra (viimased ja järgmised 12 kuud), riigi majandusolukorra ootuse ja suuremate ostude kavatsuste saldode keskmine",
+   "miks": "Tarbijate meeleolu on eratarbimise ja jaekaubanduse varajane signaal"
+  },
+  "43": {
+   "valdkond": "Kindlustunne ja ootused",
+   "peamine": false,
+   "nimi": "Jaekaubanduse kindlustunne",
+   "kirjeldus": "Jaekaubandusettevõtete kindlustunde indikaator: praeguse ja oodatava äriolukorra ning varude taseme hinnangute saldode keskmine",
+   "miks": "Näitab kaupmeeste hinnangut tarbijanõudlusele enne jaekaubanduse käibe statistikat"
+  },
+  "44": {
+   "valdkond": "Kindlustunne ja ootused",
+   "peamine": false,
+   "nimi": "Ehituse kindlustunne",
+   "kirjeldus": "Ehitusettevõtete kindlustunde indikaator: tellimuste taseme ja tööhõive ootuste saldode keskmine",
+   "miks": "Ehitus reageerib intressidele ja investeeringutele; indikaator annab varajase signaali ehitusmahu muutusest"
   }
  }
 }
