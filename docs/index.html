@@ -481,7 +481,7 @@ const SEERIA_NAITAJA = {
   saast_a: ['26', '%'], ehitusload_q: ['27', ''],
   vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
   eluase_q: '29', autod_m: ['30', ''], krt_q_cur: ['31', ' mln €'], krt_a_cur: ['31', ' mln €'],
-  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
+  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
   maksuvolg_arv_m: ['34', ''], maksuvolg_fi_m: ['34', ''], maksuvolg_ji_m: ['34', ''],
   maksuvolg_summa_m: ['35', ' mln €'],
 };
@@ -635,6 +635,10 @@ function koostaGrupid(D, META) {
   const qEst = new Set(hinn.periods.map(kvKey));
   const esiA = koonda(esiO, aKey, 12, (v) => r1(mean(v)));
   const mmyy = (p) => p.slice(5) + '/' + p.slice(0, 4);
+  // Majandususalduse alamindeksid: kuu, kvartali ja aasta keskmine
+  const kindlF = (k) => ({ M: xy(Q(k)), Q: xy(koonda(Q(k), kvKey, 3, (v) => r1(mean(v))), { note: 'Kvartali kuude keskmine.' }),
+    A: xy(koonda(S(k), aKey, 12, (v) => r1(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) });
+  const KINDL_MARKUS = '2026. aastal vahetus konjunktuuribaromeetrite uuringu läbiviija, mistõttu võib aegreas olla katkestusi.';
   const esiNote = 'Sesoonselt korrigeeritud. 2026. aastal vahetus konjunktuuribaromeetrite uuringu läbiviija, mistõttu võib aegreas olla katkestusi.' +
     (hinn.periods.length ? ` Eurostat pole pärast ${mmyy(lastO)} andmeid avaldanud. Katkendjoon: hinnang Statistikaameti baromeetritest EK metoodikaga.` : '');
   // ---- 16: vabad ametikohad -------------------------------------------------------
@@ -848,6 +852,21 @@ function koostaGrupid(D, META) {
                 est: qEst.size ? esiQall.periods.map((p, i) => (qEst.has(p) || qEst.has(esiQall.periods[i + 1]) ? esiQall.values[i] : null)) : undefined, note: 'Kvartali kuude keskmine.' },
            A: xy(alates(esiA, ALGUS), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
       src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table', note: esiNote },
+    { nr: '40', unitChip: 'saldo', kind: 'line', unit: '', dec: 1, head: 'level', ref: 0,
+      F: kindlF('kindl_toostus_m'), src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
+      note: 'Sesoonselt korrigeeritud; tööstusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
+    { nr: '41', unitChip: 'saldo', kind: 'line', unit: '', dec: 1, head: 'level', ref: 0,
+      F: kindlF('kindl_teenindus_m'), src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
+      note: 'Sesoonselt korrigeeritud; teenindusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
+    { nr: '42', unitChip: 'saldo', kind: 'line', unit: '', dec: 1, head: 'level', ref: 0,
+      F: kindlF('kindl_tarbijad_m'), src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
+      note: 'Sesoonselt korrigeeritud; tarbijate küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
+    { nr: '43', unitChip: 'saldo', kind: 'line', unit: '', dec: 1, head: 'level', ref: 0,
+      F: kindlF('kindl_jae_m'), src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
+      note: 'Sesoonselt korrigeeritud; jaekaubandusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
+    { nr: '44', unitChip: 'saldo', kind: 'line', unit: '', dec: 1, head: 'level', ref: 0,
+      F: kindlF('kindl_ehitus_m'), src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
+      note: 'Sesoonselt korrigeeritud; ehitusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
 
     { nr: '15', unitChip: '% SKP-st', kind: 'col', unit: '%', head: 'level',
       F: { A: xy(S('volg_a')) }, src: 'Statistikaamet RR061', url: SA('RR061'), note: 'Konsolideeritud võlg (Maastrichti võlg).' },    // Maksuvõlg: EMTA avaldab iga kuu 1. kuupäeva seisu ehk eelmise kuu lõpu seisu. Kvartali ja aasta väärtus on perioodi lõpu seis.

@@ -331,6 +331,14 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     tul$esi_m_hinnang <- list(seeria = vana$esi_m_hinnang, staatus = "vana")
   }
 
+  # Majandususalduse alamindeksid (Eurostat, sesoonselt korrigeeritud saldod)
+  for (k in list(c("kindl_toostus_m", "BS-ICI-BAL"), c("kindl_teenindus_m", "BS-SCI-BAL"),
+                 c("kindl_tarbijad_m", "BS-CSMCI-BAL"), c("kindl_jae_m", "BS-RCI-BAL"),
+                 c("kindl_ehitus_m", "BS-CCI-BAL"))) local({
+    ind <- k[2]
+    lisa(k[1], function() eurostat_seeria("ei_bssi_m_r2", list(geo = "EE", indic = ind, s_adj = "SA", freq = "M")), c(-100, 100))
+  })
+
   # Avalehe tänane elektrihind: päevad eraldi väljal, mitte seeriana, et iga päev ei
   # tekiks muudatuste logisse uut kirjet. Vea korral jääb eelmine.
   elekter_paev <- tryCatch(elering_paevad(), error = function(e) {
