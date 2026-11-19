@@ -1,61 +1,61 @@
 {
- "uuendatud": "2026-11-19T12:59:24.799Z",
+ "uuendatud": "2026-11-19T15:55:57.082Z",
  "mudel": "claude-sonnet-5-5",
  "tekstid": {
   "yldine": {
    "laused": [
-    "Eesti majandus kasvab kiiremini, kuid pilt on vastuoluline: tootmine ja kaubandus liiguvad ühes suunas, tööturg ja hinnad teises.",
-    "Sisemajanduse koguprodukt oli III kvartalis aasta varasemast 2,2 % suurem, eelmises kvartalis oli kasv väiksem.",
-    "Septembris kasvasid töötleva tööstuse toodang (3,6 %), kaupade eksport (12,3 %) ja jaemüük, kuigi tööstus oli aprillist juunini languses.",
-    "Enim eristub töötuse määr: III kvartalis oli see 7,9 %, kõrgem kui ühelgi neljal eelneval kvartalil, kuigi registreeritud töötuid on aasta varasemast vähem.",
-    "Tarbijahinnad tõusid oktoobris aastaga 4,2 %, vabu töökohti on igas kuus vähem ja majandususaldus on pikaajalisest keskmisest veidi madalam."
+    "Eesti majandus kasvab mõõdukalt: kolmandas kvartalis oli SKP 2,2 % suurem kui aasta varem, kuid pilt on vastuoluline.",
+    "Kõige teravam vastuolu on tööturul: registreeritud töötuid oli oktoobri lõpus 11,6 % vähem kui aasta varem, ent töötuse määr tõusis 7,9 %-ni.",
+    "Töötuse määr on viiest vaadeldud kvartalist kõrgeim ja vabade töökohtade arv on juulist oktoobrini vähenenud.",
+    "Septembris oli töötleva tööstuse toodang 3,6 % ja kaupade eksport 12,3 % suurem kui aasta varem, jaemüügi maht kasvas samuti.",
+    "Hinnatõus kiirenes oktoobris 4,2 %-ni ning majandususaldus on 98,9 punktiga pikaajalisest keskmisest veidi madalam."
    ],
-   "rohk": "majandus kasvab kiiremini",
-   "rasi": "5ccf98ada1174a85",
-   "aeg": "2026-11-16"
+   "rohk": "majandus kasvab mõõdukalt",
+   "rasi": "f34792b4c73060ab",
+   "aeg": "2026-11-19"
   },
   "indeksid": {
    "laused": [
-    "Eesti paistab edetabelites silma maksusüsteemi, iduettevõtluse ja internetiühenduste poolest, maailma tippu kuuluvad ka majandusvabadus, vähene korruptsioon, innovatsioon ja talendid.",
-    "Digitaalse konkurentsivõime, Euroopa Liidu innovatsiooni ja üldise konkurentsivõime edetabelis jääb Eesti riikide esimesse poolde, kuid mitte tippu.",
-    "Eelmise väljaandega võrreldes on Eesti tõusnud korruptsioonitajus ja üldises konkurentsivõimes, kuid langenud majandusvabaduses, globaalses innovatsioonis, talentide ja digitaalses konkurentsivõimes.",
-    "Lätit ja Leedut edestab Eesti enamikus edetabelites, Soomest jääb ta enamasti maha."
+    "Eesti on rahvusvahelistes edetabelites tipus maksusüsteemi, iduettevõtluse ja internetiühenduste poolest, kuid üldises konkurentsivõimes jääb ta riikide esimesse poolde.",
+    "Maailma parimate hulka kuulub Eesti ka majandusvabaduse, vähese korruptsiooni, globaalse innovatsiooni ja talentide poolest.",
+    "Digitaalse konkurentsivõime ning Euroopa Liidu innovatsiooni edetabelis on tulemus tagasihoidlikum.",
+    "Eelmise väljaandega võrreldes on Eesti tõusnud korruptsioonitaju ja üldise konkurentsivõime edetabelis, kuid langenud majandusvabaduse, globaalse innovatsiooni, talentide ja digitaalse konkurentsivõime edetabelis."
    ],
-   "rohk": "paistab edetabelites silma",
-   "rasi": "2a4b1759d28086e5",
-   "aeg": "2026-11-16"
+   "rohk": "tipus maksusüsteemi, iduettevõtluse ja internetiühenduste",
+   "rasi": "dd4cce828c48abe8",
+   "aeg": "2026-11-19"
   },
   "vordlus_M": {
    "laused": [
-    "Eesti on võrdlusriikide seas pigem keskmike hulgas: kõrgeim väärtus on tal 3 ja madalaim 6 võrreldava näitaja puhul.",
-    "Majanduskasv 2,2% edestab nelja riigi seas vaid Soomet ning töötleva tööstuse toodang kasvas viie riigi seas neljandana.",
-    "Hinnatõus on kiiruselt teine, mis tähendab võrdluses nõrgemat positsiooni, ja kiiremini tõusevad hinnad vaid Leedus.",
-    "Töötuse määr 8,0% on kõrguselt kolmas ning ettevõtete uute laenude intressimäär 4,71% ületab euroala keskmist."
+    "Eesti on võrdlusriikide seas kirjus keskmikus, kuid tööstuskasvult ja hinnatõusult jääb ta tahapoole.",
+    "Töötleva tööstuse toodang kasvas, kuid viie riigi võrdluses on Eesti kasvult alles neljas.",
+    "Tarbijahinnad tõusid 3,6%, mis on viie riigi seas teine kiireim tempo, ning Leedus oli hinnatõus 6,1%.",
+    "Töötuse määr 8,0% on kõrguselt kolmas, sest Soomes on töötus Eestist kõrgem, 11,0%."
    ],
-   "rohk": "keskmike hulgas",
-   "rasi": "d97be00a3d5f3d08",
+   "rohk": "kirjus keskmikus",
+   "rasi": "68cfb1388667be85",
    "aeg": "2026-11-19"
   },
   "vordlus_Q": {
    "laused": [
-    "Eesti on võrdlusriikide seas enamasti keskel või tagapool, kuid hinnatõus on neist tagasihoidlikum.",
-    "Majanduskasv 2,2% jäi Rootsi omast väiksemaks ja töötleva tööstuse kasv 2,0% oli viie riigi seas kõige nõrgem.",
-    "Tarbijahinnad tõusid Eestis 2,1%, Leedus aga 5,7%, mistõttu on hinnatõus aeglasem kui enamikus võrdlusriikides.",
-    "Töötuse määr 7,8% on madalam kui Soomes, kuid kõrgem kui Leedus."
+    "Eesti on võrdlusriikide seas majanduskasvult ja töötuselt keskmikus, tööstuses aga viimane.",
+    "Töötleva tööstuse toodang kasvas kolmandas kvartalis 2,0%, mis on viie riigi seas kõige nõrgem tulemus.",
+    "Tarbijahinnad tõusid Eestis 2,1%, aeglasemalt tõusid need vaid Rootsis.",
+    "Ettevõtete uute laenude intressimäär oli 4,78%, mis on võrdlusriikide seas keskel, kuid euroala keskmisest 3,82% kõrgem."
    ],
-   "rohk": "enamasti keskel või tagapool",
-   "rasi": "7b2ff512fcea6e80",
+   "rohk": "keskmikus",
+   "rasi": "7227795341cb3895",
    "aeg": "2026-11-19"
   },
   "vordlus_A": {
    "laused": [
-    "Eesti on võrdlusriikide seas majanduskasvult ja hinnatõusult tagapool, tööstuses ja tööturul aga keskmikus.",
-    "Majandus kasvas 1,3%, mis on viiest riigist neljas tulemus, ja Leedu kasv oli 3,0%.",
-    "Tarbijahinnad tõusid Eestis 4,8%, kiiremini kui üheski teises riigis, ning ettevõtete uute laenude intressimäär 4,93% oli nelja riigi seas kõrgeim.",
-    "Töötleva tööstuse kasv ja töötuse määr paigutavad Eesti mõlemad viiest kolmandaks, nii et neil näitajatel pole Eesti ei esimene ega viimane."
+    "Eesti hinnatõus on võrdlusriikide kiireim, majanduskasv aga jääb nende seas pigem tagasihoidlikuks.",
+    "Tarbijahinnad tõusid Eestis 4,8%, Soomes aga ainult 1,8%.",
+    "Majandus kasvas 1,3%, mis on viiest riigist neljas koht, ning töötus oli Soomest madalam.",
+    "Ettevõtete uute laenude intressimäär oli 4,93%, nelja riigi seas kõrgeim, euroala keskmine oli 3,70%."
    ],
-   "rohk": "majanduskasvult ja hinnatõusult tagapool",
-   "rasi": "fbd5ed01f616a6be",
+   "rohk": "hinnatõus on võrdlusriikide kiireim",
+   "rasi": "4fdc9d4806f8e9c4",
    "aeg": "2026-11-19"
   }
  }
