@@ -638,9 +638,9 @@ function koostaGrupid(D, META) {
   // Majandususalduse alamindeksid: kuu, kvartali ja aasta keskmine
   const kindlF = (k) => ({ M: xy(Q(k)), Q: xy(koonda(Q(k), kvKey, 3, (v) => r1(mean(v))), { note: 'Kvartali kuude keskmine.' }),
     A: xy(koonda(S(k), aKey, 12, (v) => r1(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) });
-  const KINDL_MARKUS = '2026. aastal vahetus konjunktuuribaromeetrite uuringu läbiviija, mistõttu võib aegreas olla katkestusi.';
+  const KINDL_MARKUS = 'Eurostati avaldatud kuud on sesoonselt korrigeeritud; hilisemad kuud on Statistikaameti konjunktuuribaromeetrite kindlustunde indikaatorid. 2026. aastal vahetus uuringu läbiviija, mistõttu võib aegreas olla katkestusi.';
   const esiNote = 'Sesoonselt korrigeeritud. 2026. aastal vahetus konjunktuuribaromeetrite uuringu läbiviija, mistõttu võib aegreas olla katkestusi.' +
-    (hinn.periods.length ? ` Eurostat pole pärast ${mmyy(lastO)} andmeid avaldanud. Katkendjoon: hinnang Statistikaameti baromeetritest EK metoodikaga.` : '');
+    (hinn.periods.length ? ` Eurostat pole pärast ${mmyy(lastO)} andmeid avaldanud. Katkendjoon: arvutatud Statistikaameti konjunktuuribaromeetritest (BAR01–BAR05) Euroopa Komisjoni metoodikaga.` : '');
   // ---- 16: vabad ametikohad -------------------------------------------------------
   const vabM = S('vab_maar_q'), vabA = S('vab_arv_q');
   // ---- 17: tööjõu ühikukulu ---------------------------------------------------------
@@ -845,7 +845,7 @@ function koostaGrupid(D, META) {
       F: { Q: xy(Q('mitteakt_q')), A: xy(koonda(S('mitteakt_q'), aKey, 4, (v) => r1(mean(v))), { note: 'Aasta väärtus on kvartalite keskmine.' }) },
       src: 'Statistikaamet TT0160', url: SA('TT0160'), note: 'Mitteaktiivsed 15–74-aastaste rahvastikust (tööjõud + mitteaktiivsed).' },
 
-    { nr: '13', unitChip: 'punkti', extraChip: 'pikaajaline keskmine = 100', kind: 'line', unit: '', ref: 100, head: 'level',
+    { nr: '13', unitChip: 'punkti', extraChip: 'pikaajaline keskmine = 100', kind: 'line', unit: '', ref: 100, head: 'level', estName: 'Statistikaamet',
       F: { M: { x: esiM.periods.map(silt), y: esiM.periods.map((p, i) => (isEst.has(p) ? null : esiM.values[i])),
                 est: hinn.periods.length ? esiM.periods.map((p, i) => (isEst.has(p) || p === lastO ? esiM.values[i] : null)) : undefined },
            Q: { x: esiQall.periods.map(silt), y: esiQall.periods.map((p, i) => (qEst.has(p) ? null : esiQall.values[i])),
@@ -853,20 +853,20 @@ function koostaGrupid(D, META) {
            A: xy(alates(esiA, ALGUS), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
       src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table', note: esiNote },
     { nr: '40', unitChip: 'saldo', kind: 'line', unit: '', dec: 1, head: 'level', ref: 0,
-      F: kindlF('kindl_toostus_m'), src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
-      note: 'Sesoonselt korrigeeritud; tööstusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
+      F: kindlF('kindl_toostus_m'), src: 'Eurostat ei_bssi_m_r2; Statistikaamet BAR03', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
+      note: 'Tööstusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
     { nr: '41', unitChip: 'saldo', kind: 'line', unit: '', dec: 1, head: 'level', ref: 0,
-      F: kindlF('kindl_teenindus_m'), src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
-      note: 'Sesoonselt korrigeeritud; teenindusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
+      F: kindlF('kindl_teenindus_m'), src: 'Eurostat ei_bssi_m_r2; Statistikaamet BAR05', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
+      note: 'Teenindusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
     { nr: '42', unitChip: 'saldo', kind: 'line', unit: '', dec: 1, head: 'level', ref: 0,
-      F: kindlF('kindl_tarbijad_m'), src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
-      note: 'Sesoonselt korrigeeritud; tarbijate küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
+      F: kindlF('kindl_tarbijad_m'), src: 'Eurostat ei_bssi_m_r2; Statistikaamet BAR01', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
+      note: 'Tarbijate küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
     { nr: '43', unitChip: 'saldo', kind: 'line', unit: '', dec: 1, head: 'level', ref: 0,
-      F: kindlF('kindl_jae_m'), src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
-      note: 'Sesoonselt korrigeeritud; jaekaubandusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
+      F: kindlF('kindl_jae_m'), src: 'Eurostat ei_bssi_m_r2; Statistikaamet BAR04', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
+      note: 'Jaekaubandusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
     { nr: '44', unitChip: 'saldo', kind: 'line', unit: '', dec: 1, head: 'level', ref: 0,
-      F: kindlF('kindl_ehitus_m'), src: 'Eurostat ei_bssi_m_r2', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
-      note: 'Sesoonselt korrigeeritud; ehitusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
+      F: kindlF('kindl_ehitus_m'), src: 'Eurostat ei_bssi_m_r2; Statistikaamet BAR02', url: 'https://ec.europa.eu/eurostat/databrowser/view/ei_bssi_m_r2/default/table',
+      note: 'Ehitusettevõtete küsitlus. Saldo on positiivsete ja negatiivsete vastuste osakaalu vahe protsendipunktides. ' + KINDL_MARKUS },
 
     { nr: '15', unitChip: '% SKP-st', kind: 'col', unit: '%', head: 'level',
       F: { A: xy(S('volg_a')) }, src: 'Statistikaamet RR061', url: SA('RR061'), note: 'Konsolideeritud võlg (Maastrichti võlg).' },    // Maksuvõlg: EMTA avaldab iga kuu 1. kuupäeva seisu ehk eelmise kuu lõpu seisu. Kvartali ja aasta väärtus on perioodi lõpu seis.
@@ -1234,12 +1234,12 @@ function headline(it) {
     const koht = vals.filter((x) => x > v).length + 1;
     return { big: it.pm ? sgn(v, fmt) : fmt(v), unit: it.unit.trim(), per, delta: vals.length > 1 ? `kõrguselt ${koht}. ${vals.length} riigi seas` : null };
   }
-  // Kui näitajal on hinnanguline jätk (katkendjoon, nt majandususaldus pärast Eurostati viimast kuud),
-  // on pealkirjas kõige viimane väärtus koos hinnanguga; perioodi juures on siis märge „hinnang“.
+  // Kui näitajal on teisest allikast jätk (katkendjoon, nt majandususaldus pärast Eurostati viimast kuud),
+  // on pealkirjas kõige viimane väärtus; perioodi juures on sulgudes jätku allikas (estName).
   const y = it.est ? it.y.map((w, k) => (w != null ? w : it.est[k])) : it.y;
   const i = lastIdx(y);
   const v = y[i];
-  const hinnang = it.est && it.y[i] == null ? ` (${(it.estName || 'hinnang').toLowerCase()})` : '';
+  const hinnang = it.est && it.y[i] == null ? ` (${it.estName || 'hinnang'})` : '';
   const per = it.per || (it.freq === 'Q' ? it.x[i] + ' kv' : it.x[i]) + hinnang;
   let delta = null;
   const lag = { M: 12, Q: 4, H: 2, A: 1 }[it.freq];
@@ -1581,7 +1581,7 @@ function koostaVordlus(V, META) {
            Q: riigid((g) => alates(koonda(S('esi_m_' + g), kvKey, 3, (v) => r1(mean(v))), ALGUS), { note: 'Kvartali kuude keskmine.' }),
            A: riigid((g) => koonda(S('esi_m_' + g), aKey, 12, (v) => r1(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) },
       src: 'Eurostat ei_bssi_m_r2', url: EUSTAT('ei_bssi_m_r2'),
-      note: 'Sesoonselt korrigeeritud. Iga riigi indikaator on mõõdetud tema enda pikaajalise keskmise suhtes. Eesti kohta on siin ainult Eurostati ametlikud andmed, hilisemate kuude hinnang on vaates „Eesti majanduse graafikud“.' },
+      note: 'Sesoonselt korrigeeritud. Iga riigi indikaator on mõõdetud tema enda pikaajalise keskmise suhtes. Eesti kohta on siin ainult Eurostati andmed; hilisemad kuud Statistikaameti konjunktuuribaromeetrite põhjal on vaates „Eesti majanduse graafikud“.' },
     { nr: '6', nimi: 'Välismaiste otseinvesteeringute positsioon', unitChip: '% SKP-st', kind: 'lines', unit: '%', head: 'vrd',
       F: { Q: riigid((g) => alates(fdiSkp(g), ALGUS)), A: riigid((g) => q4(fdiSkp(g)), { note: 'IV kvartali lõpu positsioon.' }) },
       src: 'Eurostat bop_iip6_q, namq_10_gdp', url: EUSTAT('bop_iip6_q'),
@@ -1802,7 +1802,7 @@ function koostaKokkuvote(D, kasitsi) {
   const esiA = last(S('esi_m')), esiH = last(S('esi_m_hinnang'));
   const esi = esiH && (!esiA || esiH.p > esiA.p) ? esiH : esiA;
   if (esi) {
-    laused.push(`Majandususaldus on ${esi.v < 97 ? 'endiselt selgelt alla pikaajalise keskmise' : esi.v < 100 ? 'pikaajalisest keskmisest veidi madalam' : esi.v < 103 ? 'pikaajalise keskmise lähedal' : 'pikaajalisest keskmisest kõrgem'} (${kuu(esi.p)} ${pr(esi.v)} punkti${esi === esiH ? ', hinnang' : ''}).`);
+    laused.push(`Majandususaldus on ${esi.v < 97 ? 'endiselt selgelt alla pikaajalise keskmise' : esi.v < 100 ? 'pikaajalisest keskmisest veidi madalam' : esi.v < 103 ? 'pikaajalise keskmise lähedal' : 'pikaajalisest keskmisest kõrgem'} (${kuu(esi.p)} ${pr(esi.v)} punkti${esi === esiH ? ', Statistikaameti baromeetrite põhjal' : ''}).`);
     skoor += esi.v < 97 ? -1 : esi.v >= 100 ? 1 : 0; n++;
   }
   // Üldhinnang signaalide põhjal
@@ -1948,7 +1948,7 @@ function buildUlevaade() {
   if (u.esi) {
     const m = el('section', 'ul-kaart ul-moodik');
     m.setAttribute('aria-label', `Majandususaldus ${silt(u.esi.p)}: ${f1(u.esi.v)} punkti, pikaajaline keskmine on 100.`);
-    m.innerHTML = `<p class="ul-silt">Majandususaldus · ${esc(silt(u.esi.p))}${u.esi.hinnang ? ' (hinnang)' : ''}</p>
+    m.innerHTML = `<p class="ul-silt">Majandususaldus · ${esc(silt(u.esi.p))}${u.esi.hinnang ? ' (Statistikaamet)' : ''}</p>
       <div class="mk">${moodik(u.esi.v)}<div class="mv">${f1(u.esi.v)}</div></div>
       <div class="mt"><p>Pikaajaline keskmine on 100. ${u.esi.v >= 100 ? 'Kindlustunne on keskmisest kõrgem.' : 'Kindlustunne on keskmisest madalam.'}</p>
       <p class="ul-meta">Euroopa Komisjoni koondnäitaja ettevõtjate ja tarbijate küsitlustest tööstuses, teeninduses, jaekaubanduses ja ehituses.</p></div>`;
@@ -2342,7 +2342,7 @@ function renderPlan() {
       .sort((a, b) => b.t - a.t || ([KOOND, ...MP.naitajad].indexOf(a.naitaja) - [KOOND, ...MP.naitajad].indexOf(b.naitaja)));
     const w = el('div', 'mp-table');
     w.innerHTML = '<table><thead><tr><th>Periood</th><th>Näitaja</th><th>Indeks</th><th>Muutus, %</th><th>z</th><th>Märkus</th></tr></thead><tbody>' +
-      rows.map((r) => `<tr class="${r.naitaja === KOOND ? 'k' : ''}"><td>${esc(r.per)}</td><td>${esc(r.naitaja)}</td><td>${arvS(r.tase)}</td><td>${arvS(r.muutus, 1, true)}</td><td>${arvS(r.z, 2, true)}</td><td>${r.hinnang ? 'ESI osaliselt hinnatud' : ''}</td></tr>`).join('') + '</tbody></table>';
+      rows.map((r) => `<tr class="${r.naitaja === KOOND ? 'k' : ''}"><td>${esc(r.per)}</td><td>${esc(r.naitaja)}</td><td>${arvS(r.tase)}</td><td>${arvS(r.muutus, 1, true)}</td><td>${arvS(r.z, 2, true)}</td><td>${r.hinnang ? 'ESI osaliselt Statistikaameti baromeetritest' : ''}</td></tr>`).join('') + '</tbody></table>';
     body.append(w);
   }
 }
@@ -2378,7 +2378,7 @@ function mpKoondOpt(d, mootu, t) {
         const r = d.find((x) => x.per === tt && x.naitaja === KOOND);
         const rows = ps.filter((p) => p.seriesType === 'line').map((p) => ({ n: p.seriesName, v: (p.data.value || p.data)[1] }))
           .sort((a, b) => (a.n === KOOND ? -1 : b.n === KOOND ? 1 : b.v - a.v));
-        return `<b>${esc(r ? r.per : '')}</b><br>` + rows.map((x) => (x.n === KOOND ? `<b>${esc(x.n)}: ${fmt(x.v)}</b>` : `<span style="color:${t.muted}">${esc(x.n)}: ${fmt(x.v)}</span>`)).join('<br>') + (r && r.hinnang ? '<br><i>majandususaldus osaliselt hinnatud</i>' : '');
+        return `<b>${esc(r ? r.per : '')}</b><br>` + rows.map((x) => (x.n === KOOND ? `<b>${esc(x.n)}: ${fmt(x.v)}</b>` : `<span style="color:${t.muted}">${esc(x.n)}: ${fmt(x.v)}</span>`)).join('<br>') + (r && r.hinnang ? '<br><i>majandususaldus osaliselt Statistikaameti baromeetritest</i>' : '');
       } },
     xAxis: mpTimeAxis(t, d, mpState.sag),
     yAxis: { type: 'value', scale: mootu === 'tase', min: yMin, max: yMax, splitLine: { lineStyle: { color: t.grid } },

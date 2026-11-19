@@ -331,12 +331,26 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     tul$esi_m_hinnang <- list(seeria = vana$esi_m_hinnang, staatus = "vana")
   }
 
-  # Majandususalduse alamindeksid (Eurostat, sesoonselt korrigeeritud saldod)
-  for (k in list(c("kindl_toostus_m", "BS-ICI-BAL"), c("kindl_teenindus_m", "BS-SCI-BAL"),
-                 c("kindl_tarbijad_m", "BS-CSMCI-BAL"), c("kindl_jae_m", "BS-RCI-BAL"),
-                 c("kindl_ehitus_m", "BS-CCI-BAL"))) local({
-    ind <- k[2]
-    lisa(k[1], function() eurostat_seeria("ei_bssi_m_r2", list(geo = "EE", indic = ind, s_adj = "SA", freq = "M")), c(-100, 100))
+  # Majandususalduse alamindeksid (kindlustunde indikaatorid). Kuni Eurostati viimase
+  # kuuni Eurostati sesoonselt korrigeeritud saldod; sealt edasi Statistikaameti
+  # konjunktuuribaromeetrite (BAR01–BAR05) avaldatud kindlustunde indikaatorid, mis on
+  # ametlikud ja arvutatud Euroopa Komisjoni ühtlustatud metoodikaga.
+  for (k in list(c("kindl_toostus_m", "BS-ICI-BAL", "BAR03", "INDU_TOT_COF_B_M"),
+                 c("kindl_teenindus_m", "BS-SCI-BAL", "BAR05", "SERV_TOT_COF_B_M"),
+                 c("kindl_tarbijad_m", "BS-CSMCI-BAL", "BAR01", "CONS_TOT_COF_B_M"),
+                 c("kindl_jae_m", "BS-RCI-BAL", "BAR04", "RETA_TOT_COF_B_M"),
+                 c("kindl_ehitus_m", "BS-CCI-BAL", "BAR02", "BUIL_TOT_COF_B_M"))) local({
+    ind <- k[2]; tabel <- k[3]; kood <- k[4]
+    lisa(k[1], function() {
+      e <- eurostat_seeria("ei_bssi_m_r2", list(geo = "EE", indic = ind, s_adj = "SA", freq = "M"))
+      st <- tryCatch({
+        d <- px_paring(tabel, valik("N\u00e4itaja", kood), valik("Vaatlusperiood", "*"))
+        seeria(norm_periood(d$Vaatlusperiood), d$value)
+      }, error = function(err) { hoiata(k[1], ": Statistikaameti ", tabel, " ei laadinud (", conditionMessage(err), ")"); NULL })
+      if (is.null(st)) return(e)
+      uus <- st$periods > max(e$periods)
+      list(periods = c(e$periods, st$periods[uus]), values = c(e$values, st$values[uus]))
+    }, c(-100, 100))
   })
 
   # Avalehe tänane elektrihind: päevad eraldi väljal, mitte seeriana, et iga päev ei
