@@ -42,7 +42,7 @@ const API = process.env.AI_URL || 'https://api.anthropic.com/v1/messages';
 const VOTI = process.env.ANTHROPIC_API_KEY || '';
 // Tõsta seda, kui juhiseid või kontrolle muudetakse: siis kirjutatakse kõik tekstid uuesti,
 // ka siis, kui andmed ise pole muutunud.
-const VERSIOON = 2;
+const VERSIOON = 3;
 
 const logi = (...a) => console.log('[ai]', ...a);
 const hoiata = (m) => { console.log('[ai] HOIATUS:', m); hoiatused.push(m); };
@@ -201,7 +201,7 @@ async function loeLeht() {
         ['Keskmine brutokuupalk, eurot', saba(S('palk_q_lvl'), 4)],
         ['Keskmine brutokuupalk, muutus aastaga, %', saba(S('palk_q_yoy'), 4)],
         ['Majandususaldusindeks, punkti (pikaajaline keskmine 100)', saba(S('esi_m'))],
-        ['Majandususaldusindeksi hinnang hilisematele kuudele, punkti', saba(S('esi_m_hinnang'), 3)],
+        ['Majandususaldusindeks hilisematel kuudel Statistikaameti konjunktuuribaromeetrite põhjal (EK metoodika), punkti', saba(S('esi_m_hinnang'), 3)],
         ['Töötukassa vahendatavad vabad töökohad', saba(S('tk_vabad_m'), 4)],
         ['Tootmisvõimsuse rakendatus töötlevas tööstuses, %', saba(S('voimsus_q'), 4)],
       ].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join('\n');
