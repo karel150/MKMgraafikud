@@ -134,6 +134,12 @@ koosta_vordlus <- function(icu = NULL) {
   # 37 Elektri börsihind, €/MWh (Elering). Rootsi hindu Elering ei avalda.
   andmestik("elekter_m", "elering", list(), c(-50, 1000), fn = function(geos) elering_kuud()[geos])
 
+  # 38–39 Sadamate hinnanguline kaubamaht (tuh t) ja laevakülastused (IMF PortWatch)
+  andmestik("sadam_t_m", "portwatch", list(), c(0, 100000),
+            fn = function(geos) lapply(pw_kuud()[geos], function(x) x$tonnid))
+  andmestik("sadam_laevu_m", "portwatch", list(), c(0, 100000),
+            fn = function(geos) lapply(pw_kuud()[geos], function(x) x$laevu))
+
   # 13 Majandususaldus (ESI), SA
   andmestik("esi_m", "ei_bssi_m_r2", list(indic = "BS-ESI-I", s_adj = "SA", freq = "M"), c(30, 170))
   # 6 Otseinvesteeringute kohustiste positsioon, mln €, ja nominaalne SKP (suhte jaoks)

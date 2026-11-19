@@ -71,6 +71,24 @@ Rootsi lisamiseks on vaja ENTSO-E läbipaistvusplatvormi API-võtit.
   failis pole (nt nädalavahetusel), näidatakse viimast päeva koos kuupäevaga.
 * Nord Pooli enda andmeportaalist andmeid ei võeta: avalik edasilevitamine vajab tasulist litsentsi.
 
+## Sadamad (IMF PortWatch)
+
+Näitajad 38 (sadamate hinnanguline eksport ja import, tuhat tonni) ja 39 (laevakülastused) tulevad
+IMF PortWatchi avalikust ArcGIS-teenusest `Daily_Ports_Data` (võtit pole vaja). Viide:
+„UN Global Platform; IMF PortWatch (portwatch.imf.org)“.
+
+* Andmed on laevade satelliitpositsioonidel (AIS) põhinevad **hinnangud**, esialgsed ja muutuvad.
+  Need hõlmavad ainult kaubalaevu (mitte reisiparvlaevu), seega on tase ametlikust
+  sadamastatistikast tunduvalt madalam – kasulik on eelkõige muutus ja suund.
+* Päringud tehakse serveris koondatuna (`outStatistics`), päevade kaupa riigi ja aasta kohta;
+  kui aasta korraga ei õnnestu (nt Rootsi), küsitakse kuu kaupa. Ühe riigi rike ei mõjuta teisi.
+* Kuu loetakse täielikuks, kui andmed katavad selle viimase päeva. PortWatch uueneb kord nädalas
+  ja maha jääb umbes nädal.
+* Võrdluses (Eesti, Läti, Leedu, Soome, Rootsi) on muutus aasta varasemaga, sest sadamate suurus
+  on väga erinev.
+* Avalehe ribal on „Sadamate eksport“: viimase 28 päeva hinnanguline eksport võrreldes sama 28
+  päevaga 364 päeva varem (samad nädalapäevad); `naitajad.json` väli `sadamad_kiire`.
+
 ## TAIE mõõdikud
 
 Vahekaart „TAIE mõõdikud" näitab teadus- ja arendustegevuse, innovatsiooni ning ettevõtluse arengukava 2021–2035 seirenäitajaid (arengukava lisa 3) nelja eesmärgi kaupa. Graafiku katkendjoon on 2035. aasta sihttase.

@@ -395,6 +395,115 @@ elering_paevad <- function(paevi = 400) {
   list(paevad = p$paev, ee = round(p$hind, 2))
 }
 
+# ---- IMF PortWatch: sadamate laevakülastused ja hinnanguline kaubamaht --------
+# Laevade satelliitpositsioonidel (AIS) põhinevad päevased hinnangud iga sadama kohta.
+# Kaubamaht (import, eksport) on tonnides ja esialgne. Allikas palub viidata:
+# "UN Global Platform; IMF PortWatch (portwatch.imf.org)". Päringud tehakse serveris
+# koondatuna (outStatistics), nii et ridu tuleb sadu, mitte sadu tuhandeid.
+PW_URL <- "https://services9.arcgis.com/weJ1QsnbMYJlCHdG/arcgis/rest/services/Daily_Ports_Data/FeatureServer/0"
+PW_RIIGID <- c(EE = "EST", LV = "LVA", LT = "LTU", FI = "FIN", SE = "SWE")
+PW_ALGUS <- 2019   # PortWatchi andmed algavad 2019. aastast
+.pw_malu <- new.env(parent = emptyenv())
+
+pw_koond <- function(where, grupp) {
+  stat <- lapply(c(laevu = "portcalls", eksport = "export", import = "import"), function(v) v)
+  out <- jsonlite::toJSON(lapply(names(stat), function(n)
+    list(statisticType = "sum", onStatisticField = stat[[n]], outStatisticFieldName = n)), auto_unbox = TRUE)
+  # ArcGIS annab ülekoormuse korral HTTP 200 koos veateatega, seega korratakse ka siin
+  for (k in 1:3) {
+    v <- http_json(paste0(PW_URL, "/query"), list(where = where, outStatistics = out,
+      groupByFieldsForStatistics = paste(grupp, collapse = ","), f = "json"))
+    if (is.null(v$error)) break
+    if (k < 3) Sys.sleep(10 * k)
+  }
+  if (!is.null(v$error)) {
+    # Kihi kirjeldusest väljade nimed logisse, et skeemi muutumist oleks lihtne näha
+    m <- tryCatch(http_json(PW_URL, list(f = "json"), katseid = 1), error = function(e) NULL)
+    if (!is.null(m$fields)) message("PortWatchi väljad: ", paste(m$fields$name, collapse = ", "))
+    stop("PortWatch: ", v$error$message, " ", paste(unlist(v$error$details), collapse = " "), " (", where, ")")
+  }
+  d <- v$features$attributes
+  if (!is.data.frame(d) || !nrow(d)) stop("PortWatch ei tagastanud ridu (", where, ")")
+  names(d) <- tolower(names(d))
+  if (isTRUE(v$exceededTransferLimit)) stop("PortWatch: vastus jäi poolikuks (", where, ")")
+  d
+}
+
+# Eesti päevad viimase ~400 päeva kohta + kõige uuem päev andmetes
+pw_eesti_paevad <- function() {
+  if (!is.null(.pw_malu$paevad)) return(.pw_malu$paevad)
+  y <- as.integer(format(Sys.Date(), "%Y")) - 1
+  d <- pw_koond(sprintf("ISO3 = 'EST' AND year >= %d", y), c("year", "month", "day"))
+  d$kp <- as.Date(sprintf("%04d-%02d-%02d", as.integer(d$year), as.integer(d$month), as.integer(d$day)))
+  d <- d[order(d$kp), ]
+  message("PortWatch: Eesti päevi ", nrow(d), ", viimane ", max(d$kp))
+  .pw_malu$paevad <- d
+  d
+}
+
+# Kuusummad riigiti: list(EE = list(laevu = seeria, tonnid = seeria, eksport = …, import = …), …).
+# Jooksev kuu jääb välja, kuni andmed katavad selle viimase päeva.
+pw_kuud <- function() {
+  if (inherits(.pw_malu$kuud, "error")) stop(.pw_malu$kuud)   # sama viga ei korrata iga seeria jaoks
+  if (!is.null(.pw_malu$kuud)) return(.pw_malu$kuud)
+  tryCatch(pw_kuud_lae(), error = function(e) { .pw_malu$kuud <- e; stop(e) })
+}
+pw_kuud_lae <- function() {
+  viimane <- max(pw_eesti_paevad()$kp)
+  # Üks päring riigi ja aasta kohta: kõiki riike ja aastaid korraga koondades jääb server hätta
+  aastad <- PW_ALGUS:as.integer(format(viimane, "%Y"))
+  # Päevade kaupa (nagu Eesti päevapäring), kuud liidetakse siin. Kui aasta korraga ei
+  # õnnestu (suurte riikide puhul jääb server mõnikord hätta), küsitakse kuu kaupa.
+  pw_aasta <- function(iso, a) {
+    paevad <- function(w) pw_koond(w, c("year", "month", "day"))
+    x <- tryCatch(paevad(sprintf("ISO3 = '%s' AND year = %d", iso, a)), error = function(e) NULL)
+    if (is.null(x)) x <- do.call(rbind, lapply(1:12, function(k) tryCatch(
+      paevad(sprintf("ISO3 = '%s' AND year = %d AND month = %d", iso, a, k)),
+      error = function(e) if (grepl("ei tagastanud ridu", conditionMessage(e))) NULL else stop(e))))
+    x <- stats::aggregate(cbind(laevu, eksport, import) ~ year + month, data = x, FUN = sum)
+    x$iso3 <- iso
+    x
+  }
+  # Ühe riigi rike ei too kaasa teiste (ega Eesti) andmete kadu
+  d <- do.call(rbind, lapply(PW_RIIGID, function(iso) tryCatch(
+    do.call(rbind, lapply(aastad, function(a) pw_aasta(iso, a))),
+    error = function(e) { hoiata("PortWatch ", iso, ": ", conditionMessage(e)); NULL })))
+  if (is.null(d) || !nrow(d)) stop("PortWatchist ei saanud ühegi riigi kuuandmeid")
+  kuu_lopp <- as.Date(sprintf("%04d-%02d-01", as.integer(d$year), as.integer(d$month))) + 31
+  kuu_lopp <- as.Date(format(kuu_lopp, "%Y-%m-01")) - 1
+  d <- d[kuu_lopp <= viimane, ]
+  d$per <- sprintf("%04dM%02d", as.integer(d$year), as.integer(d$month))
+  d <- d[order(d$per), ]
+  tul <- lapply(PW_RIIGID, function(iso) {
+    x <- d[toupper(d$iso3) == iso, ]
+    if (!nrow(x)) return(NULL)
+    list(laevu = seeria(x$per, x$laevu),
+         eksport = seeria(x$per, round(x$eksport / 1000, 1)),
+         import = seeria(x$per, round(x$import / 1000, 1)),
+         tonnid = seeria(x$per, round((x$eksport + x$import) / 1000, 1)))
+  })
+  ee <- tul$EE
+  if (!is.null(ee)) message("PortWatch, Eesti ", utils::tail(ee$laevu$periods, 1), ": laevu ",
+    utils::tail(ee$laevu$values, 1), ", eksport ", utils::tail(ee$eksport$values, 1), " tuh t, import ",
+    utils::tail(ee$import$values, 1), " tuh t")
+  .pw_malu$kuud <- tul
+  tul
+}
+
+# Avalehe kiire näitaja: viimase 28 päeva summa vs sama periood 364 päeva varem (samad nädalapäevad)
+pw_kiire <- function(paevi = 28) {
+  d <- pw_eesti_paevad()
+  lopp <- max(d$kp)
+  aken <- function(l) { x <- d[d$kp > l - paevi & d$kp <= l, ]; if (nrow(x) < paevi - 2) NULL else x }
+  n <- aken(lopp); v <- aken(lopp - 364)
+  if (is.null(n) || is.null(v)) stop("PortWatch: kiire näitaja jaoks pole piisavalt päevi")
+  s <- function(x, k) round(sum(x[[k]]) / 1000, 1)
+  list(algus = format(lopp - paevi + 1), lopp = format(lopp), paevi = paevi,
+       eksport = s(n, "eksport"), eksport_varem = s(v, "eksport"),
+       import = s(n, "import"), import_varem = s(v, "import"),
+       laevu = sum(n$laevu), laevu_varem = sum(v$laevu))
+}
+
 # ---- Eurostat ---------------------------------------------------------------
 # get_eurostat: paketi eurostat samanimeline funktsioon koos korduskatsete ja
 # vahemäluga. Kuna see on defineeritud töökeskkonnas, kasutavad seda ka

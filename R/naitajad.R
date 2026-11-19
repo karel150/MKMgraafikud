@@ -306,6 +306,16 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     s
   }, c(-50, 1000))
 
+  # ---- Sadamad (IMF PortWatch), hinnang --------------------------------------------
+  pw_ee <- function(k) function() {
+    s <- pw_kuud()[["EE"]][[k]]
+    if (is.null(s)) stop("PortWatchis pole Eesti andmeid.")
+    s
+  }
+  lisa("sadam_eksport_m", pw_ee("eksport"), c(0, 20000))
+  lisa("sadam_import_m", pw_ee("import"), c(0, 20000))
+  lisa("sadam_laevu_m", pw_ee("laevu"), c(0, 50000))
+
   # ---- Majandususaldus ---------------------------------------------------------
   # Kui majandusplaaniindeksi arvutus õnnestus, kasutatakse sealset ESI-t
   # (Eurostat + hinnang Statistikaameti baromeetritest). Muidu ainult Eurostat.
@@ -328,9 +338,16 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     loe_json("naitajad.json")$elekter_paev
   })
 
+  # Avalehe kiire sadamanäitaja (viimased 28 päeva aastaga); vea korral jääb eelmine
+  sadamad_kiire <- tryCatch(pw_kiire(), error = function(e) {
+    hoiata("sadamad_kiire: ", conditionMessage(e), ". Jäetakse alles eelmine versioon.")
+    loe_json("naitajad.json")$sadamad_kiire
+  })
+
   list(
     uuendatud = aeg_utc(),
     elekter_paev = elekter_paev,
+    sadamad_kiire = sadamad_kiire,
     seeriad   = lapply(tul, function(r) seeria_json(r$seeria)),
     staatus   = lapply(tul, function(r) list(
       staatus = r$staatus,
