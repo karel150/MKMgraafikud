@@ -65,8 +65,10 @@ Rootsi lisamiseks on vaja ENTSO-E läbipaistvusplatvormi API-võtit.
 
 * Veerandtunni- ja tunnihinnad keskmistatakse esmalt tunniks, kuu keskmine on tundide keskmine
   (Eesti aja järgi). Jooksvat kuud ei näidata; kvartal ja aasta on kuude keskmised.
-* Avalehe ribal on Eesti tänase päeva keskmine hind (`naitajad.json` väli `elekter_paev`, viimased
-  45 päeva). Kui tänast hinda failis pole (nt nädalavahetusel), näidatakse viimast päeva koos kuupäevaga.
+* Avalehe mõõdikus on Eesti tänase päeva keskmine hind ja see, kui suur osa viimase 365 päeva
+  päevahindadest on sellest madalamad (protsentiil; poolringi keskel on aasta mediaan).
+  Päevahinnad on `naitajad.json` väljal `elekter_paev` (viimased 400 päeva). Kui tänast hinda
+  failis pole (nt nädalavahetusel), näidatakse viimast päeva koos kuupäevaga.
 * Nord Pooli enda andmeportaalist andmeid ei võeta: avalik edasilevitamine vajab tasulist litsentsi.
 
 ## TAIE mõõdikud
