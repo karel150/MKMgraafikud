@@ -1802,9 +1802,7 @@ function koostaUlevaade(D) {
     tootus, tootusAasta: aastaTagasi(S('tootus_q'), tootus && tootus.p),
     palk, palkAasta: aastaTagasi(S('palk_q_lvl'), palk && palk.p), palkA: viim(S('palk_q_yoy')),
     vabad, vabadAasta: aastaTagasi(S('tk_vabad_m'), vabad && vabad.p),
-    esi, esiAasta: aastaTagasi(esiK, esi && esi.p), elekter: elektriPaev(D.elekter_paev),
-    // Elektrimõõdiku tasakaalupunkt: viimase 12 täiskuu keskmine hind
-    elekterKesk: (() => { const v = S('elekter_m').values.slice(-12); return v.length === 12 && v.every((x) => x != null) ? v.reduce((a, b) => a + b, 0) / 12 : null; })() };
+    esi, esiAasta: aastaTagasi(esiK, esi && esi.p), elekter: elektriPaev(D.elekter_paev) };
 }
 // Eesti elektri börsihinna päeva keskmine: tänane, kui see on failis, muidu viimane varasem päev
 function elektriPaev(E) {
@@ -1813,7 +1811,18 @@ function elektriPaev(E) {
   let i = -1;
   E.paevad.forEach((p, j) => { if (p <= tana && E.ee[j] != null) i = j; });
   if (i < 0) return null;
-  return { p: E.paevad[i], v: E.ee[i], tana: E.paevad[i] === tana, eile: i > 0 ? E.ee[i - 1] : null };
+  // Protsentiil: kui suur osa sellele päevale eelnenud 365 päeva hindadest on madalamad
+  // (võrdsed lähevad poolenisti). Arvutatakse ainult siis, kui ajalugu on vähemalt 300 päeva.
+  const algus = new Date(Date.parse(E.paevad[i]) - 365 * 864e5).toISOString().slice(0, 10);
+  const aasta = E.paevad.map((p, j) => (p >= algus && p < E.paevad[i] ? E.ee[j] : null)).filter((x) => x != null);
+  let pr = null, med = null;
+  if (aasta.length >= 300) {
+    const v = E.ee[i];
+    pr = 100 * aasta.reduce((n, x) => n + (x < v ? 1 : x === v ? 0.5 : 0), 0) / aasta.length;
+    const sr = aasta.slice().sort((a, b) => a - b), k = sr.length >> 1;
+    med = sr.length % 2 ? sr[k] : (sr[k - 1] + sr[k]) / 2;
+  }
+  return { p: E.paevad[i], v: E.ee[i], tana: E.paevad[i] === tana, eile: i > 0 ? E.ee[i - 1] : null, pr, med, n: aasta.length };
 }
 // Suund: ▲/▼ ja värv selle järgi, kas tõus on selle näitaja puhul hea (hea = 1), halb (−1) või neutraalne (0)
 function suund(v, hea = 1) {
@@ -1897,16 +1906,17 @@ function buildUlevaade() {
       <p class="ul-meta">Euroopa Komisjoni koondnäitaja ettevõtjate ja tarbijate küsitlustest tööstuses, teeninduses, jaekaubanduses ja ehituses.</p></div>`;
     moodikud.append(m);
   }
-  if (u.elekter && u.elekterKesk != null) {
-    // Skaala 0 … kahekordne 12 kuu keskmine, nii et keskmine on alati täpselt poolringi tipus.
-    // Kõrgema hinna korral jääb täpp skaala lõppu, arv näitab tegelikku hinda.
-    const e = u.elekter, kesk = Math.round(u.elekterKesk), yla = 2 * u.elekterKesk;
-    const kp = `${+e.p.slice(8)}.${+e.p.slice(5, 7)}.${e.p.slice(0, 4)}`;
+  if (u.elekter && u.elekter.pr != null) {
+    // Poolring näitab päeva hinna kohta viimase 365 päeva seas (protsentiil 0–100);
+    // tipus on aasta mediaan. Skaala ei saa ületada, suur arv on päeva hind eurodes.
+    const e = u.elekter, pr = Math.round(e.pr), kp = `${+e.p.slice(8)}.${+e.p.slice(5, 7)}.${e.p.slice(0, 4)}`;
+    const sildid = (x) => (x === 50 ? `mediaan ${f0(e.med)} €` : x === 0 ? 'odavaim' : 'kalleim');
+    const tekst = pr >= 50 ? `Kallim kui ${pr}% viimase aasta päevadest.` : `Odavam kui ${100 - pr}% viimase aasta päevadest.`;
     const m = el('section', 'ul-kaart ul-moodik');
-    m.setAttribute('aria-label', `Elektri börsihind ${e.tana ? 'täna' : kp}: ${f0(e.v)} eurot megavatt-tunni kohta, viimase 12 kuu keskmine on ${kesk}.`);
+    m.setAttribute('aria-label', `Elektri börsihind ${e.tana ? 'täna' : kp}: ${f0(e.v)} eurot megavatt-tunni kohta. ${tekst} Viimase aasta mediaan on ${f0(e.med)}.`);
     m.innerHTML = `<p class="ul-silt">Elektri börsihind · ${e.tana ? 'täna' : esc(kp)}</p>
-      <div class="mk">${moodik(e.v, 0, yla, u.elekterKesk, (x) => f0(x))}<div class="mv">${f0(e.v)}<small>€/MWh</small></div></div>
-      <div class="mt"><p>Viimase 12 kuu keskmine on ${kesk}&nbsp;€/MWh. ${e.v >= u.elekterKesk ? 'Päeva hind on keskmisest kõrgem.' : 'Päeva hind on keskmisest madalam.'}</p>
+      <div class="mk">${moodik(e.pr, 0, 100, 50, sildid)}<div class="mv">${f0(e.v)}<small>€/MWh</small></div></div>
+      <div class="mt"><p>${tekst} Viimase 365 päeva mediaan on ${f0(e.med)}&nbsp;€/MWh.</p>
       <p class="ul-meta">Nord Pooli järgmise päeva turu päeva keskmine hind Eesti hinnapiirkonnas, käibemaksu ja võrgutasudeta (Eleringi andmed).</p></div>`;
     moodikud.append(m);
   }

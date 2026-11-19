@@ -382,8 +382,9 @@ elering_kuud <- function() {
   }), unname(ELERING_ALAD))
 }
 
-# Eesti viimaste päevade keskmine hind (koos homsega, kui see on juba teada)
-elering_paevad <- function(paevi = 45) {
+# Eesti viimaste päevade keskmine hind (koos homsega, kui see on juba teada). Avalehe
+# mõõdik võrdleb tänast hinda viimase 365 päevaga, seega hoitakse veidi üle aasta.
+elering_paevad <- function(paevi = 400) {
   t <- elering_tunnid()
   t <- t[t$ala == "EE", ]
   p <- stats::aggregate(hind ~ paev, data = t, FUN = mean)
