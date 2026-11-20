@@ -263,10 +263,23 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
 
   # ---- Valitsemissektori võlg (RR061) ja ettevõtete T&A (TD052) -------------
   lisa("volg_a", function() { d <- px_paring("RR061", valik(NAITAJA, "2"), valik("Aasta", "*")); seeria(d$Aasta, d$value, alates = 2010) }, c(0, 200))
-  lisa("berd_a", function() { d <- px_paring("TD052", valik(NAITAJA, "BES_GDP_RD"), valik("Vaatlusperiood", "*")); seeria(d$Vaatlusperiood, d$value, alates = 2010) }, c(0, 10))
+  # T&A kulutuste osatähtsus SKP-s: Statistikaameti TD052; aastad, mida Statistikaamet pole
+  # veel avaldanud, lisatakse Eurostatist (rd_e_gerdtot, sageli esialgsed). Eurostati rike
+  # ei takista Statistikaameti rea uuendamist.
+  ta_kulud <- function(kood, sektor) function() {
+    d <- px_paring("TD052", valik(NAITAJA, kood), valik("Vaatlusperiood", "*"))
+    st <- seeria(d$Vaatlusperiood, d$value, alates = 2010)
+    e <- tryCatch(eurostat_seeria("rd_e_gerdtot", list(geo = "EE", sectperf = sektor, unit = "PC_GDP", freq = "A")),
+                  error = function(err) { message("TD052 ", kood, ": Eurostati lisa-aastaid ei saanud (", conditionMessage(err), ")"); NULL })
+    if (is.null(e) || !length(st$periods)) return(st)
+    uus <- e$periods > max(st$periods)
+    if (any(uus)) message("TD052 ", kood, ": Eurostatist lisatud ", paste(e$periods[uus], collapse = ", "))
+    list(periods = c(st$periods, e$periods[uus]), values = c(st$values, e$values[uus]))
+  }
+  lisa("berd_a", ta_kulud("BES_GDP_RD", "BES"), c(0, 10))
   # T&A kulutuste osatähtsus SKP-s kokku (TD052) ning teadlased ja insenerid täistööaja
   # ekvivalendis (TD01: kõik sektorid, mõlemad sood)
-  lisa("gerd_a", function() { d <- px_paring("TD052", valik(NAITAJA, "GDP_RD"), valik("Vaatlusperiood", "*")); seeria(d$Vaatlusperiood, d$value, alates = 2010) }, c(0, 10))
+  lisa("gerd_a", ta_kulud("GDP_RD", "TOTAL"), c(0, 10))
   lisa("teadlased_a", function() {
     d <- px_paring("TD01", valik(NAITAJA, "EMPLOYEES_FTE"), valik("Institutsionaalne sektor", "_T"),
                    valik("Ametikoha liik", "RSE"), valik("Sugu", "_T"), valik("Vaatlusperiood", "*"))
