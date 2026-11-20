@@ -39,6 +39,16 @@ imf_paring <- function(naitaja, aastad) {
     }
     vead <- c(vead, paste0(basename(api), ": vastuses puudub ", naitaja, " (väljad: ", paste(names(v), collapse = ", "), ")"))
   }
+  # AJUTINE DIAGNOSTIKA
+  for (u in c("https://www.imf.org/external/datamapper/api/v1/indicators", "https://www.imf.org/external/datamapper/api/v2/indicators",
+              "https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH/EST", "https://www.imf.org/external/datamapper/api/v2/NGDP_RPCH/EST",
+              "https://www.imf.org/external/datamapper/api/v1/NGDP_RPCH?periods=2026", "https://www.imf.org/external/datamapper/api/v2/NGDP_RPCH",
+              "https://www.imf.org/external/datamapper/api/v1/countries")) {
+    for (ua in c("R", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36")) {
+      r <- tryCatch(httr::GET(u, httr::user_agent(ua), httr::timeout(30)), error = function(e) NULL)
+      message("DIAG ", u, " UA=", substr(ua, 1, 7), " -> ", if (is.null(r)) "viga" else paste(httr::status_code(r), substr(httr::content(r, "text", encoding = "UTF-8"), 1, 80)))
+    }
+  }
   stop(paste(vead, collapse = "; "))
 }
 
