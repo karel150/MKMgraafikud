@@ -149,7 +149,9 @@ koosta_vordlus <- function(icu = NULL) {
   # EL-27 jäetakse välja: EL-i koondpositsioon on EL-väline, mitte riikide summa, seega ei ole võrreldav
   andmestik("fdi_q", "bop_iip6_q", list(currency = "MIO_EUR", bop_item = "FA__D__F", sector10 = "S1", sectpart = "S1",
                                         stk_flow = "L_LE", partner = "WRL_REST", freq = "Q"), c(1, 1e7), geos = VORDLUS_RIIGID)
-  andmestik("skp_q", "namq_10_gdp", list(na_item = "B1GQ", unit = "CP_MEUR", s_adj = "NSA", freq = "Q"), c(1, 1e7), geos = VORDLUS_RIIGID)
+  # SKP-l on EL-27 rida (investeeringute % SKP-st jaoks); otseinvesteeringute suhet see ei mõjuta,
+  # sest fdi_q EL-27 rida puudub
+  andmestik("skp_q", "namq_10_gdp", list(na_item = "B1GQ", unit = "CP_MEUR", s_adj = "NSA", freq = "Q"), c(1, 1e7))
   # 10 Elektri hind mittekodutarbijatele, ilma maksudeta, €/kWh
   andmestik("elekter_h", "nrg_pc_205", list(nrg_cons = "TOT_KWH", tax = "X_TAX", currency = "EUR", unit = "KWH"), c(0, 2))
   # 26 Kodumajapidamiste brutosäästu määr, %
