@@ -336,6 +336,20 @@
    "nimi": "Ehituse kindlustunne",
    "kirjeldus": "Ehitusettevõtete kindlustunde indikaator: tellimuste taseme ja tööhõive ootuste saldode keskmine",
    "miks": "Ehitus reageerib intressidele ja investeeringutele; indikaator annab varajase signaali ehitusmahu muutusest"
+  },
+  "45": {
+   "valdkond": "Teadmised ja tehnoloogia",
+   "peamine": true,
+   "nimi": "T&A kulutused kokku suhtena SKP-sse",
+   "kirjeldus": "Kõigi sektorite (ettevõtlus-, kõrgharidus-, riiklik ja kasumitaotluseta erasektor) teadus- ja arendustegevuse kulutused (GERD) jagatud sama aasta jooksevhindades SKP-ga, protsendina",
+   "miks": "Peamine teadus- ja arendustegevuse mahu näitaja; TAIE arengukava ja EL-i eesmärgid on seatud just selle suhtarvu kohta"
+  },
+  "46": {
+   "valdkond": "Teadmised ja tehnoloogia",
+   "peamine": false,
+   "nimi": "Teadlased ja insenerid täistööaja ekvivalendis",
+   "kirjeldus": "Teadus- ja arendustegevusega hõivatud teadlaste ja inseneride arv kõigis sektorites, taandatuna täistööajale (osalise koormusega töötajad arvestatakse koormuse järgi)",
+   "miks": "Näitab teadus- ja arendustegevuse inimressurssi; teadmistepõhise majanduse kasvuvõime eeldus"
   }
  }
 }

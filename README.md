@@ -105,10 +105,11 @@ Vahekaart „Prognoosid“ võrdleb Rahandusministeeriumi, Eesti Panga, Euroopa 
 Swedbanki, SEB ja LHV viimaseid prognoose majanduskasvu, inflatsiooni ja töötuse määra kohta.
 Andmed koostab `R/prognoosid.R` failiks `docs/data/prognoosid.json`.
 
-* **IMF** laetakse automaatselt DataMapperi API-st (`NGDP_RPCH`, `PCPIPCH`, `LUR`). Kui arvud
-  muutuvad, loetakse avaldamise kuupäevaks muutuse päev. API rikke korral kasutatakse CSV varurida.
-* **Ülejäänud asutused** on failis `andmed/prognoosid.csv`, mida uuendatakse vormiga
+* Kõigi asutuste, ka IMF-i arvud on failis `andmed/prognoosid.csv`, mida uuendatakse vormiga
   (vt allpool). Kui asutus mõnda arvu ei avalda, jääb see lehel tühjaks, mitte hinnatuks.
+* IMF-i DataMapperi API keelab GitHub Actionsi päringud (HTTP 403), seetõttu IMF-i automaatselt
+  ei laadita. IMF avaldab World Economic Outlooki aprillis ja oktoobris (vahepealsed uuendused
+  jaanuaris ja juulis); arvud on DataMapperis (`imf.org/external/datamapper`, Eesti profiil).
 
 ### Prognoosi uuendamine vormiga
 

@@ -264,6 +264,14 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
   # ---- Valitsemissektori võlg (RR061) ja ettevõtete T&A (TD052) -------------
   lisa("volg_a", function() { d <- px_paring("RR061", valik(NAITAJA, "2"), valik("Aasta", "*")); seeria(d$Aasta, d$value, alates = 2010) }, c(0, 200))
   lisa("berd_a", function() { d <- px_paring("TD052", valik(NAITAJA, "BES_GDP_RD"), valik("Vaatlusperiood", "*")); seeria(d$Vaatlusperiood, d$value, alates = 2010) }, c(0, 10))
+  # T&A kulutuste osatähtsus SKP-s kokku (TD052) ning teadlased ja insenerid täistööaja
+  # ekvivalendis (TD01: kõik sektorid, mõlemad sood)
+  lisa("gerd_a", function() { d <- px_paring("TD052", valik(NAITAJA, "GDP_RD"), valik("Vaatlusperiood", "*")); seeria(d$Vaatlusperiood, d$value, alates = 2010) }, c(0, 10))
+  lisa("teadlased_a", function() {
+    d <- px_paring("TD01", valik(NAITAJA, "EMPLOYEES_FTE"), valik("Institutsionaalne sektor", "_T"),
+                   valik("Ametikoha liik", "RSE"), valik("Sugu", "_T"), valik("Vaatlusperiood", "*"))
+    seeria(d$Vaatlusperiood, d$value, alates = 2010)
+  }, c(500, 50000))
 
   # ---- Eurostat -------------------------------------------------------------
   lisa("fdi_q", function() eurostat_seeria("bop_iip6_q", list(

@@ -7,7 +7,6 @@ body:
       value: |
         **Uus kuupäev = uus prognoos:** asutuse senised arvud asendatakse täielikult. Tühjaks jäetud näitajat asutus siis ei avaldanud.
         **Sama kuupäev = parandus:** muudetakse ainult sisestatud aastaid, teised jäävad alles. Ühe aasta kustutamiseks kirjuta `2027: -`, terve näitaja kustutamiseks lahtrisse ainult `-`.
-        IMF-i prognoos tuleb automaatselt, seepärast seda siin ei ole.
   - type: dropdown
     id: asutus
     attributes:
@@ -16,6 +15,7 @@ body:
         - Rahandusministeerium
         - Eesti Pank
         - Euroopa Komisjon
+        - IMF
         - Swedbank
         - SEB
         - LHV
