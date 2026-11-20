@@ -638,6 +638,7 @@ function koostaGrupid(D, META) {
   // Majandususalduse alamindeksid: kuu, kvartali ja aasta keskmine
   const kindlF = (k) => ({ M: xy(Q(k)), Q: xy(koonda(Q(k), kvKey, 3, (v) => r1(mean(v))), { note: 'Kvartali kuude keskmine.' }),
     A: xy(koonda(S(k), aKey, 12, (v) => r1(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) });
+  const TA_MARKUS = 'Aastad, mida Statistikaamet pole veel avaldanud, on Eurostatist (võivad olla esialgsed).';
   const KINDL_MARKUS = 'Kuni Eurostati viimase avaldatud kuuni Eurostati sesoonselt korrigeeritud andmed; hilisemad kuud on Statistikaameti konjunktuuribaromeetrite kindlustunde indikaatorid, mis ei ole sesoonselt korrigeeritud. Seetõttu ja 2026. aastal vahetunud uuringu läbiviija tõttu võib aegreas olla katkestus.';
   const esiNote = 'Sesoonselt korrigeeritud. 2026. aastal vahetus konjunktuuribaromeetrite uuringu läbiviija, mistõttu võib aegreas olla katkestusi.' +
     (hinn.periods.length ? ` Eurostat pole pärast ${mmyy(lastO)} andmeid avaldanud. Katkendjoon: arvutatud Statistikaameti konjunktuuribaromeetritest (BAR01–BAR05) Euroopa Komisjoni metoodikaga.` : '');
@@ -760,9 +761,9 @@ function koostaGrupid(D, META) {
 
     { nr: '45', unitChip: '% SKP-st', kind: 'lines', unit: '%', dec: 2, head: 'level',
       F: { A: xy(S('gerd_a'), { series: [{ name: 'Kokku', y: S('gerd_a').values, c: '--s1' }, { name: 'Ettevõtlussektor', y: joonda(S('gerd_a').periods, S('berd_a')), c: '--s2' }] }) },
-      src: 'Statistikaamet TD052', url: SA('TD052'), note: 'Pealkirjas kõigi sektorite T&A kulutused kokku; teine joon on ettevõtlussektori osa (näitaja 7).' },
+      src: 'Statistikaamet TD052; Eurostat rd_e_gerdtot', url: SA('TD052'), note: 'Pealkirjas kõigi sektorite T&A kulutused kokku; teine joon on ettevõtlussektori osa (näitaja 7). ' + TA_MARKUS },
     { nr: '7', unitChip: '% SKP-st', kind: 'col', unit: '%', dec: 2, head: 'level',
-      F: { A: xy(S('berd_a')) }, src: 'Statistikaamet TD052', url: SA('TD052') },
+      F: { A: xy(S('berd_a')) }, src: 'Statistikaamet TD052; Eurostat rd_e_gerdtot', url: SA('TD052'), note: TA_MARKUS },
     { nr: '46', unitChip: 'täistööaja ekvivalent', kind: 'col', unit: '', dec: 0, head: 'levelpct',
       F: { A: xy(S('teadlased_a')) }, src: 'Statistikaamet TD01', url: SA('TD01'),
       note: 'Teadlased ja insenerid kõigis sektorites (ettevõtlus-, kõrgharidus-, riiklik ja kasumitaotluseta erasektor), täistööajale taandatuna.' },
