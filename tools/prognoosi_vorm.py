@@ -25,8 +25,7 @@ NAITAJAD = {
     "Töötuse määr": ("tootus", 1, 25),
 }
 NIMI = {kood: nimi for nimi, (kood, _, _) in NAITAJAD.items()}
-# IMF tuleb API-st automaatselt, seda vormiga ei muudeta
-ASUTUSED = ["Rahandusministeerium", "Eesti Pank", "Euroopa Komisjon", "Swedbank", "SEB", "LHV"]
+ASUTUSED = ["Rahandusministeerium", "Eesti Pank", "Euroopa Komisjon", "IMF", "Swedbank", "SEB", "LHV"]
 TYHI = {"", "_No response_", "None"}
 KUSTUTA = {"-", "–", "—"}
 

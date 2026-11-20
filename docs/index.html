@@ -481,7 +481,7 @@ const SEERIA_NAITAJA = {
   saast_a: ['26', '%'], ehitusload_q: ['27', ''],
   vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
   eluase_q: '29', autod_m: ['30', ''], krt_q_cur: ['31', ' mln €'], krt_a_cur: ['31', ' mln €'],
-  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
+  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], gerd_a: ['45', '%'], teadlased_a: ['46', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
   maksuvolg_arv_m: ['34', ''], maksuvolg_fi_m: ['34', ''], maksuvolg_ji_m: ['34', ''],
   maksuvolg_summa_m: ['35', ' mln €'],
 };
@@ -758,8 +758,14 @@ function koostaGrupid(D, META) {
       src: 'Euroopa Keskpank, MIR', url: 'https://data.ecb.europa.eu/data/datasets/MIR/MIR.M.EE.B.A2I.AM.R.A.2240.EUR.N',
       note: 'Mittefinantsettevõtete uute eurolaenude keskmine intressimäär (laenukulu koondnäitaja).' },
 
+    { nr: '45', unitChip: '% SKP-st', kind: 'lines', unit: '%', dec: 2, head: 'level',
+      F: { A: xy(S('gerd_a'), { series: [{ name: 'Kokku', y: S('gerd_a').values, c: '--s1' }, { name: 'Ettevõtlussektor', y: joonda(S('gerd_a').periods, S('berd_a')), c: '--s2' }] }) },
+      src: 'Statistikaamet TD052', url: SA('TD052'), note: 'Pealkirjas kõigi sektorite T&A kulutused kokku; teine joon on ettevõtlussektori osa (näitaja 7).' },
     { nr: '7', unitChip: '% SKP-st', kind: 'col', unit: '%', dec: 2, head: 'level',
       F: { A: xy(S('berd_a')) }, src: 'Statistikaamet TD052', url: SA('TD052') },
+    { nr: '46', unitChip: 'täistööaja ekvivalent', kind: 'col', unit: '', dec: 0, head: 'levelpct',
+      F: { A: xy(S('teadlased_a')) }, src: 'Statistikaamet TD01', url: SA('TD01'),
+      note: 'Teadlased ja insenerid kõigis sektorites (ettevõtlus-, kõrgharidus-, riiklik ja kasumitaotluseta erasektor), täistööajale taandatuna.' },
     { nr: '19', unitChip: '% ettevõtetest', kind: 'lines', unit: '%', head: 'level',
       F: { A: xy(S('ai_a_ee'), { series: [{ name: 'Eesti', y: S('ai_a_ee').values, c: '--s1' }, { name: 'EL-27', y: joonda(S('ai_a_ee').periods, S('ai_a_eu')), c: '--peer' }] }) },
       src: 'Eurostat isoc_eb_ai', url: 'https://ec.europa.eu/eurostat/databrowser/product/page/isoc_eb_ai', note: 'Vähemalt 10 hõivatuga ettevõtted, mis kasutavad vähemalt üht tehisintellekti tehnoloogiat.' },
