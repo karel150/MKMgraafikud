@@ -206,6 +206,8 @@ koosta_vordlus <- function(icu = NULL) {
   andmestik("ulc_a",   "nama_10_lp_ulc", A_(na_item = "NULC_HW", unit = "PCH_PRE"), YOY)
   # 7 ettevõtlussektori T&A, % SKP-st
   andmestik("berd_a", "rd_e_gerdtot", A_(sectperf = "BES", unit = "PC_GDP"), c(0, 10))
+  # 45 T&A kulutused kokku (kõik sektorid), % SKP-st
+  andmestik("gerd_a", "rd_e_gerdtot", A_(sectperf = "TOTAL", unit = "PC_GDP"), c(0, 10))
   # 11 palgad: tööjõukulu indeksi palgaosa (D11), aastamuutus
   andmestik("lci_q", "lc_lci_r2_q", Q_(lcstruct = "D11", nace_r2 = "B-S", s_adj = "SCA", unit = "PCH_SM"), YOY)
   # 14 töötuse määr 15-74 (kuu: age TOTAL = 15-74)
