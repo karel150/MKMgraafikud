@@ -21,12 +21,31 @@ PROGN_IMF_SAGEDUS <- 7   # päeva: nii tihti küsitakse IMF-ilt uusi arve
 PROGN_IMF_HOIATUS <- 14  # päeva: nii kaua võib laadimine ebaõnnestuda ilma hoiatuseta
 PROGN_VAHEMIK <- list(skp = c(-15, 15), inflatsioon = c(-5, 30), tootus = c(1, 25))
 
+# IMF DataMapperi API. Dokumentatsiooni järgi on kehtiv versioon v2; v1 on varuks.
+PROGN_IMF_API <- c("https://www.imf.org/external/datamapper/api/v2/",
+                   "https://www.imf.org/external/datamapper/api/v1/")
+
+# Üks näitaja: proovitakse API versioone järjest, esimene õnnestunud vastus jääb
+imf_paring <- function(naitaja, aastad) {
+  vead <- character()
+  for (api in PROGN_IMF_API) {
+    v <- tryCatch(http_json(paste0(api, naitaja, "/EST"), list(periods = paste(aastad, collapse = ",")), katseid = 2),
+                  error = function(e) { vead <<- c(vead, paste0(basename(api), ": ", conditionMessage(e))); NULL })
+    if (is.null(v)) next
+    x <- v$values[[naitaja]]$EST
+    if (!is.null(x) && length(x)) {
+      if (api != PROGN_IMF_API[1]) message("IMF: ", naitaja, " laaditi varuaadressilt ", api)
+      return(x)
+    }
+    vead <- c(vead, paste0(basename(api), ": vastuses puudub ", naitaja, " (väljad: ", paste(names(v), collapse = ", "), ")"))
+  }
+  stop(paste(vead, collapse = "; "))
+}
+
 # IMF-i World Economic Outlooki arvud Eesti kohta: data.frame(aasta, naitaja, vaartus)
 imf_prognoos <- function(aastad) {
   osad <- lapply(names(PROGN_IMF), function(n) {
-    v <- http_json(paste0("https://www.imf.org/external/datamapper/api/v1/", PROGN_IMF[[n]], "/EST"),
-                   list(periods = paste(aastad, collapse = ",")))
-    x <- v$values[[PROGN_IMF[[n]]]]$EST
+    x <- imf_paring(PROGN_IMF[[n]], aastad)
     if (is.null(x) || !length(x)) stop("IMF-i vastuses puudub ", PROGN_IMF[[n]])
     d <- data.frame(aasta = as.integer(names(x)), naitaja = n, vaartus = as.numeric(unlist(x)))
     d <- d[d$aasta %in% aastad & !is.na(d$vaartus), ]
@@ -36,6 +55,9 @@ imf_prognoos <- function(aastad) {
   })
   d <- do.call(rbind, osad)
   if (!nrow(d) || !any(d$naitaja == "skp")) stop("IMF-i vastuses pole majanduskasvu prognoosi")
+  # Logisse WEO väljaanne, millest arvud pärinevad (nt „World Economic Outlook (October 2026)“)
+  ind <- tryCatch(http_json(paste0(PROGN_IMF_API[1], "indicators"), katseid = 1)$indicators$NGDP_RPCH, error = function(e) NULL)
+  if (!is.null(ind$source)) message("IMF: allikas ", ind$source, ", muudetud ", ind$`last-modified`)
   d
 }
 
