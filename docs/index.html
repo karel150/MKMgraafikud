@@ -1627,6 +1627,8 @@ function koostaVordlus(V, META) {
     { nr: '39', nimi: 'Laevakülastused sadamates', unitChip: 'muutus aasta varem, %', kind: 'lines', unit: '%', head: 'vrd', F: summaF('sadam_laevu_m_'),
       src: 'UN Global Platform; IMF PortWatch', url: 'https://portwatch.imf.org/',
       note: 'Kaubalaevade külastused riigi sadamates kokku, muutus aasta varasemaga.' },
+    { nr: '45', unitChip: '% SKP-st', kind: 'lines', unit: '%', dec: 2, head: 'vrd', F: { A: riigid((g) => S('gerd_a_' + g)) },
+      src: 'Eurostat rd_e_gerdtot', url: EUSTAT('rd_e_gerdtot'), note: 'Kõigi sektorite T&A kulutused kokku.' },
     { nr: '7', unitChip: '% SKP-st', kind: 'lines', unit: '%', dec: 2, head: 'vrd', F: { A: riigid((g) => S('berd_a_' + g)) },
       src: 'Eurostat rd_e_gerdtot', url: EUSTAT('rd_e_gerdtot') },
     { nr: '8', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'vrd', pm: true,
