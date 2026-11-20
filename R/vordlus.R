@@ -9,6 +9,9 @@
 # =============================================================================
 
 VORDLUS_RIIGID <- c("EE", "LV", "LT", "FI", "SE")
+# Lisaks riikidele EL-27 koondnäitaja, kus see on olemas (Eurostati andmestikud). Kui
+# andmestikus EL-27 rida pole, jäetakse see vaikselt välja.
+VORDLUS_GEOS <- c(VORDLUS_RIIGID, "EU27_2020")
 
 # Üks Eurostati päring mitme riigi kohta -> nimega list seeriatest (NULL, kui riigil andmeid pole)
 eurostat_riigid <- function(id, filters, geos = VORDLUS_RIIGID, vali = NULL) {
@@ -99,7 +102,7 @@ koosta_vordlus <- function(icu = NULL) {
   # kehtib tavaline kontroll ja hoiatus.
   # varu: list(list(id =, filters =), ...) proovitakse järjest, kui põhipäring ebaõnnestub
   # (nt Eurostat muutis andmestiku koodi või klassifikaatorit).
-  andmestik <- function(nimi, id, filters, vahemik, geos = VORDLUS_RIIGID, vali = NULL, varu = list(), fn = NULL) {
+  andmestik <- function(nimi, id, filters, vahemik, geos = VORDLUS_GEOS, vali = NULL, varu = list(), fn = NULL) {
     if (!is.null(fn)) varu <- c(list(list(fn = fn)), varu)
     cache <- NULL; viga <- NULL
     lae <- function() {
@@ -143,9 +146,10 @@ koosta_vordlus <- function(icu = NULL) {
   # 13 Majandususaldus (ESI), SA
   andmestik("esi_m", "ei_bssi_m_r2", list(indic = "BS-ESI-I", s_adj = "SA", freq = "M"), c(30, 170))
   # 6 Otseinvesteeringute kohustiste positsioon, mln €, ja nominaalne SKP (suhte jaoks)
+  # EL-27 jäetakse välja: EL-i koondpositsioon on EL-väline, mitte riikide summa, seega ei ole võrreldav
   andmestik("fdi_q", "bop_iip6_q", list(currency = "MIO_EUR", bop_item = "FA__D__F", sector10 = "S1", sectpart = "S1",
-                                        stk_flow = "L_LE", partner = "WRL_REST", freq = "Q"), c(1, 1e7))
-  andmestik("skp_q", "namq_10_gdp", list(na_item = "B1GQ", unit = "CP_MEUR", s_adj = "NSA", freq = "Q"), c(1, 1e7))
+                                        stk_flow = "L_LE", partner = "WRL_REST", freq = "Q"), c(1, 1e7), geos = VORDLUS_RIIGID)
+  andmestik("skp_q", "namq_10_gdp", list(na_item = "B1GQ", unit = "CP_MEUR", s_adj = "NSA", freq = "Q"), c(1, 1e7), geos = VORDLUS_RIIGID)
   # 10 Elektri hind mittekodutarbijatele, ilma maksudeta, €/kWh
   andmestik("elekter_h", "nrg_pc_205", list(nrg_cons = "TOT_KWH", tax = "X_TAX", currency = "EUR", unit = "KWH"), c(0, 2))
   # 26 Kodumajapidamiste brutosäästu määr, %
@@ -153,7 +157,7 @@ koosta_vordlus <- function(icu = NULL) {
   andmestik("saast_a", "nasa_10_ki", list(na_item = "SRG_S14_S15", unit = "PC", freq = "A"), c(-50, 60))
   # 19 Tehisintellekti kasutavad ettevõtted (>= 10 hõivatut), %; lisaks EL-27
   andmestik("ai_a", "isoc_eb_ai", list(indic_is = "E_AI_TANY", size_emp = "GE10", unit = "PC_ENT", freq = "A"), c(0, 100),
-            geos = c(VORDLUS_RIIGID, "EU27_2020"), vali = list(nace_r2 = "C10-S951_X_K"))
+            vali = list(nace_r2 = "C10-S951_X_K"))
 
   YOY <- c(-80, 150)
   IDX <- c(1, 1000)
@@ -194,7 +198,8 @@ koosta_vordlus <- function(icu = NULL) {
   andmestik("tootl_q", "namq_10_lp_ulc", Q_(na_item = "RLPR_HW", unit = "PCH_SM", s_adj = "SCA"), YOY)
   andmestik("tootl_a", "nama_10_lp_ulc", A_(na_item = "RLPR_HW", unit = "PCH_PRE"), YOY)
   # 36 tootlikkus hõivatu kohta, % EL-27 keskmisest (ostujõu standardis)
-  andmestik("tootl_el_a", "nama_10_lp_ulc", A_(na_item = "NLPR_PER", unit = "PC_EU27_2020_MPPS_CP"), c(10, 300))
+  andmestik("tootl_el_a", "nama_10_lp_ulc", A_(na_item = "NLPR_PER", unit = "PC_EU27_2020_MPPS_CP"), c(10, 300),
+            geos = VORDLUS_RIIGID)   # EL-27 = 100 on graafikul niigi võrdlusjoonena
   andmestik("ulc_q",   "namq_10_lp_ulc", Q_(na_item = "NULC_HW", unit = "PCH_SM", s_adj = "SCA"), YOY)
   andmestik("ulc_a",   "nama_10_lp_ulc", A_(na_item = "NULC_HW", unit = "PCH_PRE"), YOY)
   # 7 ettevõtlussektori T&A, % SKP-st
