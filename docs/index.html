@@ -638,7 +638,7 @@ function koostaGrupid(D, META) {
   // Majandususalduse alamindeksid: kuu, kvartali ja aasta keskmine
   const kindlF = (k) => ({ M: xy(Q(k)), Q: xy(koonda(Q(k), kvKey, 3, (v) => r1(mean(v))), { note: 'Kvartali kuude keskmine.' }),
     A: xy(koonda(S(k), aKey, 12, (v) => r1(mean(v))), { note: 'Aasta kuude keskmine. Poolikut aastat ei näidata.' }) });
-  const KINDL_MARKUS = 'Eurostati avaldatud kuud on sesoonselt korrigeeritud; hilisemad kuud on Statistikaameti konjunktuuribaromeetrite kindlustunde indikaatorid. 2026. aastal vahetus uuringu läbiviija, mistõttu võib aegreas olla katkestusi.';
+  const KINDL_MARKUS = 'Kuni Eurostati viimase avaldatud kuuni Eurostati sesoonselt korrigeeritud andmed; hilisemad kuud on Statistikaameti konjunktuuribaromeetrite kindlustunde indikaatorid, mis ei ole sesoonselt korrigeeritud. Seetõttu ja 2026. aastal vahetunud uuringu läbiviija tõttu võib aegreas olla katkestus.';
   const esiNote = 'Sesoonselt korrigeeritud. 2026. aastal vahetus konjunktuuribaromeetrite uuringu läbiviija, mistõttu võib aegreas olla katkestusi.' +
     (hinn.periods.length ? ` Eurostat pole pärast ${mmyy(lastO)} andmeid avaldanud. Katkendjoon: arvutatud Statistikaameti konjunktuuribaromeetritest (BAR01–BAR05) Euroopa Komisjoni metoodikaga.` : '');
   // ---- 16: vabad ametikohad -------------------------------------------------------
@@ -1515,7 +1515,9 @@ function koostaVordlus(V, META) {
   const joonda = (per, s) => per.map((p) => { const i = s.periods.indexOf(p); return i < 0 ? null : s.values[i]; });
   const kaart = (s, f) => ({ periods: s.periods, values: s.values.map(f) });
   // f(riik) -> seeria; tulemuseks mitme joonega graafik, y = Eesti (pealkirja jaoks)
+  // EL-27 lisatakse igale võrdlusele automaatselt, kui selle rida on andmetes (järjestuses ei osale)
   const riigid = (f, extra = {}, lisa = []) => {
+    if (!lisa.some((r) => r.name === 'EL-27')) lisa = lisa.concat([{ name: 'EL-27', c: '--peer', s: f('EU27_2020') }]);
     const rows = RIIGID.map(([g, name, c]) => ({ g, name, c, s: f(g) })).filter((r) => r.s.periods.length);
     if (!rows.length || rows[0].g !== 'EE') return { x: [], y: [] };
     const per = [...new Set(rows.flatMap((r) => r.s.periods).concat(lisa.flatMap((r) => r.s.periods)))].sort();
