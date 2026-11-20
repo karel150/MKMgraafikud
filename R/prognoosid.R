@@ -4,8 +4,9 @@
 # Asutuste viimased prognoosid Eesti majanduskasvu, inflatsiooni ja töötuse
 # määra kohta. Enamikul asutustel masinloetavat allikat ei ole, nii et nende
 # arvud on käsitsi failis andmed/prognoosid.csv (uue prognoosi ilmudes
-# asendatakse selle asutuse read). IMF-i arvud laetakse DataMapperi API-st;
-# kui see ei õnnestu, jäävad kehtima CSV varuread.
+# asendatakse selle asutuse read). IMF-i arvud laetakse DataMapperi API-st
+# kord nädalas (vt PROGN_IMF_SAGEDUS). Kui laadimine ei õnnestu, jäävad eelmise
+# laadimise arvud ja kui neid pole, siis CSV varuread.
 # =============================================================================
 
 PROGN_CSV <- "andmed/prognoosid.csv"
@@ -16,6 +17,8 @@ PROGN_NAITAJAD <- list(
   list(id = "tootus", nimi = "Töötuse määr", kirjeldus = "Töötute osakaal tööjõus, %")
 )
 PROGN_IMF <- c(skp = "NGDP_RPCH", inflatsioon = "PCPIPCH", tootus = "LUR")
+PROGN_IMF_SAGEDUS <- 7   # päeva: nii tihti küsitakse IMF-ilt uusi arve
+PROGN_IMF_HOIATUS <- 14  # päeva: nii kaua võib laadimine ebaõnnestuda ilma hoiatuseta
 PROGN_VAHEMIK <- list(skp = c(-15, 15), inflatsioon = c(-5, 30), tootus = c(1, 25))
 
 # IMF-i World Economic Outlooki arvud Eesti kohta: data.frame(aasta, naitaja, vaartus)
@@ -36,6 +39,29 @@ imf_prognoos <- function(aastad) {
   d
 }
 
+# Eelmise faili automaatselt laaditud IMF-i arvud samade aastate kohta:
+# list(d = data.frame(aasta, naitaja, vaartus), avaldatud, laaditud) või NULL
+vana_imf <- function(vana, aastad) {
+  a <- vana$asutused
+  if (!is.data.frame(a) || !("automaatne" %in% names(a)) || !identical(as.integer(vana$aastad), as.integer(aastad)))
+    return(NULL)
+  i <- which(a$asutus == "IMF" & a$automaatne %in% TRUE)
+  if (!length(i)) return(NULL)
+  i <- i[1]
+  d <- do.call(rbind, lapply(names(PROGN_IMF), function(n) {
+    vv <- a$vaartused[[n]]
+    if (!is.data.frame(vv)) return(NULL)
+    do.call(rbind, lapply(intersect(as.character(aastad), names(vv)), function(y) {
+      x <- vv[[y]][i]
+      if (is.null(x) || is.na(x)) NULL else data.frame(aasta = as.integer(y), naitaja = n, vaartus = as.numeric(x))
+    }))
+  }))
+  if (is.null(d) || !any(d$naitaja == "skp")) return(NULL)
+  laaditud <- if ("laaditud" %in% names(a)) as.Date(a$laaditud[i], optional = TRUE) else as.Date(NA)
+  if (!length(laaditud)) laaditud <- as.Date(NA)
+  list(d = d, avaldatud = a$avaldatud[i], laaditud = laaditud)
+}
+
 koosta_prognoosid <- function() {
   d <- utils::read.csv(PROGN_CSV, encoding = "UTF-8", stringsAsFactors = FALSE,
                        colClasses = c(aasta = "integer", vaartus = "numeric"))
@@ -51,23 +77,44 @@ koosta_prognoosid <- function() {
 
   # IMF automaatselt. Avaldamise kuupäeva API ei anna: kui arvud muutuvad,
   # loetakse uueks avaldamiseks muutuse päev, muidu jääb eelmise faili kuupäev.
-  vana <- loe_json("prognoosid.json")
-  imf <- tryCatch(imf_prognoos(aastad), error = function(e) {
-    hoiata("IMF-i prognoos: ", conditionMessage(e), ". Kasutatakse CSV varuridu."); NULL })
+  # WEO arvud muutuvad paar korda aastas, seetõttu küsitakse IMF-ilt uuesti alles
+  # siis, kui viimane õnnestunud laadimine on vähemalt PROGN_IMF_SAGEDUS päeva vana.
+  # Vahepeal ja ühekordse vea korral jäävad eelmise laadimise arvud; hoiatus tuleb
+  # alles siis, kui laadimine pole õnnestunud PROGN_IMF_HOIATUS päeva jooksul.
+  vana <- vana_imf(loe_json("prognoosid.json"), aastad)
+  vanus <- if (is.null(vana) || is.na(vana$laaditud)) Inf else as.numeric(Sys.Date() - vana$laaditud)
+  imf <- NULL; laaditud <- NA
+  if (vanus < PROGN_IMF_SAGEDUS) {
+    message("IMF: kasutatakse ", format(vana$laaditud), " laaditud arve (uus päring alates ",
+            format(vana$laaditud + PROGN_IMF_SAGEDUS), ").")
+    imf <- vana$d; laaditud <- vana$laaditud
+  } else {
+    imf <- tryCatch(imf_prognoos(aastad), error = function(e) e)
+    if (inherits(imf, "error")) {
+      viga <- conditionMessage(imf); imf <- NULL
+      if (is.null(vana)) {
+        hoiata("IMF-i prognoos: ", viga, ". Kasutatakse CSV varuridu.")
+      } else {
+        teade <- paste0("IMF-i prognoos: ", viga, ". Jäävad ",
+                        if (is.na(vana$laaditud)) "eelmise" else format(vana$laaditud), " laaditud arvud.")
+        if (vanus < PROGN_IMF_HOIATUS) message(teade) else hoiata(teade)
+        imf <- vana$d; laaditud <- vana$laaditud
+      }
+    } else {
+      laaditud <- Sys.Date()
+    }
+  }
   if (!is.null(imf)) {
     varu <- d[d$asutus == "IMF", ][1, ]
     message("IMF: ", paste(sprintf("%s %d = %.1f", imf$naitaja, imf$aasta, imf$vaartus), collapse = "; "))
     # Võrreldakse ainult eelmise automaatse laadimisega; CSV varurea järel kehtib CSV kuupäev
-    vanaImf <- if (is.data.frame(vana$asutused) && isTRUE("automaatne" %in% names(vana$asutused)))
-      which(vana$asutused$asutus == "IMF" & vana$asutused$automaatne %in% TRUE) else integer()
     kuup <- varu$avaldatud
-    if (length(vanaImf)) {
-      vv <- vana$asutused$vaartused[vanaImf[1], , drop = FALSE]
-      sama <- all(vapply(seq_len(nrow(imf)), function(i) {
-        x <- tryCatch(vv[[imf$naitaja[i]]][[as.character(imf$aasta[i])]], error = function(e) NULL)
-        !is.null(x) && length(x) == 1 && !is.na(x) && abs(x - imf$vaartus[i]) < 0.05
+    if (!is.null(vana)) {
+      sama <- nrow(imf) == nrow(vana$d) && all(vapply(seq_len(nrow(imf)), function(i) {
+        x <- vana$d$vaartus[vana$d$naitaja == imf$naitaja[i] & vana$d$aasta == imf$aasta[i]]
+        length(x) == 1 && abs(x - imf$vaartus[i]) < 0.05
       }, logical(1)))
-      kuup <- if (sama) vana$asutused$avaldatud[vanaImf[1]] else format(Sys.Date(), "%Y-%m-%d")
+      kuup <- if (sama) vana$avaldatud else format(Sys.Date(), "%Y-%m-%d")
     }
     d <- rbind(d[d$asutus != "IMF", ],
                data.frame(asutus = "IMF", prognoos = varu$prognoos, avaldatud = kuup, aasta = imf$aasta,
@@ -89,6 +136,9 @@ koosta_prognoosid <- function() {
          markus = if (length(m)) paste(m, collapse = " ") else NULL,
          vaartused = vaartused)
   })
+  # Viimase õnnestunud IMF-i päringu kuupäev, et järgmine jooks teaks, kas küsida uuesti
+  i <- which(jarjekord == "IMF")
+  if (length(i) && !is.null(imf) && !is.na(laaditud)) asutused[[i]]$laaditud <- format(laaditud)
   if (length(asutused) < 2) stop("prognoose on liiga vähe")
 
   list(uuendatud = aeg_utc(), aastad = aastad, naitajad = PROGN_NAITAJAD, asutused = asutused)
