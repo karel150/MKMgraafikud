@@ -1,5 +1,5 @@
 {
- "uuendatud": "2026-11-20T10:06:09.234Z",
+ "uuendatud": "2026-11-21T10:17:59.584Z",
  "mudel": "claude-sonnet-5-5",
  "tekstid": {
   "yldine": {
@@ -27,14 +27,14 @@
   },
   "vordlus_M": {
    "laused": [
-    "Eesti on võrdlusriikide seas enamasti keskmikus, kuid hinnatõus ja laenukulu on kõrged ning tööstuse kasv jääb teistest maha.",
-    "Tarbijahinnad tõusid oktoobris Eestis 3,6%, kiiremini kui kolmes teises riigis, ainult Leedus oli hinnatõus 6,1%.",
-    "Ettevõtete uute laenude intressimäär oli septembris 4,71%, mis on kõrgem kui euroala keskmine 3,90%.",
-    "Töötuse määr 8,0% jääb viie riigi seas keskele, Soomes on see 11,0%, töötleva tööstuse kasv aga on neljandal kohal."
+    "Eesti jääb võrdlusriikide seas pigem keskele või taha, selget eesliini ta neis näitajates ei hoia.",
+    "Majanduskasv oli aastaga 2,2%, mis on nelja riigi seas kolmas koht, ning tööstustoodangu kasv jäi viie riigi seas neljandaks.",
+    "Tarbijahinnad tõusid 3,6%, mis on viiest riigist teine koht ja tähendab kiiremat hinnakasvu.",
+    "Ettevõtete uute laenude intress 4,71% on euroala keskmisest 3,90% kõrgem, töötuse määr aga viie riigi seas kolmandal kohal ning kõrgeim Soomes."
    ],
-   "rohk": "enamasti keskmikus",
-   "rasi": "573a60f17845e24b",
-   "aeg": "2026-11-20"
+   "rohk": "pigem keskele või taha",
+   "rasi": "93ab777eab701061",
+   "aeg": "2026-11-21"
   },
   "vordlus_Q": {
    "laused": [
