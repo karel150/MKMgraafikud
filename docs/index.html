@@ -478,7 +478,7 @@ const SEERIA_NAITAJA = {
   jaem_m_idx: '20b', jaem_m_eur: ['20b', ' mln €'],
   hoive_q_1574: ['21', '%'], hoive_q_2064: ['21', '%'], mitteakt_q: ['22', '%'],
   ppi_m_kokku: '23', ppi_m_c: '23', ppi_a_kokku: '23', ppi_a_c: '23',
-  saast_a: ['26', '%'], ehitusload_q: ['27', ''],
+  saast_a: ['26', '%'], ehitusload_q: ['27', ''], kasutusload_q: ['47', ''], mitteelamud_ehitus_q: ['48', ' tuh m²'], mitteelamud_kasutus_q: ['48', ' tuh m²'],
   vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
   eluase_q: '29', autod_m: ['30', ''], krt_q_cur: ['31', ' mln €'], krt_a_cur: ['31', ' mln €'],
   laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], gerd_a: ['45', '%'], teadlased_a: ['46', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
@@ -672,6 +672,12 @@ function koostaGrupid(D, META) {
   };
   // ---- 27, 28, 30: kogused -------------------------------------------------------------
   const ehQ = S('ehitusload_q'); const ehA = koonda(ehQ, aKey, 4, sum);
+  const kaQ = S('kasutusload_q'); const kaA = koonda(kaQ, aKey, 4, sum);
+  // Mitteelamud: pealkirjas ehitusloa saanud pind, joontena ehitus- ja kasutusload
+  const mitteF = (kooS, extra = {}) => {
+    const e = kooS(S('mitteelamud_ehitus_q')), k = kooS(S('mitteelamud_kasutus_q'));
+    return xy(e, { series: [{ name: 'Ehitusluba', y: e.values, c: '--s1' }, { name: 'Kasutusluba', y: joonda(e.periods, k), c: '--s2' }], ...extra });
+  };
   const veduQ = sumS(S('vedu_q_riigisis'), S('vedu_q_rahvusv')), veduA = sumS(S('vedu_a_riigisis'), S('vedu_a_rahvusv'));
   const autoM = S('autod_m'); const autoQ = kuuKv(autoM); const autoA = koonda(autoM, aKey, 12, sum);
   // ---- 29: eluaseme hinnad --------------------------------------------------------------
@@ -719,6 +725,12 @@ function koostaGrupid(D, META) {
     { nr: '27', unitChip: 'eluruumide arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
       F: { Q: xy(alates(ehQ, ALGUS)), A: xy(ehA) },
       src: 'Statistikaamet EH04', url: SA('EH04'), note: 'Uusehitus. Aasta väärtus on kvartalite summa.' },
+    { nr: '47', unitChip: 'eluruumide arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
+      F: { Q: xy(alates(kaQ, ALGUS)), A: xy(kaA) },
+      src: 'Statistikaamet EH04', url: SA('EH04'), note: 'Uusehitus. Aasta väärtus on kvartalite summa.' },
+    { nr: '48', unitChip: 'suletud netopind, tuhat m²', kind: 'lines', unit: '', dec: 0, head: 'levelpct',
+      F: { Q: mitteF((s) => alates(s, ALGUS)), A: mitteF((s) => koonda(s, aKey, 4, sum), { note: 'Aasta väärtus on kvartalite summa.' }) },
+      src: 'Statistikaamet EH044', url: SA('EH044'), note: 'Uusehitus. Pealkirjas ehitusloa saanud mitteelamute pind; teine joon on kasutusse lubatud pind.' },
     { nr: '28', unitChip: 'tuhat tonni', kind: 'lines', unit: '', dec: 0, head: 'levelpct',
       F: { Q: xy(alates(veduQ, ALGUS), { series: [{ name: 'Riigisisene', y: joonda(alates(veduQ, ALGUS).periods, S('vedu_q_riigisis')), c: '--s1' }, { name: 'Rahvusvaheline', y: joonda(alates(veduQ, ALGUS).periods, S('vedu_q_rahvusv')), c: '--s2' }] }),
            A: xy(veduA, { series: [{ name: 'Riigisisene', y: joonda(veduA.periods, S('vedu_a_riigisis')), c: '--s1' }, { name: 'Rahvusvaheline', y: joonda(veduA.periods, S('vedu_a_rahvusv')), c: '--s2' }] }) },

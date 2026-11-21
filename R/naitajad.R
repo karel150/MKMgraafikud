@@ -235,11 +235,23 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     lisa(paste0("panus_a_", kood), function() { d <- aa(pan()); d <- d[d[[TK]] == kood, ]; seeria(d$Aasta, d$value) }, c(-30, 30))
   })
 
-  # ---- Ehitusloa saanud eluruumid (EH04) ---------------------------------------
+  # ---- Ehitus- ja kasutusload (uusehitus, kvartalid) ----------------------------
+  # Eluruumide arv (EH04) ning mitteelamute suletud netopind, tuhat m² (EH044)
   lisa("ehitusload_q", function() {
     d <- px_paring("EH04", valik(NAITAJA, "PNUM"), valik("Loa/teatise liik", "BPERMIT"), valik("Vaatlusperiood", "*"))
     seeria(d$Vaatlusperiood, d$value)
   }, c(0, 1e5))
+  lisa("kasutusload_q", function() {
+    d <- px_paring("EH04", valik(NAITAJA, "PNUM"), valik("Loa/teatise liik", "CCOMPL"), valik("Vaatlusperiood", "*"))
+    seeria(d$Vaatlusperiood, d$value)
+  }, c(0, 1e5))
+  for (k in list(c("mitteelamud_ehitus_q", "BPERMIT"), c("mitteelamud_kasutus_q", "CCOMPL"))) local({
+    liik <- k[2]
+    lisa(k[1], function() {
+      d <- px_paring("EH044", valik(NAITAJA, "NRBAREA"), valik("Loa/teatise liik", liik), valik("Vaatlusperiood", "*"))
+      seeria(d$Vaatlusperiood, d$value)
+    }, c(0, 1e4))
+  })
 
   # ---- Maanteekaubavedu (TS54): veosed, tuhat tonni ---------------------------
   ts <- mitu(function() px_paring("TS54", valik("Aasta", "*"), valik(NAITAJA, "1"), valik("Kvartal", c("1", RN)), valik("Veo liik", c("2", "3"))))
