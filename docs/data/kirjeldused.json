@@ -350,6 +350,20 @@
    "nimi": "Teadlased ja insenerid täistööaja ekvivalendis",
    "kirjeldus": "Teadus- ja arendustegevusega hõivatud teadlaste ja inseneride arv kõigis sektorites, taandatuna täistööajale (osalise koormusega töötajad arvestatakse koormuse järgi)",
    "miks": "Näitab teadus- ja arendustegevuse inimressurssi; teadmistepõhise majanduse kasvuvõime eeldus"
+  },
+  "47": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": false,
+   "nimi": "Kasutusse lubatud eluruumide arv",
+   "kirjeldus": "Uute eluruumide arv, millele on väljastatud kasutusluba ehk mis on valmis ja kasutusse lubatud",
+   "miks": "Näitab, kui palju uusi eluasemeid tegelikult turule jõuab; koos ehituslubadega näitab elamuehituse tsüklit kavandamisest valmimiseni"
+  },
+  "48": {
+   "valdkond": "Majanduskasv, tootmine ja tarbimine",
+   "peamine": false,
+   "nimi": "Mitteelamute ehitus- ja kasutusload",
+   "kirjeldus": "Uute mitteelamute (äri-, tootmis-, lao-, büroo- ja muud hooned) suletud netopind tuhandetes ruutmeetrites, millele on väljastatud ehitusluba või kasutusluba",
+   "miks": "Ehituslubade pind on ettevõtete ehitusinvesteeringute varajane signaal; kasutuslubade pind näitab valminud mahtu"
   }
  }
 }
