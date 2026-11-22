@@ -364,6 +364,20 @@
    "nimi": "Mitteelamute ehitus- ja kasutusload",
    "kirjeldus": "Uute mitteelamute (äri-, tootmis-, lao-, büroo- ja muud hooned) suletud netopind tuhandetes ruutmeetrites, millele on väljastatud ehitusluba või kasutusluba",
    "miks": "Ehituslubade pind on ettevõtete ehitusinvesteeringute varajane signaal; kasutuslubade pind näitab valminud mahtu"
+  },
+  "49": {
+   "valdkond": "Rahvastik",
+   "peamine": true,
+   "nimi": "Elussünnid",
+   "kirjeldus": "Elussündide arv kuus Statistikaameti esialgsete registreerimisandmete järgi (sünni registreerimise kuu, kogu Eesti)",
+   "miks": "Sündide arv mõjutab pikas plaanis tööjõu pakkumist, haridus- ja sotsiaalkulusid ning rahvastiku vananemist; kuuandmed näitavad muutust kiiresti"
+  },
+  "50": {
+   "valdkond": "Rahvastik",
+   "peamine": false,
+   "nimi": "Summaarne sündimuskordaja",
+   "kirjeldus": "Keskmine laste arv, kelle naine sünnitaks oma elu jooksul, kui vanuserühmade sündimuskordajad püsiksid aasta tasemel",
+   "miks": "Rahvastiku taastootmise põhinäitaja, mis ei sõltu vanusstruktuurist; taastetase on umbes 2,1 last naise kohta"
   }
  }
 }

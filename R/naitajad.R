@@ -235,6 +235,20 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     lisa(paste0("panus_a_", kood), function() { d <- aa(pan()); d <- d[d[[TK]] == kood, ]; seeria(d$Aasta, d$value) }, c(-30, 30))
   })
 
+  # ---- Sündimus -------------------------------------------------------------------
+  # Elussünnid registreerimiskuu järgi, esialgsed andmed (RV061, kogu Eesti); avaldamata
+  # kuud tulevad tühjana või nullina ja jäetakse välja
+  lisa("synnid_m", function() {
+    d <- px_paring("RV061", valik("Aasta", "*"), valik("Maakond", "00"), valik(NAITAJA, "1"), valik("Registreerimiskuu", "*"))
+    d <- d[!is.na(d$value) & d$value > 0, ]
+    seeria(per_m(d$Aasta, d$Registreerimiskuu), d$value, alates = 2010)
+  }, c(100, 5000))
+  # Summaarne sündimuskordaja (RV033)
+  lisa("sundimus_a", function() {
+    d <- px_paring("RV033", valik("Aasta", "*"), valik(NAITAJA, "1"))
+    seeria(d$Aasta, d$value, alates = 2000)
+  }, c(0.5, 4))
+
   # ---- Ehitus- ja kasutusload (uusehitus, kvartalid) ----------------------------
   # Eluruumide arv (EH04) ning mitteelamute suletud netopind, tuhat m² (EH044)
   lisa("ehitusload_q", function() {

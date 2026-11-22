@@ -478,7 +478,7 @@ const SEERIA_NAITAJA = {
   jaem_m_idx: '20b', jaem_m_eur: ['20b', ' mln €'],
   hoive_q_1574: ['21', '%'], hoive_q_2064: ['21', '%'], mitteakt_q: ['22', '%'],
   ppi_m_kokku: '23', ppi_m_c: '23', ppi_a_kokku: '23', ppi_a_c: '23',
-  saast_a: ['26', '%'], ehitusload_q: ['27', ''], kasutusload_q: ['47', ''], mitteelamud_ehitus_q: ['48', ' tuh m²'], mitteelamud_kasutus_q: ['48', ' tuh m²'],
+  saast_a: ['26', '%'], ehitusload_q: ['27', ''], kasutusload_q: ['47', ''], synnid_m: ['49', ''], sundimus_a: ['50', ''], mitteelamud_ehitus_q: ['48', ' tuh m²'], mitteelamud_kasutus_q: ['48', ' tuh m²'],
   vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
   eluase_q: '29', autod_m: ['30', ''], krt_q_cur: ['31', ' mln €'], krt_a_cur: ['31', ' mln €'],
   laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], gerd_a: ['45', '%'], teadlased_a: ['46', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
@@ -501,7 +501,7 @@ function aiVoiVaru(votme, varu, silt) {
 }
 // Valdkonnad indikaatorite tabeli järjekorras (mõlemal graafikute vahekaardil)
 const VALDKONNAD = ['Majanduskasv, tootmine ja tarbimine', 'Väliskaubandus', 'Investeeringud ja kapital', 'Teadmised ja tehnoloogia',
-  'Tootlikkus ja kulud', 'Hinnad ja ostujõud', 'Energia ja kulud', 'Tööturg ja palgad', 'Kindlustunne ja ootused', 'Riigi rahandus'];
+  'Tootlikkus ja kulud', 'Hinnad ja ostujõud', 'Energia ja kulud', 'Tööturg ja palgad', 'Kindlustunne ja ootused', 'Riigi rahandus', 'Rahvastik'];
 let ULEVAATED = null;
 let VGROUPS = null; // rahvusvaheline võrdlus; null = andmeid ei õnnestunud laadida
 
@@ -725,6 +725,13 @@ function koostaGrupid(D, META) {
     { nr: '27', unitChip: 'eluruumide arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
       F: { Q: xy(alates(ehQ, ALGUS)), A: xy(ehA) },
       src: 'Statistikaamet EH04', url: SA('EH04'), note: 'Uusehitus. Aasta väärtus on kvartalite summa.' },
+    { nr: '49', unitChip: 'elussündide arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
+      F: { M: xy(Q('synnid_m')), Q: xy(kuuKv(Q('synnid_m')), { note: 'Kvartal on kuude summa.' }), A: xy(koonda(S('synnid_m'), aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
+      src: 'Statistikaamet RV061', url: SA('RV061'),
+      note: 'Esialgsed andmed registreerimiskuu järgi (kogu Eesti). Lõplikud sünnikuu järgi andmed ilmuvad järgmise aasta kevadel ja võivad veidi erineda.' },
+    { nr: '50', unitChip: 'last naise kohta', kind: 'line', unit: '', dec: 2, head: 'level', ref: 2.1,
+      F: { A: xy(S('sundimus_a')) }, src: 'Statistikaamet RV033', url: SA('RV033'),
+      note: 'Kriipsjoon 2,1 on ligikaudne taastetase, mille juures rahvastik ilma rändeta püsiks.' },
     { nr: '47', unitChip: 'eluruumide arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
       F: { Q: xy(alates(kaQ, ALGUS)), A: xy(kaA) },
       src: 'Statistikaamet EH04', url: SA('EH04'), note: 'Uusehitus. Aasta väärtus on kvartalite summa.' },
