@@ -372,12 +372,12 @@
    "kirjeldus": "Elussündide arv kuus Statistikaameti esialgsete registreerimisandmete järgi (sünni registreerimise kuu, kogu Eesti)",
    "miks": "Sündide arv mõjutab pikas plaanis tööjõu pakkumist, haridus- ja sotsiaalkulusid ning rahvastiku vananemist; kuuandmed näitavad muutust kiiresti"
   },
-  "50": {
+  "51": {
    "valdkond": "Rahvastik",
    "peamine": false,
-   "nimi": "Summaarne sündimuskordaja",
-   "kirjeldus": "Keskmine laste arv, kelle naine sünnitaks oma elu jooksul, kui vanuserühmade sündimuskordajad püsiksid aasta tasemel",
-   "miks": "Rahvastiku taastootmise põhinäitaja, mis ei sõltu vanusstruktuurist; taastetase on umbes 2,1 last naise kohta"
+   "nimi": "Surmad",
+   "kirjeldus": "Surmajuhtumite arv kuus Statistikaameti esialgsete registreerimisandmete järgi (surma registreerimise kuu, kogu Eesti)",
+   "miks": "Koos sündidega näitab rahvastiku loomulikku muutust; kuuandmed näitavad ka erakordseid suremuse muutusi (nt gripihooaeg) kiiresti"
   }
  }
 }
