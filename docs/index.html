@@ -216,6 +216,14 @@ footer a { color: var(--muted); }
 /* Kokkuvõte ja värskenduste kast kõrvuti; kitsal ekraanil üksteise all */
 .kv-rida { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 330px); gap: 14px; align-items: start; }
 @media (max-width: 860px) { .kv-rida { grid-template-columns: 1fr; } }
+.kv-vasak { min-width: 0; }
+.teemad { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 14px; }
+.teemad .tm-silt { font-size: 13px; color: var(--muted); margin-right: 4px; }
+.teemad button { font: inherit; font-size: 13.5px; line-height: 1.2; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.teemad button:hover { border-color: var(--accent); color: var(--accent); }
+.teemad button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.teemad button span { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+.group { scroll-margin-top: 80px; }
 .uus-kast { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
 .uus-kast h2 { font-family: var(--f-display); font-size: 14px; margin: 0 0 2px; }
 .uus-kast .uk-vahemik { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -1194,17 +1202,43 @@ function naitaNaitaja(nr) {
   setTimeout(() => c.classList.remove('esile'), 2600);
 }
 
+function naitaTeema(gi) {
+  const g = GROUPS[gi];
+  if (!g) return;
+  if (econValik === 'pohi' && !g.items.some((d) => d.peamine)) setValik('koik', false);
+  const sec = document.getElementById(`majandus-g-${gi}`);
+  if (!sec) return;
+  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const h = sec.querySelector('h2'); if (h) h.focus({ preventScroll: true });
+}
+
 function buildEconomy() {
   const root = document.getElementById('p-majandus');
   tyhjenda('majandus');
   root.innerHTML = '';
+  // Teemade lingid: hüpe valdkonna juurde. Kui valdkonnas pole põhinäitajaid, lülitub vaade korraks „Kõik“ peale.
+  const teemad = el('nav', 'teemad');
+  teemad.setAttribute('aria-label', 'Teemad');
+  teemad.append(el('span', 'tm-silt', 'Vali teema:'));
+  GROUPS.forEach((g, gi) => {
+    const n = g.items.filter((d) => econValik === 'koik' || d.peamine).length || g.items.length;
+    if (!g.items.length) return;
+    const b = el('button', null, `${esc(g.name)}<span>${n}</span>`);
+    b.type = 'button';
+    b.addEventListener('click', () => naitaTeema(gi));
+    teemad.append(b);
+  });
+  // Kokkuvõte ja selle all teemad vasakul, värskenduste kast paremal
+  const vasak = el('div', 'kv-vasak');
   if (KOKKUVOTE) {
     const k = el('section', 'kokkuvote');
     k.setAttribute('aria-labelledby', 'kv-h');
     k.innerHTML = `<h2 id="kv-h">Eesti majandus praegu</h2><p>${KOKKUVOTE.tekst}</p><p class="kv-meta">${KOKKUVOTE.meta}</p>`;
-    const uk = uuendusteKast();
-    if (uk) { const rida = el('div', 'kv-rida'); rida.append(k, uk); root.append(rida); } else root.append(k);
+    vasak.append(k);
   }
+  vasak.append(teemad);
+  const uk = uuendusteKast();
+  if (uk) { const rida = el('div', 'kv-rida'); rida.append(vasak, uk); root.append(rida); } else root.append(vasak);
   const bar = el('div', 'freqbar');
   bar.innerHTML = `<span class="fl" id="freq-l">Sagedus</span><div class="seg" role="radiogroup" aria-labelledby="freq-l">` +
     [['M', 'Kuu'], ['Q', 'Kvartal'], ['A', 'Aasta']].map(([k, n]) => `<button type="button" role="radio" data-f="${k}" aria-checked="${k === econFreq}" tabindex="${k === econFreq ? 0 : -1}">${n}</button>`).join('') +
@@ -1226,7 +1260,8 @@ function buildEconomy() {
     const naha = g.items.filter((d) => econValik === 'koik' || d.peamine);
     if (!naha.length) return;
     const sec = el('div', 'group');
-    sec.append(el('div', 'group-h', `<h2>${esc(g.name)}</h2><span>${naha.length} ${naha.length === 1 ? 'näitaja' : 'näitajat'}</span>`));
+    sec.id = `majandus-g-${GROUPS.indexOf(g)}`;
+    sec.append(el('div', 'group-h', `<h2 tabindex="-1">${esc(g.name)}</h2><span>${naha.length} ${naha.length === 1 ? 'näitaja' : 'näitajat'}</span>`));
     const grid = el('div', 'grid');
     naha.forEach((def) => grid.append(buildCard(resolveItem(def, econFreq))));
     sec.append(grid);
