@@ -651,6 +651,86 @@ eurostat_seeria <- function(id, filters, vali = NULL) {
   seeria(p, df$values)
 }
 
+# ---- Tootlikkus tegevusalati (Eurostat) --------------------------------------
+# Lisandväärtus töötatud tunni kohta, indeks baas = 100. Mahu muutus tuleb aheldatud
+# mahu aastamuutusest (nama_10_a10, CLV_PCH_PRE), mis ei sõltu Eurostati baasaastast;
+# tunnid andmestikust nama_10_a10_e (THS_HW). Tulemus: nimega list seeriatest NACE
+# koodi järgi (NULL, kui tegevusalal andmeid pole). Vahemälus koos veaga.
+tootlikkus_tegevusalati <- local({
+  vahemalu <- list()
+  function(alad, geo = "EE", baas = "2015") {
+    voti <- paste(geo, baas, paste(alad, collapse = ","))
+    if (!is.null(vahemalu[[voti]])) {
+      if (inherits(vahemalu[[voti]], "error")) stop(vahemalu[[voti]])
+      return(vahemalu[[voti]])
+    }
+    tulemus <- tryCatch({
+      lv <- eurostat_tabel("nama_10_a10", list(geo = geo, na_item = "B1G", unit = "CLV_PCH_PRE", nace_r2 = alad, freq = "A"))
+      tu <- eurostat_tabel("nama_10_a10_e", list(geo = geo, na_item = "EMP_DC", unit = "THS_HW", nace_r2 = alad, freq = "A"))
+      aeg <- function(df) norm_periood(as.character(df[[intersect(c("time", "TIME_PERIOD"), names(df))[1]]]))
+      lv$per <- aeg(lv); tu$per <- aeg(tu)
+      lv <- lv[!is.na(lv$values), ]; tu <- tu[!is.na(tu$values) & tu$values > 0, ]
+      if (!nrow(lv) || !nrow(tu)) stop("nama_10_a10: päring ei tagastanud andmeid.")
+      out <- lapply(alad, function(a) {
+        g <- setNames(lv$values[lv$nace_r2 == a], lv$per[lv$nace_r2 == a])
+        h <- setNames(tu$values[tu$nace_r2 == a], tu$per[tu$nace_r2 == a])
+        if (length(h) < 3 || !length(g)) return(NULL)
+        # järjestikused aastad esimesest tundide aastast, mille kohta on nii mahu muutus kui ka tunnid
+        a0 <- min(as.integer(names(h))); a1 <- max(as.integer(names(h)))
+        maht <- c(); eelmine <- NULL
+        for (y in as.character(a0:a1)) {
+          if (is.null(eelmine)) { maht[y] <- 100; eelmine <- 100; next }
+          if (is.na(g[y]) || is.na(h[y])) break
+          maht[y] <- eelmine * (1 + g[[y]] / 100); eelmine <- maht[[y]]
+        }
+        if (!(baas %in% names(maht)) || length(maht) < 3) return(NULL)
+        tl <- maht / h[names(maht)]
+        seeria(names(tl), unname(round(100 * tl / tl[[baas]], 1)))
+      })
+      names(out) <- alad
+      out
+    }, error = function(e) e)
+    vahemalu[[voti]] <<- tulemus
+    if (inherits(tulemus, "error")) stop(tulemus)
+    tulemus
+  }
+})
+
+# ---- AMECO (Euroopa Komisjon) DBnomicsi kaudu ---------------------------------
+# AMECO riigikoodid. Komisjoni prognoosiaastaid ei võeta: ainult aastad enne jooksvat.
+AMECO_RIIGID <- c(EE = "EST", LV = "LVA", LT = "LTU", FI = "FIN", SE = "SWE", EU27_2020 = "EU27")
+ameco_seeriad <- local({
+  vahemalu <- list()
+  function(muutuja) {
+    if (!is.null(vahemalu[[muutuja]])) {
+      if (inherits(vahemalu[[muutuja]], "error")) stop(vahemalu[[muutuja]])
+      return(vahemalu[[muutuja]])
+    }
+    tulemus <- tryCatch({
+      v <- http_json(paste0("https://api.db.nomics.world/v22/series/AMECO/", muutuja),
+                     list(observations = 1, limit = 100))
+      d <- v$series$docs
+      if (!is.data.frame(d) || !nrow(d)) stop("AMECO ", muutuja, ": DBnomics ei tagastanud seeriaid.")
+      kood <- toupper(sub("\\..*$", "", d$series_code))
+      viimane <- as.integer(format(Sys.Date(), "%Y")) - 1
+      out <- lapply(AMECO_RIIGID, function(k) {
+        i <- which(kood == k)[1]
+        if (is.na(i)) return(NULL)
+        p <- as.character(unlist(d$period[[i]])); x <- suppressWarnings(as.numeric(unlist(d$value[[i]])))
+        hoia <- !is.na(x) & suppressWarnings(as.integer(substr(p, 1, 4))) <= viimane
+        if (!any(hoia)) return(NULL)
+        seeria(p[hoia], round(x[hoia], 1))
+      })
+      names(out) <- names(AMECO_RIIGID)
+      if (is.null(out$EE)) stop("AMECO ", muutuja, ": Eesti seeriat ei leitud (koodid: ", paste(head(kood, 10), collapse = ", "), ").")
+      out
+    }, error = function(e) e)
+    vahemalu[[muutuja]] <<- tulemus
+    if (inherits(tulemus, "error")) stop(tulemus)
+    tulemus
+  }
+})
+
 # ---- Perioodikoodid ----------------------------------------------------------
 # Lehel kasutatavad koodid: "2019M01", "2019Q1", "2021S2", "2019"
 RN <- c("I", "II", "III", "IV")
