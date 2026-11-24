@@ -392,6 +392,13 @@
    "nimi": "Tööjõu tootlikkus tegevusalati",
    "kirjeldus": "Lisandväärtus töötatud tunni kohta püsivhindades peamistes tegevusalades (indeks, 2015 = 100)",
    "miks": "Näitab, millistes tegevusalades tootlikkus kasvab ja millised jäävad maha – kogu majanduse keskmine võib peita suuri erinevusi"
+  },
+  "52b": {
+   "valdkond": "Tootlikkus ja kulud",
+   "peamine": false,
+   "nimi": "Kogutootlikkuse muutus",
+   "kirjeldus": "Kogu majanduse kogutootlikkuse (TFP) muutus eelmise aastaga võrreldes, %",
+   "miks": "Näitab, kas majandus muutus aasta jooksul tõhusamaks või vähem tõhusaks, sõltumata töötundide ja kapitali hulgast"
   }
  }
 }
