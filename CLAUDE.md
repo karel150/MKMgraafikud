@@ -91,5 +91,10 @@ ainult koodi lugemisest ei piisa, sest vead tulevad välja alles joonistamisel.
 * **GitHubi `schedule` hilineb** selles repos tundide kaupa, seetõttu käivitab hommikuse jooksu
   väline ajastatud ülesanne. `uuenda.yml`-i `kell` töö valib kahest cron-ist selle, mis vastab
   Eesti aja järgi kella 8.05-le.
+* **Aeglased või maas allikad:** `R/abi.R`-is on Statistikaameti ja Eurostati katkesti (pärast mõnda
+  järjestikust ebaõnnestumist jäetakse selle allika ülejäänud päringud vahele) ja üldine tähtaeg
+  `UUENDUSE_TAHTAEG_MIN` (Actionsis 33 min töö algusest), et töö jõuaks enne GitHubi 45 minuti
+  piiri salvestada.
+  Uus päringufunktsioon peab kutsuma `aja_kontroll()`-i.
 * `tools/indeksi_vorm.py` kirjutab CSV-d reavahetusega `\r\n`, ülejäänud failid (ka `tools/prognoosi_vorm.py` kirjutatav `andmed/prognoosid.csv`) on `\n`-ga.
 * Kasutaja e-posti aadress on isiklik info: ära kasuta seda mujal kui tema enda töö tuvastamiseks.

@@ -43,10 +43,14 @@ jobs:
     needs: kell
     if: needs.kell.outputs.kaivita == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 30   # rippuma jäänud API-päring ei hoia tööd kinni 6 tundi
+    # Rippuma jäänud päring ei hoia tööd kinni 6 tundi. R ise lõpetab päringud varem
+    # (UUENDUSE_TAHTAEG_MIN töö algusest), et salvestamiseks ja avaldamiseks jääks aega.
+    timeout-minutes: 45
     outputs:
       hoiatusi: ${{ steps.kontroll.outputs.hoiatusi }}
     steps:
+      - name: Märgi töö algus
+        run: echo "TOO_ALGUS=$(date +%s)" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -58,6 +62,7 @@ jobs:
         env:
           TZ: Europe/Tallinn
           LANG: C.UTF-8
+          UUENDUSE_TAHTAEG_MIN: "33"
         run: Rscript R/uuenda.R
       # Kokkuvõtvad lõigud kirjutab tehisaru juba uuendatud andmete põhjal (docs/data/aitekstid.json).
       # Ebaõnnestumine ei peata uuendust: kehtima jääb eelmine tekst, selle puudumisel reeglipõhine.
