@@ -203,6 +203,8 @@ koosta_vordlus <- function(icu = NULL) {
   # 36 tootlikkus hõivatu kohta, % EL-27 keskmisest (ostujõu standardis)
   andmestik("tootl_el_a", "nama_10_lp_ulc", A_(na_item = "NLPR_PER", unit = "PC_EU27_2020_MPPS_CP"), c(10, 300),
             geos = VORDLUS_RIIGID)   # EL-27 = 100 on graafikul niigi võrdlusjoonena
+  # 52 kogutootlikkus (TFP), indeks 2020 = 100 (Euroopa Komisjoni AMECO)
+  andmestik("tfp_a", "ameco", list(), c(30, 200), fn = function(geos) ameco_seeriad("ZVGDF")[geos])
   andmestik("ulc_q",   "namq_10_lp_ulc", Q_(na_item = "NULC_HW", unit = "PCH_SM", s_adj = "SCA"), YOY)
   andmestik("ulc_a",   "nama_10_lp_ulc", A_(na_item = "NULC_HW", unit = "PCH_PRE"), YOY)
   # 7 ettevõtlussektori T&A, % SKP-st

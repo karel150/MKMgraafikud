@@ -71,6 +71,17 @@ Rootsi lisamiseks on vaja ENTSO-E läbipaistvusplatvormi API-võtit.
   failis pole (nt nädalavahetusel), näidatakse viimast päeva koos kuupäevaga.
 * Nord Pooli enda andmeportaalist andmeid ei võeta: avalik edasilevitamine vajab tasulist litsentsi.
 
+## Tootlikkus: TFP ja tegevusalad
+
+* **Näitaja 52, kogutootlikkus (TFP)**: Euroopa Komisjoni AMECO muutuja `ZVGDF` (kogu majandus,
+  2020 = 100), laaditakse DBnomicsi API kaudu (`api.db.nomics.world/v22/series/AMECO/ZVGDF`, võtit
+  pole vaja). Komisjoni prognoosiaastaid ei võeta: alles jäävad aastad enne jooksvat aastat.
+  Graafikute lehel on Eesti ja EL-27, võrdluslehel ka naaberriigid.
+* **Näitaja 53, tootlikkus tegevusalati**: lisandväärtus töötatud tunni kohta, 2015 = 100.
+  Mahu muutus tuleb Eurostati andmestikust `nama_10_a10` (B1G, `CLV_PCH_PRE`) ja tunnid andmestikust
+  `nama_10_a10_e` (EMP_DC, `THS_HW`). Aheldatud mahu aastamuutus ei sõltu Eurostati baasaastast.
+  Tegevusalad: kokku, B–E, F, G–I, J, M–N.
+
 ## Sadamad (IMF PortWatch)
 
 Näitajad 38 (sadamate hinnanguline eksport ja import, tuhat tonni) ja 39 (laevakülastused) tulevad

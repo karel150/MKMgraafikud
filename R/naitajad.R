@@ -322,6 +322,25 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
   # Tööjõu tootlikkus hõivatu kohta, % EL-27 keskmisest (ostujõu standardis)
   lisa("tootl_el_a", function() eurostat_seeria("nama_10_lp_ulc", list(
     geo = "EE", na_item = "NLPR_PER", unit = "PC_EU27_2020_MPPS_CP", freq = "A")), c(20, 200))
+  # Lisandväärtus töötatud tunni kohta tegevusalati, indeks 2015 = 100 (nama_10_a10, nama_10_a10_e)
+  TEGEVUSALAD <- c(TOTAL = "kokku", "B-E" = "toostus", F = "ehitus", "G-I" = "kaubandus", J = "info", M_N = "kutse")
+  for (k in names(TEGEVUSALAD)) local({
+    kood <- k
+    lisa(paste0("tootl_ta_", TEGEVUSALAD[[kood]], "_a"), function() {
+      s <- tootlikkus_tegevusalati(names(TEGEVUSALAD))[[kood]]
+      if (is.null(s)) stop("Eurostatis pole tegevusala ", kood, " andmeid.")
+      s
+    }, c(20, 500))
+  })
+  # Kogutootlikkus (TFP), indeks 2020 = 100: Euroopa Komisjoni AMECO (ZVGDF)
+  for (k in list(c("EE", "ee"), c("EU27_2020", "eu"))) local({
+    geo <- k[1]; nimi <- k[2]
+    lisa(paste0("tfp_a_", nimi), function() {
+      s <- ameco_seeriad("ZVGDF")[[geo]]
+      if (is.null(s)) stop("AMECO-s pole ", geo, " andmeid.")
+      s
+    }, c(30, 200))
+  })
   # Kodumajapidamiste säästumäär (brutosäästu määr, %): ainult aasta, Eurostat ei avalda Eesti kohta kvartalirida
   lisa("saast_a", function() eurostat_seeria("nasa_10_ki", list(geo = "EE", na_item = "SRG_S14_S15", unit = "PC", freq = "A")), c(-50, 60))
   # Tehisintellekti kasutavad ettevõtted (>= 10 hõivatut), % ettevõtetest

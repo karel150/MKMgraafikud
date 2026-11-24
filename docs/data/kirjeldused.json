@@ -378,6 +378,20 @@
    "nimi": "Surmad",
    "kirjeldus": "Surmajuhtumite arv kuus Statistikaameti esialgsete registreerimisandmete järgi (surma registreerimise kuu, kogu Eesti)",
    "miks": "Koos sündidega näitab rahvastiku loomulikku muutust; kuuandmed näitavad ka erakordseid suremuse muutusi (nt gripihooaeg) kiiresti"
+  },
+  "52": {
+   "valdkond": "Tootlikkus ja kulud",
+   "peamine": false,
+   "nimi": "Kogutootlikkus (TFP)",
+   "kirjeldus": "Kogu majanduse kogutootlikkus Euroopa Komisjoni AMECO andmebaasist: toodangu kasv, mida tööjõu ja kapitali kasv ei selgita (indeks, 2020 = 100)",
+   "miks": "Näitab, kui palju kasvab majandus tänu tehnoloogiale, oskustele ja paremale korraldusele, mitte lihtsalt rohkemate töötundide ja investeeringute arvelt"
+  },
+  "53": {
+   "valdkond": "Tootlikkus ja kulud",
+   "peamine": false,
+   "nimi": "Tööjõu tootlikkus tegevusalati",
+   "kirjeldus": "Lisandväärtus töötatud tunni kohta püsivhindades peamistes tegevusalades (indeks, 2015 = 100)",
+   "miks": "Näitab, millistes tegevusalades tootlikkus kasvab ja millised jäävad maha – kogu majanduse keskmine võib peita suuri erinevusi"
   }
  }
 }
