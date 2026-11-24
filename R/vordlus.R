@@ -46,6 +46,7 @@ jvs_riigid <- function(geos = VORDLUS_RIIGID) {
   logi <- character()
   for (id in ids) {
     # Kõigepealt kitsa päringuga; kui dimensiooni nimi on muutunud, siis ainult riigi ja sagedusega
+    eurostat_kontroll(id)
     df <- tryCatch(eurostat::get_eurostat(id, filters = list(geo = geos, indic_em = c("JOBRATE", "JVR"), freq = "Q"),
                                           time_format = "raw", cache = FALSE), error = function(e) NULL)
     if (is.null(df) || !nrow(df))

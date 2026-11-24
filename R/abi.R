@@ -31,6 +31,29 @@ valik <- function(code, values, filter = if (identical(values, "*")) "all" else 
   list(code = code, selection = list(filter = filter, values = as.list(values)))
 }
 
+# Ajapiirang andmete laadimisele. GitHub katkestab töö 45 minuti pärast ja siis ei
+# salvestata midagi. Kui mõni allikas on aeglane (24.11.2026 vastas Eurostat iga päringu
+# peale pool minutit hiljem ja R-i pakettide paigaldus venis), jäetakse pärast tähtaega
+# ülejäänud päringud vahele: nende seeriate eelmised väärtused jäävad alles ja jõutakse
+# salvestada. Tähtaeg on UUENDUSE_TAHTAEG_MIN minutit GitHubi töö algusest (TOO_ALGUS,
+# sekundid), käsitsi käivitamisel R-i käivitumisest. Tavaline jooks võtab ~5 minutit.
+UUENDUSE_ALGUS <- local({
+  t <- suppressWarnings(as.numeric(Sys.getenv("TOO_ALGUS")))
+  if (is.na(t)) Sys.time() else as.POSIXct(t, origin = "1970-01-01")
+})
+UUENDUSE_TAHTAEG_MIN <- as.numeric(Sys.getenv("UUENDUSE_TAHTAEG_MIN", "20"))
+.aeg_teatatud <- FALSE
+aja_kontroll <- function(mis) {
+  kulunud <- as.numeric(difftime(Sys.time(), UUENDUSE_ALGUS, units = "mins"))
+  if (kulunud < UUENDUSE_TAHTAEG_MIN) return(invisible())
+  if (!.aeg_teatatud) {
+    .aeg_teatatud <<- TRUE
+    hoiata("Uuendus on kestnud üle ", UUENDUSE_TAHTAEG_MIN, " minuti (mõni allikas vastab aeglaselt): ",
+           "ülejäänud päringud jäetakse vahele, nende näitajate eelmised väärtused jäävad alles.")
+  }
+  stop(mis, ": ajapiirang täis, päring jäeti vahele")
+}
+
 # Kui Statistikaamet ei vasta, kulub iga päringu kolmele katsele ~5 minutit ja kümnete
 # seeriate puhul jõuab töö ajapiiranguni enne, kui ülejäänud andmed (Eurostat, IMF jm)
 # kirja saavad. Seepärast loetakse järjestikuseid ebaõnnestunud päringuid: pärast
@@ -53,6 +76,7 @@ statee_tulemus <- function(ok) {
 
 # Tagastab data.frame'i: üks veerg iga dimensiooni koodiga + veerg value.
 px_paring <- function(tabel, ..., katseid = 3, api = PX_API) {
+  aja_kontroll(tabel)
   statee_kontroll(tabel)
   if (statee_vigu > 0) katseid <- 1
   keha <- list(query = list(...), response = list(format = "json"))
@@ -101,6 +125,7 @@ BREADY_SAMBAD <- c(WB_WDI_IC_BRE_P1_RF = "Õigusraamistik", WB_WDI_IC_BRE_P2_PS 
                    WB_WDI_IC_BRE_P3_OE = "Tegevuse tõhusus")
 
 http_json <- function(url, query = list(), katseid = 3) {
+  aja_kontroll(sub("\\?.*$", "", url))
   vastus <- NULL
   for (k in seq_len(katseid)) {
     vastus <- tryCatch(GET(url, query = query, timeout(60)), error = function(e) e)
@@ -516,16 +541,40 @@ pw_kiire <- function(paevi = 28) {
 #     sama ebaõnnestunud päringut ei korrataks iga sellest sõltuva seeria jaoks.
 .eurostat_malu <- new.env(parent = emptyenv())
 
+# Eurostati katkesti, sama põhimõttega nagu Statistikaameti oma (vt statee_kontroll):
+# kui Eurostat ei vasta, kulub iga andmestiku kolmele katsele mitu minutit ja töö jõuab
+# ajapiiranguni enne, kui midagi salvestatakse (nii juhtus 24.11.2026). Pärast esimest
+# ebaõnnestunud andmestikku proovitakse iga järgmist vaid korra ja pärast EUROSTAT_PIIR
+# järjestikust ebaõnnestumist jäetakse ülejäänud Eurostati päringud vahele (nende seeriate
+# eelmised väärtused jäävad alles). Õnnestunud päring nullib loenduri.
+EUROSTAT_PIIR <- 4
+eurostat_vigu <- 0
+eurostat_kontroll <- function(id) {
+  if (eurostat_vigu >= EUROSTAT_PIIR)
+    stop(id, ": Eurostat ei vastanud ", EUROSTAT_PIIR, " järjestikusele päringule, päring jäeti vahele")
+}
+eurostat_tulemus <- function(ok) {
+  if (ok) { eurostat_vigu <<- 0; return(invisible()) }
+  eurostat_vigu <<- eurostat_vigu + 1
+  if (eurostat_vigu == EUROSTAT_PIIR)
+    hoiata("Eurostat ei vasta: ülejäänud Eurostati päringud jäetakse selles jooksus vahele, ",
+           "nende näitajate eelmised väärtused jäävad alles.")
+}
+
 get_eurostat <- function(id, ..., katseid = 3, paus = 5, .lae = eurostat::get_eurostat) {
   voti <- paste(deparse(list(id, ...), width.cutoff = 500L), collapse = "")
   meeles <- .eurostat_malu[[voti]]
   if (inherits(meeles, "condition")) stop(meeles)
   if (!is.null(meeles)) return(meeles)
+  aja_kontroll(id)
+  eurostat_kontroll(id)
+  if (eurostat_vigu > 0) katseid <- 1
 
   viga <- NULL
   for (k in seq_len(katseid)) {
     df <- tryCatch(.lae(id, ...), error = function(e) e)
     if (is.data.frame(df)) {
+      eurostat_tulemus(TRUE)
       assign(voti, df, envir = .eurostat_malu)
       return(df)
     }
@@ -536,6 +585,7 @@ get_eurostat <- function(id, ..., katseid = 3, paus = 5, .lae = eurostat::get_eu
       Sys.sleep(paus * k)
     }
   }
+  eurostat_tulemus(FALSE)
   viga <- simpleError(paste0(id, ": ", viga, " (", katseid, " katset)"))
   assign(voti, viga, envir = .eurostat_malu)
   stop(viga)
