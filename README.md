@@ -100,6 +100,13 @@ IMF PortWatchi avalikust ArcGIS-teenusest `Daily_Ports_Data` (võtit pole vaja).
 * Avalehe ribal on „Sadamate eksport“: viimase 28 päeva hinnanguline eksport võrreldes sama 28
   päevaga 364 päeva varem (samad nädalapäevad); `naitajad.json` väli `sadamad_kiire`.
 
+**Uuendussagedus.** PortWatch avaldab andmed kord nädalas (teisipäeval, hoolduse ajal on teenus
+maas), seega päritakse seda ainult kolmapäeviti või siis, kui viimasest õnnestunud uuendusest
+(`naitajad.json` väli `sadamad_uuendatud`) on möödas vähemalt 7 päeva. Uuesti päritakse ainult
+eelmine ja jooksev aasta, varasemad kuud võetakse eelmisest failist. PortWatchi päringutel on oma
+ajaeelarve (`PORTWATCH_AJAEELARVE_MIN`, vaikimisi 6 min), et hätta jäänud ArcGIS ei sööks ära
+kogu uuenduse aega. `PORTWATCH_ALATI=1` sunnib uuendama.
+
 ## TAIE mõõdikud
 
 Vahekaart „TAIE mõõdikud" näitab teadus- ja arendustegevuse, innovatsiooni ning ettevõtluse arengukava 2021–2035 seirenäitajaid (arengukava lisa 3) nelja eesmärgi kaupa. Graafiku katkendjoon on 2035. aasta sihttase.

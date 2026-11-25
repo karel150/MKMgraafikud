@@ -96,5 +96,6 @@ ainult koodi lugemisest ei piisa, sest vead tulevad välja alles joonistamisel.
   `UUENDUSE_TAHTAEG_MIN` (Actionsis 33 min töö algusest), et töö jõuaks enne GitHubi 45 minuti
   piiri salvestada.
   Uus päringufunktsioon peab kutsuma `aja_kontroll()`-i.
+* **IMF PortWatch** uueneb kord nädalas (kolmapäeviti) ja tal on oma ajaeelarve (6 min), vt README.
 * `tools/indeksi_vorm.py` kirjutab CSV-d reavahetusega `\r\n`, ülejäänud failid (ka `tools/prognoosi_vorm.py` kirjutatav `andmed/prognoosid.csv`) on `\n`-ga.
 * Kasutaja e-posti aadress on isiklik info: ära kasuta seda mujal kui tema enda töö tuvastamiseks.
