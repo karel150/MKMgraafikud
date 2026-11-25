@@ -122,9 +122,14 @@ koosta_vordlus <- function(icu = NULL) {
         olemas <- tryCatch(!is.null(lae()[[g]]), error = function(e) TRUE)
         if (!olemas) { message(k, ": Eurostatis andmeid pole, jäetakse välja."); return(invisible()) }
       }
+      # PortWatchi päevadel, mil seda ei uuendata, jääb eelmine seeria (vt pw_uuenda)
+      if (identical(id, "portwatch") && !pw_uuenda() && !is.null(vana[[k]])) {
+        tul[[k]] <<- turvaliselt(k, function() vana[[k]], vana[[k]], vahemik)
+        return(invisible())
+      }
       tul[[k]] <<- turvaliselt(k, function() {
         s <- lae()[[g]]
-        if (is.null(s)) stop("Eurostatis pole selle riigi andmeid.")
+        if (is.null(s)) stop("allikas ei tagastanud selle riigi andmeid.")
         s
       }, vana[[k]], vahemik)
     })

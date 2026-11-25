@@ -379,9 +379,14 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     if (is.null(s)) stop("PortWatchis pole Eesti andmeid.")
     s
   }
-  lisa("sadam_eksport_m", pw_ee("eksport"), c(0, 20000))
-  lisa("sadam_import_m", pw_ee("import"), c(0, 20000))
-  lisa("sadam_laevu_m", pw_ee("laevu"), c(0, 50000))
+  # Kui PortWatchi täna ei pärita (vt pw_uuenda), jääb eelmine seeria muutmata ja ilma hoiatuseta
+  lisa_pw <- function(nimi, f, vahemik) {
+    if (!pw_uuenda() && !is.null(vana[[nimi]])) f <- function() vana[[nimi]]
+    lisa(nimi, f, vahemik)
+  }
+  lisa_pw("sadam_eksport_m", pw_ee("eksport"), c(0, 20000))
+  lisa_pw("sadam_import_m", pw_ee("import"), c(0, 20000))
+  lisa_pw("sadam_laevu_m", pw_ee("laevu"), c(0, 50000))
 
   # ---- Majandususaldus ---------------------------------------------------------
   # Kui majandusplaaniindeksi arvutus õnnestus, kasutatakse sealset ESI-t
@@ -428,15 +433,19 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
   })
 
   # Avalehe kiire sadamanäitaja (viimased 28 päeva aastaga); vea korral jääb eelmine
-  sadamad_kiire <- tryCatch(pw_kiire(), error = function(e) {
-    hoiata("sadamad_kiire: ", conditionMessage(e), ". Jäetakse alles eelmine versioon.")
-    loe_json("naitajad.json")$sadamad_kiire
-  })
+  vana_pw <- loe_json("naitajad.json")
+  sadamad_kiire <- if (!pw_uuenda() && !is.null(vana_pw$sadamad_kiire)) vana_pw$sadamad_kiire else
+    tryCatch(pw_kiire(), error = function(e) {
+      hoiata("sadamad_kiire: ", conditionMessage(e), ". Jäetakse alles eelmine versioon.")
+      vana_pw$sadamad_kiire
+    })
+  sadamad_uuendatud <- if (pw_uuenda() && pw_onnestus()) format(Sys.Date()) else vana_pw$sadamad_uuendatud
 
   list(
     uuendatud = aeg_utc(),
     elekter_paev = elekter_paev,
     sadamad_kiire = sadamad_kiire,
+    sadamad_uuendatud = sadamad_uuendatud,
     seeriad   = lapply(tul, function(r) seeria_json(r$seeria)),
     staatus   = lapply(tul, function(r) list(
       staatus = r$staatus,

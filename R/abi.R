@@ -429,22 +429,49 @@ PW_URL <- "https://services9.arcgis.com/weJ1QsnbMYJlCHdG/arcgis/rest/services/Da
 PW_RIIGID <- c(EE = "EST", LV = "LVA", LT = "LTU", FI = "FIN", SE = "SWE")
 PW_ALGUS <- 2019   # PortWatchi andmed algavad 2019. aastast
 .pw_malu <- new.env(parent = emptyenv())
+# PortWatchi päringutele on oma ajaeelarve, et aeglane või hätta jäänud ArcGIS ei sööks ära
+# kogu uuenduse aega (siis jääksid vahele ka Eurostati jm päringud).
+PW_AJAEELARVE_MIN <- as.numeric(Sys.getenv("PORTWATCH_AJAEELARVE_MIN", "6"))
+pw_aja_kontroll <- function() {
+  if (is.null(.pw_malu$algus)) .pw_malu$algus <- Sys.time()
+  if (as.numeric(difftime(Sys.time(), .pw_malu$algus, units = "mins")) > PW_AJAEELARVE_MIN)
+    stop("PortWatchi ajaeelarve (", PW_AJAEELARVE_MIN, " min) täis, ülejäänud päringud jäeti vahele")
+}
+
+# PortWatch uueneb kord nädalas (teisipäeval, hoolduse ajal on teenus maas), seega päritakse
+# seda ainult kolmapäeviti või siis, kui viimasest õnnestunud uuendusest on möödas vähemalt
+# 7 päeva (nt kolmapäevane päring ebaõnnestus). Muul ajal jääb alles eelmine versioon.
+# Keskkonnamuutuja PORTWATCH_ALATI=1 sunnib uuendama.
+PW_UUENDUSPAEV <- 3L   # ISO nädalapäev: 3 = kolmapäev
+pw_uuenda <- function() {
+  if (!is.null(.pw_malu$uuenda)) return(.pw_malu$uuenda)
+  eelmine <- tryCatch(as.Date(loe_json("naitajad.json")$sadamad_uuendatud), error = function(e) NA)
+  tana <- Sys.Date()
+  otsus <- identical(Sys.getenv("PORTWATCH_ALATI"), "1") || length(eelmine) != 1 || is.na(eelmine) ||
+    as.integer(format(tana, "%u")) == PW_UUENDUSPAEV || as.numeric(tana - eelmine) >= 7
+  message("PortWatch: ", if (otsus) "uuendatakse" else paste0("jäetakse vahele (viimati uuendatud ", eelmine, ")"))
+  .pw_malu$uuenda <- otsus
+  otsus
+}
+# Kas tänane kuuandmete päring õnnestus (siis kirjutatakse uus uuenduskuupäev)
+pw_onnestus <- function() !is.null(.pw_malu$kuud) && !inherits(.pw_malu$kuud, "error")
 
 pw_koond <- function(where, grupp) {
   stat <- lapply(c(laevu = "portcalls", eksport = "export", import = "import"), function(v) v)
   out <- jsonlite::toJSON(lapply(names(stat), function(n)
     list(statisticType = "sum", onStatisticField = stat[[n]], outStatisticFieldName = n)), auto_unbox = TRUE)
   # ArcGIS annab ülekoormuse korral HTTP 200 koos veateatega, seega korratakse ka siin
-  for (k in 1:3) {
+  for (k in 1:2) {
+    pw_aja_kontroll()
     v <- http_json(paste0(PW_URL, "/query"), list(where = where, outStatistics = out,
-      groupByFieldsForStatistics = paste(grupp, collapse = ","), f = "json"))
+      groupByFieldsForStatistics = paste(grupp, collapse = ","), f = "json"), katseid = 2)
     if (is.null(v$error)) break
-    if (k < 3) Sys.sleep(10 * k)
+    if (k < 2) Sys.sleep(5)
   }
   if (!is.null(v$error)) {
     # Kihi kirjeldusest väljade nimed logisse, et skeemi muutumist oleks lihtne näha
     m <- tryCatch(http_json(PW_URL, list(f = "json"), katseid = 1), error = function(e) NULL)
-    if (!is.null(m$fields)) message("PortWatchi väljad: ", paste(m$fields$name, collapse = ", "))
+    if (!is.null(m$fields)) message("PortWatchi väljad: ", paste0(m$fields$name, " (", sub("esriFieldType", "", m$fields$type), ")", collapse = ", "))
     stop("PortWatch: ", v$error$message, " ", paste(unlist(v$error$details), collapse = " "), " (", where, ")")
   }
   d <- v$features$attributes
@@ -473,10 +500,27 @@ pw_kuud <- function() {
   if (!is.null(.pw_malu$kuud)) return(.pw_malu$kuud)
   tryCatch(pw_kuud_lae(), error = function(e) { .pw_malu$kuud <- e; stop(e) })
 }
+# Eelmise uuenduse kuuseeriad riigiti (vordlus.json: laevad ja tonnid; naitajad.json: Eesti eksport ja import)
+pw_vanad <- function() {
+  n <- loe_json("naitajad.json")$seeriad
+  v <- loe_json("vordlus.json")$seeriad
+  lapply(setNames(names(PW_RIIGID), names(PW_RIIGID)), function(g) list(
+    laevu = v[[paste0("sadam_laevu_m_", g)]], tonnid = v[[paste0("sadam_t_m_", g)]],
+    eksport = if (g == "EE") n$sadam_eksport_m, import = if (g == "EE") n$sadam_import_m))
+}
 pw_kuud_lae <- function() {
   viimane <- max(pw_eesti_paevad()$kp)
-  # Üks päring riigi ja aasta kohta: kõiki riike ja aastaid korraga koondades jääb server hätta
-  aastad <- PW_ALGUS:as.integer(format(viimane, "%Y"))
+  # Üks päring riigi ja aasta kohta: kõiki riike ja aastaid korraga koondades jääb server hätta.
+  # Varasemad aastad võetakse eelmisest failist; uuesti päritakse ainult eelmine ja jooksev
+  # aasta (PortWatch võib viimaseid kuid täpsustada). Kui eelmist seeriat pole, päritakse kõik.
+  y <- as.integer(format(viimane, "%Y"))
+  vana <- pw_vanad()
+  aastad_riigil <- function(g) {
+    v <- vana[[g]]
+    vaja <- c("laevu", "tonnid", if (g == "EE") c("eksport", "import"))
+    taielik <- all(vapply(vaja, function(k) length(v[[k]]$periods) >= 24, logical(1)))
+    if (taielik) (y - 1):y else PW_ALGUS:y
+  }
   # Päevade kaupa (nagu Eesti päevapäring), kuud liidetakse siin. Kui aasta korraga ei
   # õnnestu (suurte riikide puhul jääb server mõnikord hätta), küsitakse kuu kaupa.
   pw_aasta <- function(iso, a) {
@@ -490,22 +534,42 @@ pw_kuud_lae <- function() {
     x
   }
   # Ühe riigi rike ei too kaasa teiste (ega Eesti) andmete kadu
-  d <- do.call(rbind, lapply(PW_RIIGID, function(iso) tryCatch(
-    do.call(rbind, lapply(aastad, function(a) pw_aasta(iso, a))),
-    error = function(e) { hoiata("PortWatch ", iso, ": ", conditionMessage(e)); NULL })))
+  # Viimased aastad ühe päringuga (year >= …): see kuju töötab ka siis, kui aasta kaupa
+  # (year = …) päringud ArcGIS-is ebaõnnestuvad. Eesti päevad on juba olemas.
+  pw_viimased <- function(iso, a0) {
+    x <- if (iso == "EST") pw_eesti_paevad() else
+      pw_koond(sprintf("ISO3 = '%s' AND year >= %d", iso, a0), c("year", "month", "day"))
+    x <- x[as.integer(x$year) >= a0, ]
+    x <- stats::aggregate(cbind(laevu, eksport, import) ~ year + month, data = x, FUN = sum)
+    x$iso3 <- iso
+    x
+  }
+  d <- do.call(rbind, lapply(names(PW_RIIGID), function(g) tryCatch({
+    a <- aastad_riigil(g)
+    if (length(a) == 2) pw_viimased(PW_RIIGID[[g]], a[1]) else
+      do.call(rbind, lapply(a, function(k) pw_aasta(PW_RIIGID[[g]], k)))
+  },
+    error = function(e) { hoiata("PortWatch ", PW_RIIGID[[g]], ": ", conditionMessage(e)); NULL })))
   if (is.null(d) || !nrow(d)) stop("PortWatchist ei saanud ühegi riigi kuuandmeid")
   kuu_lopp <- as.Date(sprintf("%04d-%02d-01", as.integer(d$year), as.integer(d$month))) + 31
   kuu_lopp <- as.Date(format(kuu_lopp, "%Y-%m-01")) - 1
   d <- d[kuu_lopp <= viimane, ]
   d$per <- sprintf("%04dM%02d", as.integer(d$year), as.integer(d$month))
   d <- d[order(d$per), ]
-  tul <- lapply(PW_RIIGID, function(iso) {
-    x <- d[toupper(d$iso3) == iso, ]
+  # Uued kuud + eelmise faili kuud enne esimest uuesti päritud kuud
+  liida <- function(v, u) {
+    if (is.null(v) || !length(v$periods) || !length(u$periods)) return(u)
+    hoia <- v$periods < u$periods[1]
+    seeria(c(v$periods[hoia], u$periods), c(v$values[hoia], u$values))
+  }
+  tul <- lapply(setNames(names(PW_RIIGID), names(PW_RIIGID)), function(g) {
+    x <- d[toupper(d$iso3) == PW_RIIGID[[g]], ]
     if (!nrow(x)) return(NULL)
-    list(laevu = seeria(x$per, x$laevu),
-         eksport = seeria(x$per, round(x$eksport / 1000, 1)),
-         import = seeria(x$per, round(x$import / 1000, 1)),
-         tonnid = seeria(x$per, round((x$eksport + x$import) / 1000, 1)))
+    u <- list(laevu = seeria(x$per, x$laevu),
+              eksport = seeria(x$per, round(x$eksport / 1000, 1)),
+              import = seeria(x$per, round(x$import / 1000, 1)),
+              tonnid = seeria(x$per, round((x$eksport + x$import) / 1000, 1)))
+    lapply(setNames(names(u), names(u)), function(k) liida(vana[[g]][[k]], u[[k]]))
   })
   ee <- tul$EE
   if (!is.null(ee)) message("PortWatch, Eesti ", utils::tail(ee$laevu$periods, 1), ": laevu ",
