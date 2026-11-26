@@ -1,0 +1,23 @@
+name: eibis-uuring
+on:
+  push:
+    branches: [eibis-uuring]
+jobs:
+  uuri:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Uuri EIBIS-e portaali
+        run: |
+          B=https://data.eib.org/eibis
+          curl -sL -c k.txt -b k.txt "$B/download" -o download.html
+          echo "== kõik näitajad"
+          grep -oE '>[A-Za-z][^<]{3,160}</option>' download.html | sed 's/^>//;s/<\/option>$//' | sort -u | grep -viE "^(EU|AT|BE|BG|CY|CZ|DE|DK|EE|EL|ES|FI|FR|HR|HU|IE|IT|LT|LU|LV|MT|NL|PL|PT|RO|SE|SI|SK|US|ALL|sme|Large|Micro/Small|Medium/Large|CSV.*|Excel.*|Academia|Business|Media|NGO|Government|International organisation|Other|-- Please select --)$" | grep -iE "invest|intens|capital|share of firms" 
+          for ind in "Share of firms investing" "Investment intensity" "Investment per employee" "Firm investment in the last financial year compared to the previous year: net effect" "Expected investment in the current financial year compared to the previous: net effect"; do
+            echo "== $ind"
+            curl -s -b k.txt -G "$B/download/table" --data-urlencode "i=$ind" -d c=EE -d c=EU $(for y in $(seq 2016 2026); do echo -n "-d y=$y "; done) -d s=ALL \
+             | python3 -c "import json,sys
+          try:
+            d=json.load(sys.stdin)['data']
+          except Exception as e: print('viga',e); sys.exit()
+          r=sorted((x['country'],x['year'],x['values']) for x in d if x['sector']=='ALL' and x['size']=='ALL'); print(r)"
+          done
