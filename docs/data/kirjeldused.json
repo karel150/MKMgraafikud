@@ -406,6 +406,13 @@
    "nimi": "Automatiseerimisseadmete netoimport",
    "kirjeldus": "Tööstusrobotite, automaatsete tööpinkide, konveierite, reguleerimisseadmete, 3D-printerite jm automatiseerimisseadmete import miinus eksport, mln eurot",
    "miks": "Näitab, kui palju automatiseerimistehnoloogiat Eestisse sisse tuuakse; kaubandusandmed uuenevad iga kuu"
+  },
+  "54b": {
+   "valdkond": "Teadmised ja tehnoloogia",
+   "peamine": false,
+   "nimi": "Automatiseerimisseadmete netoimport kategooriate kaupa",
+   "kirjeldus": "Tööstusrobotite, tööpinkide, reguleerimisseadmete, konveierite, tekstiilimasinate ja muude automatiseerimisseadmete import miinus eksport, mln eurot",
+   "miks": "Näitab, millised seadmed netoimporti veavad ja millistes Eesti ise rohkem ekspordib kui impordib"
   }
  }
 }
