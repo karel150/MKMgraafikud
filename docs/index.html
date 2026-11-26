@@ -347,6 +347,11 @@ footer a { color: var(--muted); }
 .loadfail { background: var(--surface); border: 1px solid var(--neg); border-radius: 8px; padding: 16px; }
 .chip.warn { color: var(--s2); background: transparent; border: 1px solid currentColor; }
 </style>
+<!-- Külastusstatistika (GoatCounter): küpsisteta, IP-aadresse ei salvestata. Vaatamised loetakse
+     vahekaartide kaupa funktsioonis loendaVaade; statistika on näha aadressil mkm-toolaud.goatcounter.com -->
+<script data-goatcounter="https://mkm-toolaud.goatcounter.com/count"
+        data-goatcounter-settings='{"no_onload": true, "allow_frame": true}'
+        async src="https://gc.zgo.at/count.js" onload="window.loendaJarjekord && loendaJarjekord()"></script>
 </head>
 <body>
 
@@ -2364,6 +2369,25 @@ function renderPanel(key, koik) {
     else { ootel.set(c.dom, c); laisk.observe(c.dom); }
   });
 }
+// Vahekaardi vaatamine külastusstatistikasse (sama vahekaarti järjest ei loeta topelt).
+// Kui skript pole veel laadinud või on blokeeritud, ootab vaatamine järjekorras ega tekita viga.
+let viimaneVaade = null; const vaadeteJarjekord = [];
+function loendaVaade(key) {
+  if (key === viimaneVaade) return;
+  viimaneVaade = key;
+  vaadeteJarjekord.push(key);
+  loendaJarjekord();
+}
+function loendaJarjekord() {
+  try {
+    if (!window.goatcounter || !window.goatcounter.count) return;
+    while (vaadeteJarjekord.length) {
+      const k = vaadeteJarjekord.shift();
+      const nupp = document.getElementById('tab-' + k);
+      window.goatcounter.count({ path: '/' + k, title: nupp ? nupp.textContent.trim() : k });
+    }
+  } catch (e) {}
+}
 function show(key, focus) {
   tabs.forEach((b) => {
     const on = b.dataset.key === key;
@@ -2373,6 +2397,7 @@ function show(key, focus) {
     if (on && focus) b.focus();
   });
   try { history.replaceState(null, '', '#' + key); } catch (e) {}
+  loendaVaade(key);
   if (EHITA[key]) { EHITA[key](); EHITA[key] = null; }
   requestAnimationFrame(() => renderPanel(key));
 }

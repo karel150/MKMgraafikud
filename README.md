@@ -322,3 +322,12 @@ Kui ilmub uus väljaanne, muuda faile `andmed/indeksid.csv` ja `andmed/indeksid_
 - [ ] Kommunikatsiooniosakond on tekstid kinnitanud.
 - [ ] Veebimeeskond on iframe'i ja domeeni seadistanud.
 - [ ] Teavitused lähevad vähemalt kahele inimesele.
+
+## Külastusstatistika
+
+Lehe külastusi loeb GoatCounter (konto `mkm-toolaud`, statistika aadressil
+`https://mkm-toolaud.goatcounter.com`, näeb ainult konto omanik). Skript on `docs/index.html` päises.
+See ei kasuta küpsiseid ega salvesta IP-aadresse. Iga vahekaardi avamine loetakse eraldi vaatamiseks
+(tee `/majandus`, `/vordlus` jne, funktsioon `loendaVaade`). Loetakse ka siis, kui leht on mkm.ee-s
+iframe'is (`allow_frame`). Kohalikku testimist (localhost) ei loeta. Kui skript on blokeeritud, töötab
+leht tavapäraselt edasi.
