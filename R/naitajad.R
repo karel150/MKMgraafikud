@@ -338,7 +338,7 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
     grupp <- g; moot <- m
     lisa(paste0("puit_", grupp, "_", moot, "_m"), function() {
       s <- puidu_eksport()$EE[[grupp]][[moot]]
-      if (is.null(s)) stop("Comextis pole tooterühma ", PUIT_HS[[grupp]], " andmeid.")
+      if (is.null(s)) stop("Comextis pole tooterühma ", paste(PUIT_HS[[grupp]], collapse = ", "), " andmeid.")
       s
     }, c(0, 5000))
   })

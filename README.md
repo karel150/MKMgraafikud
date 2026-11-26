@@ -75,7 +75,9 @@ Rootsi lisamiseks on vaja ENTSO-E läbipaistvusplatvormi API-võtit.
 
 Eurostati Comext `DS-045409`, eksport (`flow=2`) kõikidesse riikidesse, näitajad `VALUE_IN_EUROS` ja
 `QUANTITY_IN_100KG` (kogus on 100 kg ühikutes). Tooterühmad on muutujas `PUIT_HS`: grupp 44 kokku, 4401
-(küttepuit ja graanulid), 4403 (ümarpuit), 4407 (saematerjal), 4418 (ehituspuusepatooted). JSON-i
+(küttepuit ja graanulid), 4403 (ümarpuit), 4407 (saematerjal), 4418 (ehituspuusepatooted), puitmajad
+(940610, alates 2017) ja puitmööbel (940161, 940169, 940330, 940340, 940350, 940360). Mitme koodiga rühmal
+liidetakse koodid kuu kaupa. Puitmajad ja mööbel on võrdluslehel eraldi kaartidel (55b, 55c). JSON-i
 kirjutatakse kuude väärtus (mln €) ja kogus (mln kg). Kilohind arvutatakse lehel perioodi väärtuste ja
 koguste summast. Võrdluslehel on Eesti, Läti, Leedu, Soome ja Rootsi.
 
