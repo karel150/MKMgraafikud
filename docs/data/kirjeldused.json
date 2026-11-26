@@ -417,23 +417,9 @@
   "55": {
    "valdkond": "Väliskaubandus",
    "peamine": false,
-   "nimi": "Puidu ja puittoodete ekspordi kilohind",
-   "kirjeldus": "Puidu ja puittoodete (HS 44) ekspordi keskmine hind kilogrammi kohta, kokku ja peamiste tooterühmade kaupa",
+   "nimi": "Puidu, puitmajade ja puitmööbli ekspordi kilohind",
+   "kirjeldus": "Puidu ja puittoodete (HS 44), puitmajade ja puitmööbli ekspordi keskmine hind kilogrammi kohta",
    "miks": "Näitab, kui palju väärtust ühe kilogrammi eksporditud puidu kohta saadakse – kõrgem kilohind viitab rohkem töödeldud toodetele või kõrgematele hindadele"
-  },
-  "55b": {
-   "valdkond": "Väliskaubandus",
-   "peamine": false,
-   "nimi": "Puitmajade ekspordi kilohind",
-   "kirjeldus": "Puidust kokkupandavate ehitiste (HS 940610) ekspordi keskmine hind kilogrammi kohta",
-   "miks": "Puitmajad on üks enim töödeldud puidutooteid; kilohind näitab, kui palju väärtust ühe kilogrammi puidu kohta majana eksportides saadakse"
-  },
-  "55c": {
-   "valdkond": "Väliskaubandus",
-   "peamine": false,
-   "nimi": "Puitmööbli ekspordi kilohind",
-   "kirjeldus": "Puitmööbli ja puitraamiga istmete ekspordi keskmine hind kilogrammi kohta",
-   "miks": "Mööbel on puidu kõrgema lisandväärtusega kasutusviis; kilohind võimaldab võrrelda ekspordi väärtust naaberriikidega"
   }
  }
 }

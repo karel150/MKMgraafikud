@@ -1382,7 +1382,7 @@ function buildCard(it, key = 'majandus') {
   head.append(el('div', 'chips', it.chips.map((x, i) => `<span class="chip${i === 1 && it.fallback ? ' warn' : ''}">${esc(x)}</span>`).join('')));
   head.append(el('div', 'headline', `<span class="big">${esc(h.big)}<small>${esc(h.unit)}</small></span><span class="per">${esc(h.per)}</span>${h.delta ? `<span class="delta">${esc(h.delta)}</span>` : ''}`));
   c.append(head);
-  const ch = el('div', 'chart' + (it.kind === 'stack' ? ' tall' : ''));
+  const ch = el('div', 'chart' + (it.kind === 'stack' || it.ryhmad ? ' tall' : ''));
   ch.setAttribute('role', 'img');
   ch.setAttribute('aria-label', `${it.title}: viimane väärtus ${h.big} ${h.unit}, ${h.per}.`);
   c.append(ch);
@@ -1438,7 +1438,7 @@ function economyOption(it) {
   const base = {
     animation: false,
     textStyle: { fontFamily: t.font },
-    grid: { left: 8, right: it.kind === 'riigid' ? 56 : 14, top: it.kind === 'riigid' ? 6 : it.kind === 'stack' ? 74 : it.kind === 'lines' ? (it.series.length > 4 ? 74 : it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
+    grid: { left: 8, right: it.kind === 'riigid' ? 56 : 14, top: it.ryhmad ? 40 : it.kind === 'riigid' ? 6 : it.kind === 'stack' ? 74 : it.kind === 'lines' ? (it.series.length > 4 ? 74 : it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
     tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.line, textStyle: { color: t.fg, fontSize: 12 },
       valueFormatter: fmt, axisPointer: { type: it.kind === 'bar' || it.kind === 'col' ? 'shadow' : 'line', lineStyle: { color: t.muted }, shadowStyle: { color: 'rgba(128,140,160,.12)' } } },
     xAxis: xAxisFor(it, t),
@@ -1476,6 +1476,35 @@ function economyOption(it) {
       ...it.series.map((s) => ({ type: 'bar', name: s.name, stack: 'panus', data: s.y, barCategoryGap: '25%', itemStyle: { color: t.get(s.c), borderColor: t.surface, borderWidth: 0.5 } })),
       { type: 'line', name: it.stackJoon || 'SKP kasv kokku, %', data: it.y, showSymbol: true, symbol: 'circle', symbolSize: 5, lineStyle: { color: t.fg, width: 1.5 }, itemStyle: { color: t.fg }, z: 5 },
     ];
+  } else if (it.kind === 'riigid' && it.ryhmad) {
+    // Mitu tooterühma riigi kohta: iga rühm oma värvi tulbana, Eesti viimasel perioodil
+    const perS = (x) => ({ Q: x + ' kv', H: x + ' pa' }[it.freq] || x);
+    const riigid = it.series.filter((s) => s.riik).map((s) => s.name);
+    const tagavara = {}; // riik -> periood, kui tema väärtus on varasemast perioodist
+    const grupid = it.ryhmad.map((r) => {
+      const i = lastIdx(r.d.y || []);
+      // periood legendis ainult siis, kui see erineb pealkirja perioodist
+      return { name: r.name + (i >= 0 && r.d.x[i] !== it.x[lastIdx(it.y)] ? ` (${perS(r.d.x[i])})` : ''), c: r.c,
+        v: riigid.map((n) => {
+          const s = (r.d.series || []).find((x) => x.name === n);
+          if (!s || i < 0) return null;
+          if (s.y[i] != null) return s.y[i];
+          const j = lastIdx(s.y);
+          if (j < 0) return null;
+          tagavara[n] = tagavara[n] || perS(r.d.x[j]);
+          return s.y[j];
+        }) };
+    });
+    const sildid = riigid.map((n) => (tagavara[n] ? `${n} (${tagavara[n]})` : n));
+    const vf = (v) => (v == null ? '–' : nf(dec).format(v) + it.unit);
+    base.legend = { ...legend, itemHeight: 8, icon: 'roundRect' };
+    base.tooltip = { ...base.tooltip, trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(128,140,160,.12)' } }, valueFormatter: vf };
+    base.xAxis = { type: 'value', min: 0, splitLine: { lineStyle: { color: t.grid } },
+      axisLabel: { color: t.muted, fontSize: 11, hideOverlap: true, formatter: (v) => nf(telgKoma(v)).format(v) } };
+    base.yAxis = { type: 'category', inverse: true, data: sildid, axisTick: { show: false }, axisLine: { lineStyle: { color: t.line } },
+      axisLabel: { color: t.muted, fontSize: 12, formatter: (v) => (v.startsWith('Eesti') ? `{ee|${v}}` : v.replace(' (', '\n(')), rich: { ee: { color: t.fg, fontWeight: 700, fontSize: 12 } } } };
+    base.series = grupid.map((g) => ({ type: 'bar', name: g.name, data: g.v, barGap: '15%', barCategoryGap: '28%',
+      itemStyle: { color: t.get(g.c) }, label: { show: true, position: 'right', distance: 4, color: t.fg, fontSize: 11, formatter: (p) => (p.value == null ? '' : nf(dec).format(p.value)) } }));
   } else if (it.kind === 'riigid') {
     // Iga riigi väärtus Eesti viimasel perioodil; kui riigil see puudub, tema viimane periood (sulgudes)
     const perS = (j) => ({ Q: it.x[j] + ' kv', H: it.x[j] + ' pa' }[it.freq] || it.x[j]);
@@ -1652,6 +1681,12 @@ function koostaVordlus(V, META) {
   };
   // Automatiseerimisseadmete aasta netoimport % sama aasta SKP-st (kuude ja kvartalite summad)
   const kuuKvV = (s) => koonda(s, kvKey, 3, sum);
+  // Puidu, puitmajade ja puitmööbli kilohind riigiti; pealkiri ja järjestus HS 44 järgi
+  const puitKh = (k, g, koo) => kilohind(koo(S(`${k}_eur_m_${g}`)), koo(S(`${k}_kg_m_${g}`)));
+  const puitVrd = (koo) => riigid((g) => puitKh('puit', g, koo), { ryhmad: [
+    { name: 'Puit ja puittooted', c: '--s1', d: riigid((g) => puitKh('puit', g, koo)) },
+    { name: 'Puitmajad', c: '--s2', d: riigid((g) => puitKh('puitmajad', g, koo)) },
+    { name: 'Puitmööbel', c: '--s3', d: riigid((g) => puitKh('mobel', g, koo)) }] });
   const automSkp = (g) => {
     const n = koonda(S('autom_neto_m_' + g), aKey, 12, sum), y = koonda(S('skp_q_' + g), aKey, 4, sum);
     const per = n.periods.filter((p) => y.periods.includes(p));
@@ -1773,20 +1808,9 @@ function koostaVordlus(V, META) {
       src: 'Eurostat Comext DS-045409; SKP namq_10_gdp', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
       note: 'Automatiseerimisseadmete (Acemoglu ja Restrepo põhiloend, HS 2012) import miinus eksport protsendina sama aasta SKP-st jooksevhindades. Kaubavahetus kõigi riikidega, ka teiste ELi riikidega. EL-27 koondit ei näidata, sest liidusisene kaubavahetus ei ole võrreldav.' },
     { nr: '55', unitChip: 'eurot kilogrammi kohta', kind: 'lines', unit: ' €/kg', dec: 2, head: 'vrd',
-      F: { Q: riigid((g) => kilohind(kuuKvV(S('puit_eur_m_' + g)), kuuKvV(S('puit_kg_m_' + g)))),
-           A: riigid((g) => kilohind(koonda(S('puit_eur_m_' + g), aKey, 12, sum), koonda(S('puit_kg_m_' + g), aKey, 12, sum))) },
+      F: { Q: puitVrd((e) => kuuKvV(e)), A: puitVrd((e) => koonda(e, aKey, 12, sum)) },
       src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
-      note: 'Puidu ja puittoodete (HS grupp 44) ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse. Riikide erinevus peegeldab suuresti ekspordi koosseisu (ümarpuit ja küttepuit on odavad, töödeldud tooted kallid). Kvartali ja aasta kilohind on kuude väärtuste summa jagatud koguste summaga.' },
-    { nr: '55b', unitChip: 'eurot kilogrammi kohta', kind: 'lines', unit: ' €/kg', dec: 2, head: 'vrd',
-      F: { Q: riigid((g) => kilohind(kuuKvV(S('puitmajad_eur_m_' + g)), kuuKvV(S('puitmajad_kg_m_' + g)))),
-           A: riigid((g) => kilohind(koonda(S('puitmajad_eur_m_' + g), aKey, 12, sum), koonda(S('puitmajad_kg_m_' + g), aKey, 12, sum))) },
-      src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
-      note: 'Puidust kokkupandavate ehitiste (HS 940610) ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse. Andmed alates 2017, varem olid kõik kokkupandavad ehitised ühes koodis. Kvartali ja aasta kilohind on kuude väärtuste summa jagatud koguste summaga.' },
-    { nr: '55c', unitChip: 'eurot kilogrammi kohta', kind: 'lines', unit: ' €/kg', dec: 2, head: 'vrd',
-      F: { Q: riigid((g) => kilohind(kuuKvV(S('mobel_eur_m_' + g)), kuuKvV(S('mobel_kg_m_' + g)))),
-           A: riigid((g) => kilohind(koonda(S('mobel_eur_m_' + g), aKey, 12, sum), koonda(S('mobel_kg_m_' + g), aKey, 12, sum))) },
-      src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
-      note: 'Puitmööbli (puitraamiga istmed 940161, 940169 ning puitmööbel 940330–940360) ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse. Kvartali ja aasta kilohind on kuude väärtuste summa jagatud koguste summaga.' },
+      note: 'Ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse. Puit ja puittooted = HS grupp 44; puitmajad = HS 940610 (alates 2017); puitmööbel = puitraamiga istmed (940161, 940169) ja puitmööbel (940330–940360). Pealkirjas ja järjestuses puit ja puittooted. Kilohind peegeldab suuresti ekspordi koosseisu. Kvartali ja aasta kilohind on kuude väärtuste summa jagatud koguste summaga.' },
     { nr: '52b', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true,
       F: { A: riigid((g) => muutus(S('tfp_a_' + g), 1)) },
       src: 'Euroopa Komisjon, AMECO (ZVGDF)', url: 'https://db.nomics.world/AMECO/ZVGDF',
