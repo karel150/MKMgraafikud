@@ -399,6 +399,13 @@
    "nimi": "Kogutootlikkuse muutus",
    "kirjeldus": "Kogu majanduse kogutootlikkuse (TFP) muutus eelmise aastaga võrreldes, %",
    "miks": "Näitab, kas majandus muutus aasta jooksul tõhusamaks või vähem tõhusaks, sõltumata töötundide ja kapitali hulgast"
+  },
+  "54": {
+   "valdkond": "Teadmised ja tehnoloogia",
+   "peamine": false,
+   "nimi": "Automatiseerimisseadmete netoimport",
+   "kirjeldus": "Tööstusrobotite, automaatsete tööpinkide, konveierite, reguleerimisseadmete, 3D-printerite jm automatiseerimisseadmete import miinus eksport, mln eurot",
+   "miks": "Näitab, kui palju automatiseerimistehnoloogiat Eestisse sisse tuuakse; kaubandusandmed uuenevad iga kuu"
   }
  }
 }

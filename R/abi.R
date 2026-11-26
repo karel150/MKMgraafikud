@@ -715,6 +715,87 @@ eurostat_seeria <- function(id, filters, vali = NULL) {
   seeria(p, df$values)
 }
 
+# ---- Eurostati Comext (väliskaubandus kaubakoodide kaupa) ---------------------
+COMEXT_API <- "https://ec.europa.eu/eurostat/api/comext/dissemination/statistics/1.0/data/"
+# JSON-stat 2.0 vastus -> data.frame (iga dimensiooni kood + value)
+jsonstat_df <- function(js) {
+  ids <- unlist(js$id); suurus <- unlist(js$size)
+  koodid <- lapply(ids, function(d) { ix <- unlist(js$dimension[[d]]$category$index); names(sort(ix)) })
+  names(koodid) <- ids
+  v <- js$value
+  if (is.null(v) || !length(v)) return(NULL)
+  if (is.list(v) && !is.null(names(v))) { pos <- as.integer(names(v)); x <- as.numeric(unlist(v)) }
+  else { x <- as.numeric(unlist(v)); pos <- seq_along(x) - 1L; hoia <- !is.na(x); pos <- pos[hoia]; x <- x[hoia] }
+  # lame indeks -> dimensioonide indeksid (viimane dimensioon muutub kõige kiiremini)
+  df <- data.frame(value = x)
+  jaak <- pos
+  for (i in rev(seq_along(ids))) {
+    df[[ids[i]]] <- koodid[[i]][jaak %% suurus[i] + 1L]
+    jaak <- jaak %/% suurus[i]
+  }
+  df
+}
+# Comexti päring: väärtused eurodes kuude kaupa, kaubakood x kaubavoog (1 = import, 2 = eksport)
+comext_kuud <- function(tooted, reporter = "EE", partner = "WORLD", andmestik = "DS-045409") {
+  aja_kontroll(andmestik)
+  q <- c(list(format = "JSON", lang = "EN", freq = "M", reporter = reporter, partner = partner,
+              indicators = "VALUE_IN_EUROS"),
+         setNames(as.list(tooted), rep("product", length(tooted))),
+         list(flow = "1", flow = "2"))
+  vastus <- NULL
+  for (k in 1:3) {
+    vastus <- tryCatch(GET(paste0(COMEXT_API, andmestik), query = q, timeout(120)), error = function(e) e)
+    if (!inherits(vastus, "error") && status_code(vastus) == 200) break
+    if (k < 3) Sys.sleep(10 * k)
+  }
+  if (inherits(vastus, "error")) stop(andmestik, ": ", conditionMessage(vastus))
+  if (status_code(vastus) != 200) stop(andmestik, ": HTTP ", status_code(vastus), " ",
+    substr(content(vastus, as = "text", encoding = "UTF-8"), 1, 300))
+  df <- jsonstat_df(fromJSON(content(vastus, as = "text", encoding = "UTF-8"), simplifyVector = FALSE))
+  if (is.null(df) || !nrow(df)) stop(andmestik, ": päring ei tagastanud andmeid.")
+  df$per <- norm_periood(df$time)
+  df
+}
+
+# Automatiseerimise indikaator: automatiseerimisseadmete import ja eksport (Acemoglu–Restrepo
+# põhiloend, HS 2012). Vahemikud, mis katavad terve rubriigi, päritakse HS4 tasemel.
+# 3D-printerid on HS 2022-s rubriigis 8485 (enne 2022 oli 8485 muude masinaosade rubriik,
+# seepärast arvestatakse 8485 ainult alates 2022). Tulemus: kuude seeriad, mln eurot.
+AUTOMATISEERIMINE_HS <- c(
+  "847950",                                         # tööstusrobotid
+  "847989",                                         # spetsiaalmasinad
+  sprintf("%d", 8456:8466), "846820", "846880", "846890", "851511", "851519",  # tööpingid
+  "851521", "851531", "851580", "851590",           # automaatsed keevitusmasinad
+  "8446", "8447",                                   # kudumis- ja kootmismasinad
+  "8444", "8445",                                   # muud tekstiilitööstuse spetsiaalmasinad
+  "842831", "842832", "842833", "842839",           # automaatsed konveierid
+  "9032",                                           # automaatsed reguleerimisseadmed
+  "847780", "848520", "848530", "848580", "848590"  # 3D-printerid (HS 2012 ja HS 2022)
+)
+automatiseerimise_kaubandus <- local({
+  malu <- NULL
+  function() {
+    if (!is.null(malu)) { if (inherits(malu, "error")) stop(malu); return(malu) }
+    malu <<- tryCatch({
+      df <- comext_kuud(AUTOMATISEERIMINE_HS)
+      df <- df[!(substr(df$product, 1, 4) == "8485" & as.integer(substr(df$per, 1, 4)) < 2022), ]
+      puudu <- setdiff(AUTOMATISEERIMINE_HS, unique(df$product))
+      if (length(puudu)) message("Comext: andmeteta kaubakoodid: ", paste(puudu, collapse = ", "))
+      kokku <- function(voog) {
+        x <- df[df$flow == voog, ]
+        a <- tapply(x$value, x$per, sum, na.rm = TRUE)
+        seeria(names(a), round(as.numeric(a) / 1e6, 2))
+      }
+      tul <- list(import = kokku("1"), eksport = kokku("2"))
+      message("Automatiseerimisseadmed ", utils::tail(tul$import$periods, 1), ": import ",
+              utils::tail(tul$import$values, 1), " mln €, eksport ", utils::tail(tul$eksport$values, 1), " mln €")
+      tul
+    }, error = function(e) e)
+    if (inherits(malu, "error")) stop(malu)
+    malu
+  }
+})
+
 # ---- Tootlikkus tegevusalati (Eurostat) --------------------------------------
 # Lisandväärtus töötatud tunni kohta, indeks baas = 100. Mahu muutus tuleb aheldatud
 # mahu aastamuutusest (nama_10_a10, CLV_PCH_PRE), mis ei sõltu Eurostati baasaastast;

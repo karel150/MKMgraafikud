@@ -71,6 +71,16 @@ Rootsi lisamiseks on vaja ENTSO-E läbipaistvusplatvormi API-võtit.
   failis pole (nt nädalavahetusel), näidatakse viimast päeva koos kuupäevaga.
 * Nord Pooli enda andmeportaalist andmeid ei võeta: avalik edasilevitamine vajab tasulist litsentsi.
 
+## Automatiseerimisseadmete netoimport (näitaja 54)
+
+Eurostati Comexti andmestik `DS-045409` (API `ec.europa.eu/eurostat/api/comext/dissemination/statistics/1.0/data/`),
+Eesti kaubavahetus kõigi riikidega (`partner=WORLD`), väärtus eurodes kuude kaupa, import (`flow=1`) ja
+eksport (`flow=2`). Kaubakoodid on Acemoglu ja Restrepo põhiloendist (HS 2012), loend on muutujas
+`AUTOMATISEERIMINE_HS` failis `R/abi.R`. Terveid rubriike katvad vahemikud (8444–8447, 8456–8466, 9032)
+päritakse HS4 tasemel. 3D-printerid on HS 2022-s rubriigis 8485. Seda arvestatakse alates 2022. aastast,
+sest varem tähendas sama kood muid masinaosi. Leht näitab netoimporti (import − eksport) ning eraldi
+importi ja eksporti.
+
 ## Tootlikkus: TFP ja tegevusalad
 
 * **Näitaja 52, kogutootlikkus (TFP)**: Euroopa Komisjoni AMECO muutuja `ZVGDF` (kogu majandus,
