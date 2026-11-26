@@ -81,6 +81,11 @@ päritakse HS4 tasemel. 3D-printerid on HS 2022-s rubriigis 8485. Seda arvestata
 sest varem tähendas sama kood muid masinaosi. Leht näitab netoimporti (import − eksport) ning eraldi
 importi ja eksporti.
 
+Kaart 54b jagab Eesti netoimpordi kategooriatesse (`AUTOMATISEERIMINE_GRUPID`, kaubakoodi järgi funktsioonis
+`automatiseerimise_grupp`). Võrdluslehel on Eesti, Läti, Leedu, Soome ja Rootsi aasta netoimport
+protsendina sama aasta SKP-st (kvartalite summa, `namq_10_gdp` jooksevhindades). Kõik viis riiki päritakse
+Comextist ühe päringuga. EL-27 koondit ei näidata, sest selle `WORLD` hõlmab liidusisest kaubavahetust.
+
 ## Tootlikkus: TFP ja tegevusalad
 
 * **Näitaja 52, kogutootlikkus (TFP)**: Euroopa Komisjoni AMECO muutuja `ZVGDF` (kogu majandus,

@@ -489,7 +489,7 @@ const SEERIA_NAITAJA = {
   saast_a: ['26', '%'], ehitusload_q: ['27', ''], kasutusload_q: ['47', ''], synnid_m: ['49', ''], surmad_m: ['51', ''], mitteelamud_ehitus_q: ['48', ' tuh m²'], mitteelamud_kasutus_q: ['48', ' tuh m²'],
   vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
   eluase_q: '29', autod_m: ['30', ''], krt_q_cur: ['31', ' mln €'], krt_a_cur: ['31', ' mln €'],
-  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], autom_import_m: ['54', ' mln €'], autom_eksport_m: ['54', ' mln €'], gerd_a: ['45', '%'], teadlased_a: ['46', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
+  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], autom_import_m: ['54', ' mln €'], autom_eksport_m: ['54', ' mln €'], autom_neto_robotid_m: ['54b', ' mln €'], autom_neto_toopingid_m: ['54b', ' mln €'], autom_neto_reguleerimine_m: ['54b', ' mln €'], autom_neto_konveierid_m: ['54b', ' mln €'], autom_neto_tekstiil_m: ['54b', ' mln €'], autom_neto_muud_m: ['54b', ' mln €'], gerd_a: ['45', '%'], teadlased_a: ['46', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
   maksuvolg_arv_m: ['34', ''], maksuvolg_fi_m: ['34', ''], maksuvolg_ji_m: ['34', ''],
   maksuvolg_summa_m: ['35', ' mln €'],
 };
@@ -541,6 +541,8 @@ function muutus(s, lag) {
   return { periods: s.periods.slice(lag), values: s.values.slice(lag).map((v, i) => (v == null || s.values[i] == null ? null : r1((v / s.values[i] - 1) * 100))) };
 }
 const alates = (s, y) => { const i = s.periods.findIndex((p) => aasta(p) >= y); return i < 0 ? { periods: [], values: [] } : { periods: s.periods.slice(i), values: s.values.slice(i) }; };
+// teljesildi komakohad: täisarv 0, muidu nii palju kui sammul vaja (kuni 2)
+const telgKoma = (v) => { const k = (String(+(+v).toFixed(4)).split('.')[1] || '').length; return Math.min(2, k); };
 const xy = (s, extra = {}) => ({ x: s.periods.map(silt), y: s.values, ...extra });
 const viimane = (s) => ({ p: s.periods.at(-1), v: s.values.at(-1) });
 const pais = (big, unit, per, d) => ({ big, bigUnit: unit, per, deltaTxt: d });
@@ -573,6 +575,17 @@ function koostaGrupid(D, META) {
     const n = { periods: im.periods.filter((p) => e.periods.includes(p)) };
     n.values = n.periods.map((p) => r1(im.values[im.periods.indexOf(p)] - e.values[e.periods.indexOf(p)]));
     return xy(n, { series: [{ name: 'Netoimport', y: n.values, c: '--dark-line' }, { name: 'Import', y: joonda(n.periods, im), c: '--s2' }, { name: 'Eksport', y: joonda(n.periods, e), c: '--s1' }], ...extra });
+  };
+  // Automatiseerimisseadmete netoimport kategooriate kaupa (tulbad) ja kokku (joon)
+  const AUTOM_GR = [['robotid', 'Tööstusrobotid', '--s1'], ['toopingid', 'Tööpingid ja keevitusmasinad', '--s2'],
+    ['reguleerimine', 'Reguleerimisseadmed', '--s5'], ['konveierid', 'Konveierid', '--s4'], ['tekstiil', 'Tekstiilimasinad', '--s3'],
+    ['muud', 'Spetsiaalmasinad ja 3D-printerid', '--peer']];
+  const automGr = (alg, kooS, extra = {}) => {
+    const im = kooS(alg('autom_import_m')), e = kooS(alg('autom_eksport_m'));
+    const per = im.periods.filter((p) => e.periods.includes(p));
+    const kokku = per.map((p) => r1(im.values[im.periods.indexOf(p)] - e.values[e.periods.indexOf(p)]));
+    const series = AUTOM_GR.map(([k, name, c]) => ({ name, c, y: joonda(per, kooS(alg(`autom_neto_${k}_m`))).map((v) => (v == null ? null : r1(v))) }));
+    return { x: per.map(silt), y: kokku, series, ...extra };
   };
   const lvlPais = (lvlS, chgS, fmt, unit, prefix, kv) => {
     const l = viimane(lvlS), c = chgS.values.length ? chgS.values.at(-1) : null;
@@ -863,6 +876,10 @@ function koostaGrupid(D, META) {
       F: { M: automF(Q, (s) => s), Q: automF(Q, kuuKv, { note: 'Kvartal on kuude summa.' }), A: automF(S, (s) => koonda(s, aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
       src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
       note: 'Pealkirjas netoimport ehk import miinus eksport. Automatiseerimisseadmed Acemoglu ja Restrepo põhiloendi järgi (HS 2012): tööstusrobotid (847950), spetsiaalmasinad (847989), automaatsed tööpingid (8456–8466, 846820–846899, 851511–851519), automaatsed keevitusmasinad (851521, 851531, 851580, 851590), kudumis-, kootmis- ja muud tekstiilitööstuse masinad (8444–8447), automaatsed konveierid (842831–842839), automaatsed reguleerimisseadmed (9032) ja 3D-printerid (847780, alates 2022 ka HS 2022 rubriik 8485). Kaubavahetus kõigi riikidega, jooksevhindades.' },
+    { nr: '54b', unitChip: 'mln eurot', kind: 'stack', unit: ' mln €', dec: 1, head: 'level', stackJoon: 'Netoimport kokku', stackYhik: ' mln €',
+      F: { Q: automGr((k) => alates(S(k), ALGUS), kuuKv, { note: 'Kvartal on kuude summa.' }), A: automGr(S, (s) => koonda(s, aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
+      src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
+      note: 'Tulbad: netoimport (import miinus eksport) kategooriate kaupa; negatiivne tulp tähendab, et eksport ületas importi. Joon: netoimport kokku. Kategooriate kaubakoodid on samad mis näitajal 54; spetsiaalmasinad on 847989.' },
     { nr: '39', unitChip: 'laevakülastuste arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
       F: { M: xy(Q('sadam_laevu_m')), Q: xy(kuuKv(Q('sadam_laevu_m')), { note: 'Kvartal on kuude summa.' }), A: xy(koonda(S('sadam_laevu_m'), aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
       src: 'UN Global Platform; IMF PortWatch', url: 'https://portwatch.imf.org/',
@@ -1409,7 +1426,7 @@ function economyOption(it) {
       valueFormatter: fmt, axisPointer: { type: it.kind === 'bar' || it.kind === 'col' ? 'shadow' : 'line', lineStyle: { color: t.muted }, shadowStyle: { color: 'rgba(128,140,160,.12)' } } },
     xAxis: xAxisFor(it, t),
     yAxis: { type: 'value', scale: it.scale || (it.kind === 'line' && !it.ref && it.unit !== '%'), splitLine: { lineStyle: { color: t.grid } },
-      axisLabel: { color: t.muted, fontSize: 11, formatter: (v) => nf(Number.isInteger(v) ? 0 : 1).format(v) } },
+      axisLabel: { color: t.muted, fontSize: 11, formatter: (v) => nf(telgKoma(v)).format(v) } },
   };
   const legend = { top: 0, left: 0, right: 0, itemWidth: 14, itemHeight: 2, icon: 'rect', itemGap: 12, textStyle: { color: t.muted, fontSize: 12 } };
   if (it.kind === 'bar') {
@@ -1437,10 +1454,10 @@ function economyOption(it) {
   } else if (it.kind === 'stack') {
     base.legend = { ...legend, itemHeight: 8, icon: 'roundRect' };
     base.tooltip.axisPointer = { type: 'shadow', shadowStyle: { color: 'rgba(128,140,160,.12)' } };
-    base.tooltip.valueFormatter = (v) => (v == null ? '–' : nf(1).format(v) + ' pp');
+    base.tooltip.valueFormatter = (v) => (v == null ? '–' : nf(1).format(v) + (it.stackYhik || ' pp'));
     base.series = [
       ...it.series.map((s) => ({ type: 'bar', name: s.name, stack: 'panus', data: s.y, barCategoryGap: '25%', itemStyle: { color: t.get(s.c), borderColor: t.surface, borderWidth: 0.5 } })),
-      { type: 'line', name: 'SKP kasv kokku, %', data: it.y, showSymbol: true, symbol: 'circle', symbolSize: 5, lineStyle: { color: t.fg, width: 1.5 }, itemStyle: { color: t.fg }, z: 5 },
+      { type: 'line', name: it.stackJoon || 'SKP kasv kokku, %', data: it.y, showSymbol: true, symbol: 'circle', symbolSize: 5, lineStyle: { color: t.fg, width: 1.5 }, itemStyle: { color: t.fg }, z: 5 },
     ];
   } else if (it.kind === 'riigid') {
     // Iga riigi väärtus Eesti viimasel perioodil; kui riigil see puudub, tema viimane periood (sulgudes)
@@ -1456,7 +1473,7 @@ function economyOption(it) {
     base.tooltip = { trigger: 'item', backgroundColor: t.surface, borderColor: t.line, textStyle: { color: t.fg, fontSize: 12 },
       formatter: (p) => `${esc(rows[p.dataIndex].name)}: <b>${sgnFmt(rows[p.dataIndex].v)}</b>` };
     base.xAxis = { type: 'value', min: (v) => (v.min < 0 ? Math.floor(v.min - (v.max - v.min) * 0.28) : 0), splitLine: { lineStyle: { color: t.grid } },
-      axisLabel: { color: t.muted, fontSize: 11, hideOverlap: true, formatter: (v) => nf(Number.isInteger(v + ref) ? 0 : 1).format(v + ref) } };
+      axisLabel: { color: t.muted, fontSize: 11, hideOverlap: true, formatter: (v) => nf(telgKoma(v + ref)).format(v + ref) } };
     base.yAxis = { type: 'category', inverse: true, data: rows.map((r) => r.name), axisTick: { show: false }, axisLine: { lineStyle: { color: t.line } },
       axisLabel: { color: t.muted, fontSize: 12, formatter: (v) => (v.startsWith('Eesti') ? `{ee|${v}}` : v), rich: { ee: { color: t.fg, fontWeight: 700, fontSize: 12 } } } };
     base.series = [{ type: 'bar', barWidth: '58%',
@@ -1616,6 +1633,12 @@ function koostaVordlus(V, META) {
       .concat(lisa.filter((r) => r.s.periods.length).map((r) => ({ name: r.name, y: joonda(per, r.s), c: r.c })));
     return { x: per.map(silt), y: series[0].y, series, ...extra };
   };
+  // Automatiseerimisseadmete aasta netoimport % sama aasta SKP-st (kuude ja kvartalite summad)
+  const automSkp = (g) => {
+    const n = koonda(S('autom_neto_m_' + g), aKey, 12, sum), y = koonda(S('skp_q_' + g), aKey, 4, sum);
+    const per = n.periods.filter((p) => y.periods.includes(p));
+    return { periods: per, values: per.map((p) => r2(n.values[n.periods.indexOf(p)] / y.values[y.periods.indexOf(p)] * 100)) };
+  };
   // Otseinvesteeringute positsioon % nelja viimase kvartali SKP-st
   const fdiSkp = (g) => {
     const f = S('fdi_q_' + g), y = S('skp_q_' + g);
@@ -1727,6 +1750,10 @@ function koostaVordlus(V, META) {
       F: { A: riigid((g) => S('tfp_a_' + g)) },
       src: 'Euroopa Komisjon, AMECO (ZVGDF)', url: 'https://db.nomics.world/AMECO/ZVGDF',
       note: 'Kogu majanduse kogutootlikkus, Euroopa Komisjoni arvutus tootmisfunktsiooni meetodil. Indeks näitab muutust riigi sees, mitte riikide taset. Komisjoni prognoosiaastaid ei näidata.' },
+    { nr: '54', nimi: 'Automatiseerimisseadmete netoimport, % SKP-st', unitChip: '% SKP-st', kind: 'lines', unit: '%', dec: 2, head: 'vrd', pm: true, ref: 0,
+      F: { A: riigid((g) => automSkp(g)) },
+      src: 'Eurostat Comext DS-045409; SKP namq_10_gdp', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
+      note: 'Automatiseerimisseadmete (Acemoglu ja Restrepo põhiloend, HS 2012) import miinus eksport protsendina sama aasta SKP-st jooksevhindades. Kaubavahetus kõigi riikidega, ka teiste ELi riikidega. EL-27 koondit ei näidata, sest liidusisene kaubavahetus ei ole võrreldav.' },
     { nr: '52b', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true,
       F: { A: riigid((g) => muutus(S('tfp_a_' + g), 1)) },
       src: 'Euroopa Komisjon, AMECO (ZVGDF)', url: 'https://db.nomics.world/AMECO/ZVGDF',

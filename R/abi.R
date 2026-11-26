@@ -738,8 +738,8 @@ jsonstat_df <- function(js) {
 # Comexti päring: väärtused eurodes kuude kaupa, kaubakood x kaubavoog (1 = import, 2 = eksport)
 comext_kuud <- function(tooted, reporter = "EE", partner = "WORLD", andmestik = "DS-045409") {
   aja_kontroll(andmestik)
-  q <- c(list(format = "JSON", lang = "EN", freq = "M", reporter = reporter, partner = partner,
-              indicators = "VALUE_IN_EUROS"),
+  q <- c(list(format = "JSON", lang = "EN", freq = "M", partner = partner, indicators = "VALUE_IN_EUROS"),
+         setNames(as.list(reporter), rep("reporter", length(reporter))),
          setNames(as.list(tooted), rep("product", length(tooted))),
          list(flow = "1", flow = "2"))
   vastus <- NULL
@@ -772,23 +772,57 @@ AUTOMATISEERIMINE_HS <- c(
   "9032",                                           # automaatsed reguleerimisseadmed
   "847780", "848520", "848530", "848580", "848590"  # 3D-printerid (HS 2012 ja HS 2022)
 )
+# Riigid, mille kohta Comextist päritakse (sama mis võrdluslehel; vordlus.R laaditakse hiljem)
+AUTOMATISEERIMINE_RIIGID <- c("EE", "LV", "LT", "FI", "SE")
+# Kategooriad lehe jaotusgraafiku jaoks (kaubakoodi järgi)
+AUTOMATISEERIMINE_GRUPID <- c(robotid = "Tööstusrobotid", toopingid = "Tööpingid ja keevitusmasinad",
+  reguleerimine = "Reguleerimisseadmed", konveierid = "Konveierid", tekstiil = "Tekstiilimasinad",
+  muud = "Spetsiaalmasinad ja 3D-printerid")
+automatiseerimise_grupp <- function(kood) {
+  h4 <- substr(kood, 1, 4)
+  ifelse(kood == "847950", "robotid",
+  ifelse(h4 %in% c(sprintf("%d", 8456:8466), "8468", "8515"), "toopingid",
+  ifelse(h4 == "9032", "reguleerimine",
+  ifelse(h4 == "8428", "konveierid",
+  ifelse(h4 %in% c("8444", "8445", "8446", "8447"), "tekstiil", "muud")))))
+}
+# Tulemus: list(import, eksport = Eesti kuud; grupid = Eesti netoimport kategooriate kaupa;
+# neto = netoimport riigiti). Kõik mln eurot kuus.
 automatiseerimise_kaubandus <- local({
   malu <- NULL
   function() {
     if (!is.null(malu)) { if (inherits(malu, "error")) stop(malu); return(malu) }
     malu <<- tryCatch({
-      df <- comext_kuud(AUTOMATISEERIMINE_HS)
+      df <- comext_kuud(AUTOMATISEERIMINE_HS, reporter = AUTOMATISEERIMINE_RIIGID)
       df <- df[!(substr(df$product, 1, 4) == "8485" & as.integer(substr(df$per, 1, 4)) < 2022), ]
-      puudu <- setdiff(AUTOMATISEERIMINE_HS, unique(df$product))
-      if (length(puudu)) message("Comext: andmeteta kaubakoodid: ", paste(puudu, collapse = ", "))
-      kokku <- function(voog) {
-        x <- df[df$flow == voog, ]
-        a <- tapply(x$value, x$per, sum, na.rm = TRUE)
-        seeria(names(a), round(as.numeric(a) / 1e6, 2))
+      puudu <- setdiff(AUTOMATISEERIMINE_HS, unique(df$product[df$reporter == "EE"]))
+      if (length(puudu)) message("Comext: Eesti andmeteta kaubakoodid: ", paste(puudu, collapse = ", "))
+      # kuu x voog summa; puuduv voog kuul, mil teine on olemas, on 0
+      summad <- function(x) {
+        if (!nrow(x)) return(NULL)
+        t <- xtabs(value ~ per + flow, data = x)
+        v <- function(f) if (f %in% colnames(t)) as.numeric(t[, f]) else rep(0, nrow(t))
+        list(per = rownames(t), import = v("1") / 1e6, eksport = v("2") / 1e6)
       }
-      tul <- list(import = kokku("1"), eksport = kokku("2"))
+      ee <- summad(df[df$reporter == "EE", ])
+      if (is.null(ee)) stop("Comext: Eesti andmeid pole.")
+      df$grupp <- automatiseerimise_grupp(df$product)
+      grupid <- lapply(setNames(names(AUTOMATISEERIMINE_GRUPID), names(AUTOMATISEERIMINE_GRUPID)), function(g) {
+        x <- summad(df[df$reporter == "EE" & df$grupp == g, ])
+        # kõik Eesti kuud, ka need, kus selle kategooria kaubavahetust polnud (0)
+        n <- if (is.null(x)) rep(NA_real_, length(ee$per)) else
+          unname(setNames(round(x$import - x$eksport, 2), x$per)[ee$per])
+        seeria(ee$per, ifelse(is.na(n), 0, n))
+      })
+      neto <- lapply(setNames(AUTOMATISEERIMINE_RIIGID, AUTOMATISEERIMINE_RIIGID), function(r) {
+        x <- summad(df[df$reporter == r, ])
+        if (is.null(x)) NULL else seeria(x$per, round(x$import - x$eksport, 2))
+      })
+      tul <- list(import = seeria(ee$per, round(ee$import, 2)), eksport = seeria(ee$per, round(ee$eksport, 2)),
+                  grupid = grupid, neto = neto)
       message("Automatiseerimisseadmed ", utils::tail(tul$import$periods, 1), ": import ",
-              utils::tail(tul$import$values, 1), " mln €, eksport ", utils::tail(tul$eksport$values, 1), " mln €")
+              utils::tail(tul$import$values, 1), " mln €, eksport ", utils::tail(tul$eksport$values, 1), " mln €; riigid: ",
+              paste(names(Filter(Negate(is.null), neto)), collapse = ", "))
       tul
     }, error = function(e) e)
     if (inherits(malu, "error")) stop(malu)

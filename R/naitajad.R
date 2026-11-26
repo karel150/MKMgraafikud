@@ -325,6 +325,14 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
   # Automatiseerimisseadmete import ja eksport (Eurostat Comext), mln eurot kuus
   lisa("autom_import_m", function() automatiseerimise_kaubandus()$import, c(0, 500))
   lisa("autom_eksport_m", function() automatiseerimise_kaubandus()$eksport, c(0, 500))
+  for (g in names(AUTOMATISEERIMINE_GRUPID)) local({
+    grupp <- g
+    lisa(paste0("autom_neto_", grupp, "_m"), function() {
+      s <- automatiseerimise_kaubandus()$grupid[[grupp]]
+      if (is.null(s)) stop("Comextis pole kategooria ", grupp, " andmeid.")
+      s
+    }, c(-500, 500))
+  })
   # Lisandväärtus töötatud tunni kohta tegevusalati, indeks 2015 = 100 (nama_10_a10, nama_10_a10_e)
   TEGEVUSALAD <- c(TOTAL = "kokku", "B-E" = "toostus", F = "ehitus", "G-I" = "kaubandus", J = "info", M_N = "kutse")
   for (k in names(TEGEVUSALAD)) local({
