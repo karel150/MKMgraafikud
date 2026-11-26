@@ -1,5 +1,5 @@
 {
- "uuendatud": "2026-11-26T10:05:29.264Z",
+ "uuendatud": "2026-11-26T10:58:22.855Z",
  "mudel": "claude-sonnet-5-5",
  "tekstid": {
   "yldine": {
@@ -27,35 +27,35 @@
   },
   "vordlus_M": {
    "laused": [
-    "Eesti on võrdlusriikide seas pigem tagapool, sest tööstustoodangu kasv on viie riigi seas neljandal kohal ja hinnad tõusevad kiiresti.",
-    "Majanduskasv oli kolmandas kvartalis 2,2%, mis on nelja riigi seas kolmas koht, Rootsis oli kasv 2,8%.",
-    "Tarbijahinnad tõusid oktoobris 3,6%, mis on viie riigi seas teine koht, ja kõrgeim tõus oli Leedus 6,1%.",
-    "Töötuse määr 8,0% jääb viie riigi keskele, kuid uute ettevõttelaenude intress 4,71% on euroala keskmisest kõrgem."
+    "Eesti on võrdlusriikide seas pigem keskel, kuid hinnatõus on kiire ja tööstuse kasv aeglane.",
+    "Majanduskasv oli aastaga 2,2%, mis jäi riikide keskmikku, ent töötleva tööstuse kasv oli viie riigi seas alles neljas.",
+    "Tarbijahinnad tõusid Eestis 3,6%, mis on viie riigi seas teine koht, ja kiiremini kasvasid hinnad vaid Leedus, 6,1%.",
+    "Töötuse määr 8,0% oli kolmas kõrgeim viie riigi seas, Soomes oli see 11,0%."
    ],
-   "rohk": "pigem tagapool",
-   "rasi": "130ab6fbb4df4dd5",
+   "rohk": "pigem keskel",
+   "rasi": "7ce28b2cdbcb8e97",
    "aeg": "2026-11-26"
   },
   "vordlus_Q": {
    "laused": [
-    "Eesti on võrdlusriikide seas tööstuskasvult tagapool, kuid hinnatõus on siin aeglasem kui enamikus riikides.",
-    "Töötleva tööstuse toodang kasvas 2,0%, mis on viie riigi seas kõige nõrgem tulemus.",
-    "Tarbijahinnad tõusid 2,1%, samal ajal kui Leedus tõusid need 5,7%.",
-    "Ettevõtete uute laenude intressimäär oli 4,78%, mis on kõrgem kui euroala keskmine 3,82%."
+    "Eesti töötleva tööstuse kasv on võrdlusriikide seas kõige nõrgem, hinnatõus on aga võrdlemisi aeglane.",
+    "Töötleva tööstuse toodang kasvas 2,0%, mis on viie riigi seas madalaim tulemus.",
+    "Tarbijahinnad tõusid 2,1%, ainult Rootsis oli hinnatõus aeglasem.",
+    "Ettevõtete uute laenude intressimäär oli 4,78%, euroala keskmine 3,82%, nii et laenamine on Eestis kallim."
    ],
-   "rohk": "tööstuskasvult tagapool",
-   "rasi": "6b1e24751807773a",
+   "rohk": "töötleva tööstuse kasv on võrdlusriikide seas kõige nõrgem",
+   "rasi": "3893bb61f7c11195",
    "aeg": "2026-11-26"
   },
   "vordlus_A": {
    "laused": [
-    "Eesti majanduskasv jääb võrdlusriikide seas tagasihoidlikuks ja hinnad tõusevad siin kiiremini kui üheski teises riigis.",
-    "Majandus kasvas 1,3%, Leedus aga 3,0%.",
-    "Tarbijahinnad tõusid 4,8%, Soomes 1,8%, ja ettevõtete uute laenude intress on nelja riigi seas kõrgeim.",
-    "Tööstustoodangu kasv ja töötuse määr jäävad viie riigi seas keskele, kusjuures töötus on Soomes Eestist kõrgem."
+    "Eesti on viie riigi võrdluses enamikus näitajates pigem tagapool: hinnatõus on kiireim, majanduskasv jäi neljandaks ja laenud on kallimad.",
+    "Tarbijahinnad tõusid Eestis 4,8%, Soomes vaid 1,8%.",
+    "Ettevõtete uute laenude intressimäär oli 4,93%, mis on nelja riigi seas kõrgeim, euroala keskmine oli 3,70%.",
+    "Töötuse määr 7,5% jääb võrdlusriikide keskele ja on madalam kui Soomes, kus see oli 9,7%."
    ],
-   "rohk": "majanduskasv jääb võrdlusriikide seas tagasihoidlikuks",
-   "rasi": "e33aa8d2d096c0ed",
+   "rohk": "hinnatõus on kiireim",
+   "rasi": "d8ad6b27e325bb02",
    "aeg": "2026-11-26"
   }
  }
