@@ -592,7 +592,8 @@ function koostaGrupid(D, META) {
   };
   // Puidu ja puittoodete ekspordi kilohind: pealkirjas kokku, joontena tooterühmad
   const PUIT_GR = [['saematerjal', 'Saematerjal (4407)', '--s1'], ['ehituspuusepad', 'Ehituspuusepatooted (4418)', '--s2'],
-    ['kytus', 'Küttepuit ja graanulid (4401)', '--s3'], ['umarpuit', 'Ümarpuit (4403)', '--s4']];
+    ['kytus', 'Küttepuit ja graanulid (4401)', '--s3'], ['umarpuit', 'Ümarpuit (4403)', '--s4'],
+    ['puitmajad', 'Puitmajad (940610)', '--s5'], ['mobel', 'Puitmööbel', '--peer']];
   const puitF = (alg, kooS, extra = {}) => {
     const kh = (k) => kilohind(kooS(alg(`puit_${k}_eur_m`)), kooS(alg(`puit_${k}_kg_m`)));
     const k = kh('kokku');
@@ -895,7 +896,7 @@ function koostaGrupid(D, META) {
     { nr: '55', unitChip: 'eurot kilogrammi kohta', kind: 'lines', unit: ' €/kg', dec: 2, head: 'levelpct',
       F: { M: puitF(Q, (s) => s), Q: puitF(Q, kuuKv, { note: 'Kvartali kilohind on kuude väärtuste summa jagatud koguste summaga.' }), A: puitF(S, (s) => koonda(s, aKey, 12, sum), { note: 'Aasta kilohind on kuude väärtuste summa jagatud koguste summaga. Poolikut aastat ei näidata.' }) },
       src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
-      note: 'Puidu ja puittoodete (HS grupp 44) ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse, jooksevhindades. Kilohind sõltub ka ekspordi koosseisust: kui odavama toote (nt küttepuidu) osa kasvab, langeb keskmine kilohind. Puitmajad (9406) ja mööbel (94) ei kuulu grupi 44 alla.' },
+      note: 'Puidu ja puittoodete (HS grupp 44) ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse, jooksevhindades. Kilohind sõltub ka ekspordi koosseisust: kui odavama toote (nt küttepuidu) osa kasvab, langeb keskmine kilohind. Puitmajad (940610, alates 2017) ja puitmööbel (puitraamiga istmed 940161, 940169 ning puitmööbel 940330–940360) on eraldi joontena; need ei kuulu grupi 44 alla ega pealkirja summasse.' },
     { nr: '39', unitChip: 'laevakülastuste arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
       F: { M: xy(Q('sadam_laevu_m')), Q: xy(kuuKv(Q('sadam_laevu_m')), { note: 'Kvartal on kuude summa.' }), A: xy(koonda(S('sadam_laevu_m'), aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
       src: 'UN Global Platform; IMF PortWatch', url: 'https://portwatch.imf.org/',
@@ -1776,6 +1777,16 @@ function koostaVordlus(V, META) {
            A: riigid((g) => kilohind(koonda(S('puit_eur_m_' + g), aKey, 12, sum), koonda(S('puit_kg_m_' + g), aKey, 12, sum))) },
       src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
       note: 'Puidu ja puittoodete (HS grupp 44) ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse. Riikide erinevus peegeldab suuresti ekspordi koosseisu (ümarpuit ja küttepuit on odavad, töödeldud tooted kallid). Kvartali ja aasta kilohind on kuude väärtuste summa jagatud koguste summaga.' },
+    { nr: '55b', unitChip: 'eurot kilogrammi kohta', kind: 'lines', unit: ' €/kg', dec: 2, head: 'vrd',
+      F: { Q: riigid((g) => kilohind(kuuKvV(S('puitmajad_eur_m_' + g)), kuuKvV(S('puitmajad_kg_m_' + g)))),
+           A: riigid((g) => kilohind(koonda(S('puitmajad_eur_m_' + g), aKey, 12, sum), koonda(S('puitmajad_kg_m_' + g), aKey, 12, sum))) },
+      src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
+      note: 'Puidust kokkupandavate ehitiste (HS 940610) ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse. Andmed alates 2017, varem olid kõik kokkupandavad ehitised ühes koodis. Kvartali ja aasta kilohind on kuude väärtuste summa jagatud koguste summaga.' },
+    { nr: '55c', unitChip: 'eurot kilogrammi kohta', kind: 'lines', unit: ' €/kg', dec: 2, head: 'vrd',
+      F: { Q: riigid((g) => kilohind(kuuKvV(S('mobel_eur_m_' + g)), kuuKvV(S('mobel_kg_m_' + g)))),
+           A: riigid((g) => kilohind(koonda(S('mobel_eur_m_' + g), aKey, 12, sum), koonda(S('mobel_kg_m_' + g), aKey, 12, sum))) },
+      src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
+      note: 'Puitmööbli (puitraamiga istmed 940161, 940169 ning puitmööbel 940330–940360) ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse. Kvartali ja aasta kilohind on kuude väärtuste summa jagatud koguste summaga.' },
     { nr: '52b', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true,
       F: { A: riigid((g) => muutus(S('tfp_a_' + g), 1)) },
       src: 'Euroopa Komisjon, AMECO (ZVGDF)', url: 'https://db.nomics.world/AMECO/ZVGDF',

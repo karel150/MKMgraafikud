@@ -760,17 +760,23 @@ comext_kuud <- function(tooted, reporter = "EE", partner = "WORLD", andmestik = 
 
 # Puidu ja puittoodete (HS 44) eksport: väärtus ja kogus riigiti ja tooterühmiti.
 # Kilohind arvutatakse lehel perioodi väärtuste ja koguste summast.
-PUIT_HS <- c(kokku = "44", kytus = "4401", umarpuit = "4403", saematerjal = "4407", ehituspuusepad = "4418")
+# Puitmajad: HS 940610 (alates 2017; HS 2012-s olid kõik kokkupandavad ehitised koodis 940600).
+# Puitmööbel: puitraamiga istmed (940161, 940169) ja puitmööbel (940330, 940340, 940350, 940360).
+PUIT_HS <- list(kokku = "44", kytus = "4401", umarpuit = "4403", saematerjal = "4407", ehituspuusepad = "4418",
+                puitmajad = "940610", mobel = c("940161", "940169", "940330", "940340", "940350", "940360"))
 puidu_eksport <- local({
   malu <- NULL
   function() {
     if (!is.null(malu)) { if (inherits(malu, "error")) stop(malu); return(malu) }
     malu <<- tryCatch({
-      df <- comext_kuud(unname(PUIT_HS), reporter = AUTOMATISEERIMINE_RIIGID,
+      df <- comext_kuud(unique(unlist(PUIT_HS)), reporter = AUTOMATISEERIMINE_RIIGID,
                         naitajad = c("VALUE_IN_EUROS", "QUANTITY_IN_100KG"), vood = "2")
       tul <- lapply(setNames(AUTOMATISEERIMINE_RIIGID, AUTOMATISEERIMINE_RIIGID), function(r) {
-        lapply(PUIT_HS, function(kood) {
-          x <- df[df$reporter == r & df$product == kood, ]
+        lapply(PUIT_HS, function(koodid) {
+          x <- df[df$reporter == r & df$product %in% koodid, ]
+          if (!nrow(x)) return(NULL)
+          # mitme koodiga rühm: kuu summa näitaja kaupa
+          x <- stats::aggregate(value ~ per + indicators, data = x, FUN = sum)
           v <- x[x$indicators == "VALUE_IN_EUROS", ]; k <- x[x$indicators == "QUANTITY_IN_100KG", ]
           # ainult kuud, kus on nii väärtus kui ka kogus (muidu kilohind kallutatud)
           per <- intersect(v$per[v$value > 0], k$per[k$value > 0])

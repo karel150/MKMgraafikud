@@ -216,6 +216,12 @@ koosta_vordlus <- function(icu = NULL) {
             fn = function(geos) lapply(puidu_eksport()[geos], function(x) x$kokku$eur))
   andmestik("puit_kg_m", "comext", list(), c(0, 50000), geos = VORDLUS_RIIGID,
             fn = function(geos) lapply(puidu_eksport()[geos], function(x) x$kokku$kg))
+  # 55b, 55c puitmajad ja puitmööbel
+  for (g in c("puitmajad", "mobel")) for (m in c("eur", "kg")) local({
+    grupp <- g; moot <- m
+    andmestik(paste0(grupp, "_", moot, "_m"), "comext", list(), c(0, 50000), geos = VORDLUS_RIIGID,
+              fn = function(geos) lapply(puidu_eksport()[geos], function(x) x[[grupp]][[moot]]))
+  })
   # 52 kogutootlikkus (TFP), indeks 2020 = 100 (Euroopa Komisjoni AMECO)
   andmestik("tfp_a", "ameco", list(), c(30, 200), fn = function(geos) ameco_seeriad("ZVGDF")[geos])
   andmestik("ulc_q",   "namq_10_lp_ulc", Q_(na_item = "NULC_HW", unit = "PCH_SM", s_adj = "SCA"), YOY)
