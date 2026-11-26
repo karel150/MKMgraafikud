@@ -322,6 +322,9 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
   # Tööjõu tootlikkus hõivatu kohta, % EL-27 keskmisest (ostujõu standardis)
   lisa("tootl_el_a", function() eurostat_seeria("nama_10_lp_ulc", list(
     geo = "EE", na_item = "NLPR_PER", unit = "PC_EU27_2020_MPPS_CP", freq = "A")), c(20, 200))
+  # Automatiseerimisseadmete import ja eksport (Eurostat Comext), mln eurot kuus
+  lisa("autom_import_m", function() automatiseerimise_kaubandus()$import, c(0, 500))
+  lisa("autom_eksport_m", function() automatiseerimise_kaubandus()$eksport, c(0, 500))
   # Lisandväärtus töötatud tunni kohta tegevusalati, indeks 2015 = 100 (nama_10_a10, nama_10_a10_e)
   TEGEVUSALAD <- c(TOTAL = "kokku", "B-E" = "toostus", F = "ehitus", "G-I" = "kaubandus", J = "info", M_N = "kutse")
   for (k in names(TEGEVUSALAD)) local({

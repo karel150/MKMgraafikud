@@ -489,7 +489,7 @@ const SEERIA_NAITAJA = {
   saast_a: ['26', '%'], ehitusload_q: ['27', ''], kasutusload_q: ['47', ''], synnid_m: ['49', ''], surmad_m: ['51', ''], mitteelamud_ehitus_q: ['48', ' tuh m²'], mitteelamud_kasutus_q: ['48', ' tuh m²'],
   vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
   eluase_q: '29', autod_m: ['30', ''], krt_q_cur: ['31', ' mln €'], krt_a_cur: ['31', ' mln €'],
-  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], gerd_a: ['45', '%'], teadlased_a: ['46', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
+  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], autom_import_m: ['54', ' mln €'], autom_eksport_m: ['54', ' mln €'], gerd_a: ['45', '%'], teadlased_a: ['46', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
   maksuvolg_arv_m: ['34', ''], maksuvolg_fi_m: ['34', ''], maksuvolg_ji_m: ['34', ''],
   maksuvolg_summa_m: ['35', ' mln €'],
 };
@@ -566,6 +566,13 @@ function koostaGrupid(D, META) {
   const sadamF = (alg, kooS, extra = {}) => {
     const e = kooS(alg('sadam_eksport_m')), im = kooS(alg('sadam_import_m')), k = sumS(e, im);
     return xy(k, { series: [{ name: 'Eksport', y: joonda(k.periods, e), c: '--s1' }, { name: 'Import', y: joonda(k.periods, im), c: '--s2' }], ...extra });
+  };
+  // Automatiseerimisseadmed: pealkiri on netoimport (import − eksport), joontena ka import ja eksport
+  const automF = (alg, kooS, extra = {}) => {
+    const im = kooS(alg('autom_import_m')), e = kooS(alg('autom_eksport_m'));
+    const n = { periods: im.periods.filter((p) => e.periods.includes(p)) };
+    n.values = n.periods.map((p) => r1(im.values[im.periods.indexOf(p)] - e.values[e.periods.indexOf(p)]));
+    return xy(n, { series: [{ name: 'Netoimport', y: n.values, c: '--dark-line' }, { name: 'Import', y: joonda(n.periods, im), c: '--s2' }, { name: 'Eksport', y: joonda(n.periods, e), c: '--s1' }], ...extra });
   };
   const lvlPais = (lvlS, chgS, fmt, unit, prefix, kv) => {
     const l = viimane(lvlS), c = chgS.values.length ? chgS.values.at(-1) : null;
@@ -852,6 +859,10 @@ function koostaGrupid(D, META) {
       F: { M: sadamF(Q, (s) => s), Q: sadamF(Q, kuuKv, { note: 'Kvartal on kuude summa.' }), A: sadamF(S, (s) => koonda(s, aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
       src: 'UN Global Platform; IMF PortWatch', url: 'https://portwatch.imf.org/',
       note: 'Pealkirjas eksport ja import kokku. Eesti sadamate hinnanguline kaubamaht laevade satelliitandmete (AIS) põhjal, esialgne ja võib muutuda; ei ole ametlik kaubandusstatistika.' },
+    { nr: '54', unitChip: 'mln eurot', kind: 'lines', unit: ' mln €', dec: 1, head: 'level', ref: 0,
+      F: { M: automF(Q, (s) => s), Q: automF(Q, kuuKv, { note: 'Kvartal on kuude summa.' }), A: automF(S, (s) => koonda(s, aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
+      src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
+      note: 'Pealkirjas netoimport ehk import miinus eksport. Automatiseerimisseadmed Acemoglu ja Restrepo põhiloendi järgi (HS 2012): tööstusrobotid (847950), spetsiaalmasinad (847989), automaatsed tööpingid (8456–8466, 846820–846899, 851511–851519), automaatsed keevitusmasinad (851521, 851531, 851580, 851590), kudumis-, kootmis- ja muud tekstiilitööstuse masinad (8444–8447), automaatsed konveierid (842831–842839), automaatsed reguleerimisseadmed (9032) ja 3D-printerid (847780, alates 2022 ka HS 2022 rubriik 8485). Kaubavahetus kõigi riikidega, jooksevhindades.' },
     { nr: '39', unitChip: 'laevakülastuste arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
       F: { M: xy(Q('sadam_laevu_m')), Q: xy(kuuKv(Q('sadam_laevu_m')), { note: 'Kvartal on kuude summa.' }), A: xy(koonda(S('sadam_laevu_m'), aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
       src: 'UN Global Platform; IMF PortWatch', url: 'https://portwatch.imf.org/',
