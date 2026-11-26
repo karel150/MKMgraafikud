@@ -71,6 +71,14 @@ Rootsi lisamiseks on vaja ENTSO-E läbipaistvusplatvormi API-võtit.
   failis pole (nt nädalavahetusel), näidatakse viimast päeva koos kuupäevaga.
 * Nord Pooli enda andmeportaalist andmeid ei võeta: avalik edasilevitamine vajab tasulist litsentsi.
 
+## Puidu ja puittoodete ekspordi kilohind (näitaja 55)
+
+Eurostati Comext `DS-045409`, eksport (`flow=2`) kõikidesse riikidesse, näitajad `VALUE_IN_EUROS` ja
+`QUANTITY_IN_100KG` (kogus on 100 kg ühikutes). Tooterühmad on muutujas `PUIT_HS`: grupp 44 kokku, 4401
+(küttepuit ja graanulid), 4403 (ümarpuit), 4407 (saematerjal), 4418 (ehituspuusepatooted). JSON-i
+kirjutatakse kuude väärtus (mln €) ja kogus (mln kg). Kilohind arvutatakse lehel perioodi väärtuste ja
+koguste summast. Võrdluslehel on Eesti, Läti, Leedu, Soome ja Rootsi.
+
 ## Automatiseerimisseadmete netoimport (näitaja 54)
 
 Eurostati Comexti andmestik `DS-045409` (API `ec.europa.eu/eurostat/api/comext/dissemination/statistics/1.0/data/`),

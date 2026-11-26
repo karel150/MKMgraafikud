@@ -413,6 +413,13 @@
    "nimi": "Automatiseerimisseadmete netoimport kategooriate kaupa",
    "kirjeldus": "Tööstusrobotite, tööpinkide, reguleerimisseadmete, konveierite, tekstiilimasinate ja muude automatiseerimisseadmete import miinus eksport, mln eurot",
    "miks": "Näitab, millised seadmed netoimporti veavad ja millistes Eesti ise rohkem ekspordib kui impordib"
+  },
+  "55": {
+   "valdkond": "Väliskaubandus",
+   "peamine": false,
+   "nimi": "Puidu ja puittoodete ekspordi kilohind",
+   "kirjeldus": "Puidu ja puittoodete (HS 44) ekspordi keskmine hind kilogrammi kohta, kokku ja peamiste tooterühmade kaupa",
+   "miks": "Näitab, kui palju väärtust ühe kilogrammi eksporditud puidu kohta saadakse – kõrgem kilohind viitab rohkem töödeldud toodetele või kõrgematele hindadele"
   }
  }
 }

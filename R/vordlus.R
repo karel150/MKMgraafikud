@@ -211,6 +211,11 @@ koosta_vordlus <- function(icu = NULL) {
   # 54 automatiseerimisseadmete netoimport, mln eurot kuus (Eurostat Comext); lehel % SKP-st
   andmestik("autom_neto_m", "comext", list(), c(-5000, 5000), geos = VORDLUS_RIIGID,
             fn = function(geos) automatiseerimise_kaubandus()$neto[geos])
+  # 55 puidu ja puittoodete (HS 44) ekspordi väärtus ja kogus; lehel kilohind
+  andmestik("puit_eur_m", "comext", list(), c(0, 5000), geos = VORDLUS_RIIGID,
+            fn = function(geos) lapply(puidu_eksport()[geos], function(x) x$kokku$eur))
+  andmestik("puit_kg_m", "comext", list(), c(0, 50000), geos = VORDLUS_RIIGID,
+            fn = function(geos) lapply(puidu_eksport()[geos], function(x) x$kokku$kg))
   # 52 kogutootlikkus (TFP), indeks 2020 = 100 (Euroopa Komisjoni AMECO)
   andmestik("tfp_a", "ameco", list(), c(30, 200), fn = function(geos) ameco_seeriad("ZVGDF")[geos])
   andmestik("ulc_q",   "namq_10_lp_ulc", Q_(na_item = "NULC_HW", unit = "PCH_SM", s_adj = "SCA"), YOY)
