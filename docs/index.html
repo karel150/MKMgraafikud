@@ -489,7 +489,7 @@ const SEERIA_NAITAJA = {
   saast_a: ['26', '%'], ehitusload_q: ['27', ''], kasutusload_q: ['47', ''], synnid_m: ['49', ''], surmad_m: ['51', ''], mitteelamud_ehitus_q: ['48', ' tuh m²'], mitteelamud_kasutus_q: ['48', ' tuh m²'],
   vedu_q_rahvusv: '28', vedu_q_riigisis: '28', vedu_a_rahvusv: '28', vedu_a_riigisis: '28',
   eluase_q: '29', autod_m: ['30', ''], krt_q_cur: ['31', ' mln €'], krt_a_cur: ['31', ' mln €'],
-  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], autom_import_m: ['54', ' mln €'], autom_eksport_m: ['54', ' mln €'], autom_neto_robotid_m: ['54b', ' mln €'], autom_neto_toopingid_m: ['54b', ' mln €'], autom_neto_reguleerimine_m: ['54b', ' mln €'], autom_neto_konveierid_m: ['54b', ' mln €'], autom_neto_tekstiil_m: ['54b', ' mln €'], autom_neto_muud_m: ['54b', ' mln €'], gerd_a: ['45', '%'], teadlased_a: ['46', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
+  laenuintress_m: ['32', '%'], elekter_m: ['37', ' €/MWh'], sadam_eksport_m: ['38', ' tuh t'], sadam_import_m: ['38', ' tuh t'], sadam_laevu_m: ['39', ''], autom_import_m: ['54', ' mln €'], puit_kokku_eur_m: ['55', ' mln €'], autom_eksport_m: ['54', ' mln €'], autom_neto_robotid_m: ['54b', ' mln €'], autom_neto_toopingid_m: ['54b', ' mln €'], autom_neto_reguleerimine_m: ['54b', ' mln €'], autom_neto_konveierid_m: ['54b', ' mln €'], autom_neto_tekstiil_m: ['54b', ' mln €'], autom_neto_muud_m: ['54b', ' mln €'], gerd_a: ['45', '%'], teadlased_a: ['46', ''], kindl_toostus_m: ['40', ''], kindl_teenindus_m: ['41', ''], kindl_tarbijad_m: ['42', ''], kindl_jae_m: ['43', ''], kindl_ehitus_m: ['44', ''], voimsus_q: ['33', '%'], voimsus_q_stat: ['33', '%'],
   maksuvolg_arv_m: ['34', ''], maksuvolg_fi_m: ['34', ''], maksuvolg_ji_m: ['34', ''],
   maksuvolg_summa_m: ['35', ' mln €'],
 };
@@ -541,6 +541,9 @@ function muutus(s, lag) {
   return { periods: s.periods.slice(lag), values: s.values.slice(lag).map((v, i) => (v == null || s.values[i] == null ? null : r1((v / s.values[i] - 1) * 100))) };
 }
 const alates = (s, y) => { const i = s.periods.findIndex((p) => aasta(p) >= y); return i < 0 ? { periods: [], values: [] } : { periods: s.periods.slice(i), values: s.values.slice(i) }; };
+// Kilohind perioodi kaupa: väärtuste summa / koguste summa (mln € / mln kg = €/kg)
+const kilohind = (eur, kg) => { const per = eur.periods.filter((p) => kg.periods.includes(p));
+  return { periods: per, values: per.map((p) => { const k = kg.values[kg.periods.indexOf(p)]; return k ? Math.round(eur.values[eur.periods.indexOf(p)] / k * 1000) / 1000 : null; }) }; };
 // teljesildi komakohad: täisarv 0, muidu nii palju kui sammul vaja (kuni 2)
 const telgKoma = (v) => { const k = (String(+(+v).toFixed(4)).split('.')[1] || '').length; return Math.min(2, k); };
 const xy = (s, extra = {}) => ({ x: s.periods.map(silt), y: s.values, ...extra });
@@ -586,6 +589,15 @@ function koostaGrupid(D, META) {
     const kokku = per.map((p) => r1(im.values[im.periods.indexOf(p)] - e.values[e.periods.indexOf(p)]));
     const series = AUTOM_GR.map(([k, name, c]) => ({ name, c, y: joonda(per, kooS(alg(`autom_neto_${k}_m`))).map((v) => (v == null ? null : r1(v))) }));
     return { x: per.map(silt), y: kokku, series, ...extra };
+  };
+  // Puidu ja puittoodete ekspordi kilohind: pealkirjas kokku, joontena tooterühmad
+  const PUIT_GR = [['saematerjal', 'Saematerjal (4407)', '--s1'], ['ehituspuusepad', 'Ehituspuusepatooted (4418)', '--s2'],
+    ['kytus', 'Küttepuit ja graanulid (4401)', '--s3'], ['umarpuit', 'Ümarpuit (4403)', '--s4']];
+  const puitF = (alg, kooS, extra = {}) => {
+    const kh = (k) => kilohind(kooS(alg(`puit_${k}_eur_m`)), kooS(alg(`puit_${k}_kg_m`)));
+    const k = kh('kokku');
+    return xy(k, { series: [{ name: 'Puit ja puittooted kokku', y: k.values, c: '--dark-line' },
+      ...PUIT_GR.map(([g, name, c]) => ({ name, c, y: joonda(k.periods, kh(g)) }))], ...extra });
   };
   const lvlPais = (lvlS, chgS, fmt, unit, prefix, kv) => {
     const l = viimane(lvlS), c = chgS.values.length ? chgS.values.at(-1) : null;
@@ -880,6 +892,10 @@ function koostaGrupid(D, META) {
       F: { Q: automGr((k) => alates(S(k), ALGUS), kuuKv, { note: 'Kvartal on kuude summa.' }), A: automGr(S, (s) => koonda(s, aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
       src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
       note: 'Tulbad: netoimport (import miinus eksport) kategooriate kaupa; negatiivne tulp tähendab, et eksport ületas importi. Joon: netoimport kokku. Kategooriate kaubakoodid on samad mis näitajal 54; spetsiaalmasinad on 847989.' },
+    { nr: '55', unitChip: 'eurot kilogrammi kohta', kind: 'lines', unit: ' €/kg', dec: 2, head: 'levelpct',
+      F: { M: puitF(Q, (s) => s), Q: puitF(Q, kuuKv, { note: 'Kvartali kilohind on kuude väärtuste summa jagatud koguste summaga.' }), A: puitF(S, (s) => koonda(s, aKey, 12, sum), { note: 'Aasta kilohind on kuude väärtuste summa jagatud koguste summaga. Poolikut aastat ei näidata.' }) },
+      src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
+      note: 'Puidu ja puittoodete (HS grupp 44) ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse, jooksevhindades. Kilohind sõltub ka ekspordi koosseisust: kui odavama toote (nt küttepuidu) osa kasvab, langeb keskmine kilohind. Puitmajad (9406) ja mööbel (94) ei kuulu grupi 44 alla.' },
     { nr: '39', unitChip: 'laevakülastuste arv', kind: 'col', unit: '', dec: 0, head: 'levelpct',
       F: { M: xy(Q('sadam_laevu_m')), Q: xy(kuuKv(Q('sadam_laevu_m')), { note: 'Kvartal on kuude summa.' }), A: xy(koonda(S('sadam_laevu_m'), aKey, 12, sum), { note: 'Aasta on kuude summa. Poolikut aastat ei näidata.' }) },
       src: 'UN Global Platform; IMF PortWatch', url: 'https://portwatch.imf.org/',
@@ -1421,7 +1437,7 @@ function economyOption(it) {
   const base = {
     animation: false,
     textStyle: { fontFamily: t.font },
-    grid: { left: 8, right: it.kind === 'riigid' ? 56 : 14, top: it.kind === 'riigid' ? 6 : it.kind === 'stack' ? 74 : it.kind === 'lines' ? (it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
+    grid: { left: 8, right: it.kind === 'riigid' ? 56 : 14, top: it.kind === 'riigid' ? 6 : it.kind === 'stack' ? 74 : it.kind === 'lines' ? (it.series.length > 4 ? 74 : it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
     tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.line, textStyle: { color: t.fg, fontSize: 12 },
       valueFormatter: fmt, axisPointer: { type: it.kind === 'bar' || it.kind === 'col' ? 'shadow' : 'line', lineStyle: { color: t.muted }, shadowStyle: { color: 'rgba(128,140,160,.12)' } } },
     xAxis: xAxisFor(it, t),
@@ -1634,6 +1650,7 @@ function koostaVordlus(V, META) {
     return { x: per.map(silt), y: series[0].y, series, ...extra };
   };
   // Automatiseerimisseadmete aasta netoimport % sama aasta SKP-st (kuude ja kvartalite summad)
+  const kuuKvV = (s) => koonda(s, kvKey, 3, sum);
   const automSkp = (g) => {
     const n = koonda(S('autom_neto_m_' + g), aKey, 12, sum), y = koonda(S('skp_q_' + g), aKey, 4, sum);
     const per = n.periods.filter((p) => y.periods.includes(p));
@@ -1754,6 +1771,11 @@ function koostaVordlus(V, META) {
       F: { A: riigid((g) => automSkp(g)) },
       src: 'Eurostat Comext DS-045409; SKP namq_10_gdp', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
       note: 'Automatiseerimisseadmete (Acemoglu ja Restrepo põhiloend, HS 2012) import miinus eksport protsendina sama aasta SKP-st jooksevhindades. Kaubavahetus kõigi riikidega, ka teiste ELi riikidega. EL-27 koondit ei näidata, sest liidusisene kaubavahetus ei ole võrreldav.' },
+    { nr: '55', unitChip: 'eurot kilogrammi kohta', kind: 'lines', unit: ' €/kg', dec: 2, head: 'vrd',
+      F: { Q: riigid((g) => kilohind(kuuKvV(S('puit_eur_m_' + g)), kuuKvV(S('puit_kg_m_' + g)))),
+           A: riigid((g) => kilohind(koonda(S('puit_eur_m_' + g), aKey, 12, sum), koonda(S('puit_kg_m_' + g), aKey, 12, sum))) },
+      src: 'Eurostat Comext DS-045409', url: 'https://ec.europa.eu/eurostat/comext/newxtweb/',
+      note: 'Puidu ja puittoodete (HS grupp 44) ekspordi väärtus jagatud kogusega, eksport kõikidesse riikidesse. Riikide erinevus peegeldab suuresti ekspordi koosseisu (ümarpuit ja küttepuit on odavad, töödeldud tooted kallid). Kvartali ja aasta kilohind on kuude väärtuste summa jagatud koguste summaga.' },
     { nr: '52b', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'vrd', pm: true,
       F: { A: riigid((g) => muutus(S('tfp_a_' + g), 1)) },
       src: 'Euroopa Komisjon, AMECO (ZVGDF)', url: 'https://db.nomics.world/AMECO/ZVGDF',

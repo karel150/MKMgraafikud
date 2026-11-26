@@ -736,12 +736,13 @@ jsonstat_df <- function(js) {
   df
 }
 # Comexti päring: väärtused eurodes kuude kaupa, kaubakood x kaubavoog (1 = import, 2 = eksport)
-comext_kuud <- function(tooted, reporter = "EE", partner = "WORLD", andmestik = "DS-045409") {
+comext_kuud <- function(tooted, reporter = "EE", partner = "WORLD", andmestik = "DS-045409",
+                        naitajad = "VALUE_IN_EUROS", vood = c("1", "2")) {
   aja_kontroll(andmestik)
-  q <- c(list(format = "JSON", lang = "EN", freq = "M", partner = partner, indicators = "VALUE_IN_EUROS"),
-         setNames(as.list(reporter), rep("reporter", length(reporter))),
-         setNames(as.list(tooted), rep("product", length(tooted))),
-         list(flow = "1", flow = "2"))
+  korda <- function(nimi, x) setNames(as.list(x), rep(nimi, length(x)))
+  q <- c(list(format = "JSON", lang = "EN", freq = "M", partner = partner),
+         korda("indicators", naitajad), korda("reporter", reporter),
+         korda("product", tooted), korda("flow", vood))
   vastus <- NULL
   for (k in 1:3) {
     vastus <- tryCatch(GET(paste0(COMEXT_API, andmestik), query = q, timeout(120)), error = function(e) e)
@@ -756,6 +757,39 @@ comext_kuud <- function(tooted, reporter = "EE", partner = "WORLD", andmestik = 
   df$per <- norm_periood(df$time)
   df
 }
+
+# Puidu ja puittoodete (HS 44) eksport: väärtus ja kogus riigiti ja tooterühmiti.
+# Kilohind arvutatakse lehel perioodi väärtuste ja koguste summast.
+PUIT_HS <- c(kokku = "44", kytus = "4401", umarpuit = "4403", saematerjal = "4407", ehituspuusepad = "4418")
+puidu_eksport <- local({
+  malu <- NULL
+  function() {
+    if (!is.null(malu)) { if (inherits(malu, "error")) stop(malu); return(malu) }
+    malu <<- tryCatch({
+      df <- comext_kuud(unname(PUIT_HS), reporter = AUTOMATISEERIMINE_RIIGID,
+                        naitajad = c("VALUE_IN_EUROS", "QUANTITY_IN_100KG"), vood = "2")
+      tul <- lapply(setNames(AUTOMATISEERIMINE_RIIGID, AUTOMATISEERIMINE_RIIGID), function(r) {
+        lapply(PUIT_HS, function(kood) {
+          x <- df[df$reporter == r & df$product == kood, ]
+          v <- x[x$indicators == "VALUE_IN_EUROS", ]; k <- x[x$indicators == "QUANTITY_IN_100KG", ]
+          # ainult kuud, kus on nii väärtus kui ka kogus (muidu kilohind kallutatud)
+          per <- intersect(v$per[v$value > 0], k$per[k$value > 0])
+          if (length(per) < 12) return(NULL)
+          list(eur = seeria(per, round(v$value[match(per, v$per)] / 1e6, 3)),       # mln eurot
+               kg = seeria(per, round(k$value[match(per, k$per)] / 1e4, 3)))        # 100 kg -> mln kg (tuh t)
+        })
+      })
+      ee <- tul$EE$kokku
+      if (is.null(ee)) stop("Comext: Eesti puidu ekspordi andmeid pole.")
+      message("Puidu eksport ", utils::tail(ee$eur$periods, 1), ": ", utils::tail(ee$eur$values, 1), " mln €, ",
+              utils::tail(ee$kg$values, 1), " mln kg, ",
+              round(utils::tail(ee$eur$values, 1) / utils::tail(ee$kg$values, 1), 3), " €/kg")
+      tul
+    }, error = function(e) e)
+    if (inherits(malu, "error")) stop(malu)
+    malu
+  }
+})
 
 # Automatiseerimise indikaator: automatiseerimisseadmete import ja eksport (Acemoglu–Restrepo
 # põhiloend, HS 2012). Vahemikud, mis katavad terve rubriigi, päritakse HS4 tasemel.

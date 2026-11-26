@@ -333,6 +333,15 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
       s
     }, c(-500, 500))
   })
+  # Puidu ja puittoodete eksport (HS 44): väärtus mln € ja kogus mln kg, kokku ja tooterühmiti
+  for (g in names(PUIT_HS)) for (m in c("eur", "kg")) local({
+    grupp <- g; moot <- m
+    lisa(paste0("puit_", grupp, "_", moot, "_m"), function() {
+      s <- puidu_eksport()$EE[[grupp]][[moot]]
+      if (is.null(s)) stop("Comextis pole tooterühma ", PUIT_HS[[grupp]], " andmeid.")
+      s
+    }, c(0, 5000))
+  })
   # Lisandväärtus töötatud tunni kohta tegevusalati, indeks 2015 = 100 (nama_10_a10, nama_10_a10_e)
   TEGEVUSALAD <- c(TOTAL = "kokku", "B-E" = "toostus", F = "ehitus", "G-I" = "kaubandus", J = "info", M_N = "kutse")
   for (k in names(TEGEVUSALAD)) local({
