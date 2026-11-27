@@ -1,18 +1,18 @@
 {
- "uuendatud": "2026-11-26T12:19:53.328Z",
+ "uuendatud": "2026-11-27T06:11:35.959Z",
  "mudel": "claude-sonnet-5-5",
  "tekstid": {
   "yldine": {
    "laused": [
-    "Eesti majandus kasvab mõõdukalt, kuid pilt on vastuoluline: sisemajanduse koguprodukt oli kolmandas kvartalis 2,2 % suurem kui aasta varem.",
-    "Septembris oli kaupade eksport 12,3 % suurem kui aasta varem ja jaemüük kasvas samuti.",
-    "Töötleva tööstuse toodang kasvas 3,6 %, kuid kevadel ja suve alguses see langes.",
-    "Kõige selgemalt eristub tööturg: töötuse määr oli kolmandas kvartalis 7,9 %, teises kvartalis 6,6 %, samas registreeritud töötuid oli oktoobri lõpus 11,6 % vähem kui aasta varem.",
-    "Tarbijahinnad tõusid oktoobris aastaga 4,2 %, kiiremini kui septembris, ning majandususaldus on pikaajalisest keskmisest veidi madalam."
+    "Eesti majandus kasvab mõõdukalt, kuid pilt on vastuoluline: sisemajanduse koguprodukt oli kolmandas kvartalis aastaga 2,2 % suurem.",
+    "Kõige enam eristub töötuse määr, mis tõusis tööjõu-uuringu järgi kolmandas kvartalis 7,9 %-ni ja oli kõrgeim viimase viie kvartali seas.",
+    "Registreeritud töötuid oli oktoobri lõpus 11,6 % vähem kui aasta varem, kuid Töötukassa vabade töökohtade arv vähenes juulist oktoobrini igal kuul.",
+    "Tööstustoodang ja eksport kasvasid septembris aastaga, kuid jaemüügi maht langes oktoobris 0,3 % ja hinnatõus kiirenes 4,2 %-ni.",
+    "Majandususaldus on novembris pikaajalisest keskmisest veidi madalam."
    ],
    "rohk": "majandus kasvab mõõdukalt",
-   "rasi": "d10aeacb37e78981",
-   "aeg": "2026-11-25"
+   "rasi": "099698e7bb9ab9bd",
+   "aeg": "2026-11-27"
   },
   "indeksid": {
    "laused": [
