@@ -352,6 +352,15 @@ koosta_naitajad <- function(esi_kuu = NULL, icu = NULL) {
       s
     }, c(20, 500))
   })
+  # Tööjõu tootlikkus tegevusalati, Eesti % EL-27 tasemest (nominaalne ja PPS)
+  for (k in names(SEKTORID_EL)) for (m in c("nom", "pps")) local({
+    kood <- k; moot <- m
+    lisa(paste0("tootl_el_", moot, "_", SEKTORID_EL[[kood]], "_a"), function() {
+      s <- tootlikkus_el_suhtes()[[moot]][[kood]]
+      if (is.null(s)) stop("Eurostatis pole tegevusala ", kood, " andmeid (", moot, ").")
+      s
+    }, c(5, 400))
+  })
   # Kogutootlikkus (TFP), indeks 2020 = 100: Euroopa Komisjoni AMECO (ZVGDF)
   for (k in list(c("EE", "ee"), c("EU27_2020", "eu"))) local({
     geo <- k[1]; nimi <- k[2]

@@ -97,6 +97,14 @@ Kaart 54b jagab Eesti netoimpordi kategooriatesse (`AUTOMATISEERIMINE_GRUPID`, k
 protsendina sama aasta SKP-st (kvartalite summa, `namq_10_gdp` jooksevhindades). Kõik viis riiki päritakse
 Comextist ühe päringuga. EL-27 koondit ei näidata, sest selle `WORLD` hõlmab liidusisest kaubavahetust.
 
+## Tööjõu tootlikkus tegevusalati EL-27 suhtes (näitajad 56, 56b)
+
+Lisandväärtus (`nama_10_a10`, `B1G`) jagatud hõivatute arvuga siseriikliku mõiste järgi
+(`nama_10_a10_e`, `EMP_DC`, `THS_PER`) samal tegevusalal, Eesti protsendina EL-27 tasemest. Kaks mõõtu:
+jooksevhindades eurodes (`CP_MEUR`, nominaalne) ja ostujõu standardis (`CP_MPPS_EU27_2020`). Tegevusalad on
+muutujas `SEKTORID_EL`: kokku, A, C, F, G–I, J, K, M–N. Kaart 56 näitab viimast aastat tegevusalade kaupa,
+kaart 56b PPS-taset ajas.
+
 ## Tootlikkus: TFP ja tegevusalad
 
 * **Näitaja 52, kogutootlikkus (TFP)**: Euroopa Komisjoni AMECO muutuja `ZVGDF` (kogu majandus,

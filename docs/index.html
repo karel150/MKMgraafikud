@@ -484,7 +484,7 @@ const SEERIA_NAITAJA = {
   esi_m: ['13', ' punkti'], esi_m_hinnang: ['13', ' punkti'],
   tootus_q: ['14', '%'], regtootud_m: ['14b', ''], volg_a: ['15', '%'],
   vab_maar_q: ['16', '%'], vab_arv_q: ['16', ''], tk_vabad_m: ['16b', ''], tk_vabad_c_m: ['16c', ''],
-  tootl_el_a: ['36', '%'], tfp_a_ee: '52', tootl_ta_kokku_a: '53', tootl_ta_toostus_a: '53', tootl_ta_ehitus_a: '53', tootl_ta_kaubandus_a: '53', tootl_ta_info_a: '53', tootl_ta_kutse_a: '53', ulc_nom_q: ['17', '%'], ulc_real_q: ['17', '%'], ulc_nom_a: ['17', '%'], ulc_real_a: ['17', '%'],
+  tootl_el_a: ['36', '%'], tfp_a_ee: '52', tootl_el_pps_kokku_a: '56', tootl_el_nom_kokku_a: '56', tootl_ta_kokku_a: '53', tootl_ta_toostus_a: '53', tootl_ta_ehitus_a: '53', tootl_ta_kaubandus_a: '53', tootl_ta_info_a: '53', tootl_ta_kutse_a: '53', ulc_nom_q: ['17', '%'], ulc_real_q: ['17', '%'], ulc_nom_a: ['17', '%'], ulc_real_a: ['17', '%'],
   kapital_q_osa: ['18', '%'], kapital_a_osa: ['18', '%'], kapital_q_yoy: '18', kapital_a_yoy: '18',
   ai_a_ee: ['19', '%'],
   jae_q_G45_47: ['20', '%'], jae_q_G45: ['20', '%'], jae_q_G47: ['20', '%'],
@@ -604,6 +604,19 @@ function koostaGrupid(D, META) {
     const k = kh('kokku');
     return xy(k, { series: [{ name: 'Puit ja puittooted kokku', y: k.values, c: '--dark-line' },
       ...PUIT_GR.map(([g, name, c]) => ({ name, c, y: joonda(k.periods, kh(g)) }))], ...extra });
+  };
+  // Tööjõu tootlikkus tegevusalati, Eesti % EL-27 tasemest
+  const SEKT_EL = [['kokku', 'Kogu majandus', '--dark-line'], ['pollumajandus', 'Põllumajandus (A)', '--s1'],
+    ['tootlev', 'Töötlev tööstus (C)', '--s2'], ['ehitus', 'Ehitus (F)', '--s3'], ['kaubandus', 'Kaubandus, veondus (G–I)', '--s4'],
+    ['info', 'Info ja side (J)', '--s5'], ['finants', 'Finants (K)', null], ['kutse', 'Äriteenused (M–N)', '--peer']];
+  const sektEl = () => {
+    const k = S('tootl_el_pps_kokku_a');
+    const rida = (m) => SEKT_EL.map(([g, name]) => ({ name, y: joonda(k.periods, S(`tootl_el_${m}_${g}_a`)) }));
+    return xy(k, { series: rida('pps'), nomSeries: rida('nom') });
+  };
+  const sektElAeg = () => {
+    const k = S('tootl_el_pps_kokku_a');
+    return xy(k, { series: SEKT_EL.filter(([, , c]) => c).map(([g, name, c]) => ({ name, c, y: joonda(k.periods, S(`tootl_el_pps_${g}_a`)) })) });
   };
   const lvlPais = (lvlS, chgS, fmt, unit, prefix, kv) => {
     const l = viimane(lvlS), c = chgS.values.length ? chgS.values.at(-1) : null;
@@ -844,6 +857,14 @@ function koostaGrupid(D, META) {
       F: { A: xy(S('tootl_el_a')) },
       src: 'Eurostat nama_10_lp_ulc', url: EUSTAT('nama_10_lp_ulc'),
       note: 'Hõivatu kohta loodud lisandväärtus ostujõu standardis. Katkendjoon on EL-27 keskmine (100).' },
+    { nr: '56', unitChip: '% EL-27 tasemest', kind: 'sektorid', unit: '%', dec: 0, head: 'level',
+      F: { A: sektEl() },
+      src: 'Eurostat nama_10_a10, nama_10_a10_e', url: EUSTAT('nama_10_a10'),
+      note: 'Tegevusala lisandväärtus hõivatu kohta (siseriiklik mõiste), Eesti protsendina EL-27 tasemest viimasel aastal. PPS arvestab hinnataseme erinevust, nominaalne võrdleb eurosid. Katkendjoon on EL-27 tase (100). Põllumajandus = A (koos metsanduse ja kalandusega), kaubandus ja veondus = G–I (koos majutuse ja toitlustusega), äriteenused = M–N (kutse-, teadus- ja tehnikaalane ning haldus- ja abitegevus). Pealkirjas kogu majandus PPS-is. Tabelis PPS aastate kaupa.' },
+    { nr: '56b', unitChip: '% EL-27 tasemest, PPS', kind: 'lines', unit: '%', dec: 0, head: 'level', ref: 100, scale: true,
+      F: { A: sektElAeg() },
+      src: 'Eurostat nama_10_a10, nama_10_a10_e', url: EUSTAT('nama_10_a10'),
+      note: 'Tegevusala lisandväärtus hõivatu kohta ostujõu standardis, Eesti protsendina EL-27 tasemest (EL-27 = 100, katkendjoon). Finants- ja kindlustustegevus on ainult eelmisel kaardil.' },
     { nr: '53', unitChip: 'indeks, 2015 = 100', kind: 'lines', unit: '', dec: 1, head: 'level', ref: 100, scale: true,
       F: { A: xy(S('tootl_ta_kokku_a'), { series: [
         { name: 'Kokku', y: S('tootl_ta_kokku_a').values, c: '--dark-line' },
@@ -1387,7 +1408,7 @@ function buildCard(it, key = 'majandus') {
   head.append(el('div', 'chips', it.chips.map((x, i) => `<span class="chip${i === 1 && it.fallback ? ' warn' : ''}">${esc(x)}</span>`).join('')));
   head.append(el('div', 'headline', `<span class="big">${esc(h.big)}<small>${esc(h.unit)}</small></span><span class="per">${esc(h.per)}</span>${h.delta ? `<span class="delta">${esc(h.delta)}</span>` : ''}`));
   c.append(head);
-  const ch = el('div', 'chart' + (it.kind === 'stack' || it.ryhmad ? ' tall' : ''));
+  const ch = el('div', 'chart' + (it.kind === 'stack' || it.ryhmad || it.kind === 'sektorid' || (it.kind === 'lines' && (it.series || []).length > 6) ? ' tall' : ''));
   ch.setAttribute('role', 'img');
   ch.setAttribute('aria-label', `${it.title}: viimane väärtus ${h.big} ${h.unit}, ${h.per}.`);
   c.append(ch);
@@ -1443,7 +1464,7 @@ function economyOption(it) {
   const base = {
     animation: false,
     textStyle: { fontFamily: t.font },
-    grid: { left: 8, right: it.kind === 'riigid' ? 56 : 14, top: it.ryhmad ? 40 : it.kind === 'riigid' ? 6 : it.kind === 'stack' ? 74 : it.kind === 'lines' || it.kind === 'tulbad' ? (it.series.length > 4 ? 74 : it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
+    grid: { left: 8, right: it.kind === 'riigid' || it.kind === 'sektorid' ? 56 : 14, top: it.ryhmad || it.kind === 'sektorid' ? 40 : it.kind === 'riigid' ? 6 : it.kind === 'stack' ? 74 : it.kind === 'lines' || it.kind === 'tulbad' ? (it.series.length > 6 ? 92 : it.series.length > 4 ? 74 : it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
     tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.line, textStyle: { color: t.fg, fontSize: 12 },
       valueFormatter: fmt, axisPointer: { type: it.kind === 'bar' || it.kind === 'col' || it.kind === 'tulbad' ? 'shadow' : 'line', lineStyle: { color: t.muted }, shadowStyle: { color: 'rgba(128,140,160,.12)' } } },
     xAxis: xAxisFor(it, t),
@@ -1538,6 +1559,21 @@ function economyOption(it) {
       data: rows.map((r) => ({ value: r.v - ref, label: r.v - ref < 0 ? { position: 'left' } : undefined, itemStyle: { color: r.ee ? t.s1 : r.riik ? t.peer : 'transparent', borderColor: r.riik ? undefined : t.muted, borderWidth: r.riik ? 0 : 1.5, borderType: 'dashed' } })),
       label: { show: true, position: 'right', distance: 6, color: t.fg, fontSize: 12, formatter: (p) => sgnFmt(rows[p.dataIndex].v) },
       markLine: it.ref != null ? { silent: true, symbol: 'none', label: { show: false }, lineStyle: { color: t.muted, type: 'dashed' }, data: [{ xAxis: 0 }] } : undefined }];
+  } else if (it.kind === 'sektorid') {
+    // Viimane aasta tegevusalade kaupa: PPS ja nominaalne kõrvuti, viitejoon EL-27 = 100
+    const i = lastIdx(it.y);
+    const nimed = it.series.map((s) => s.name);
+    const vf = (v) => (v == null ? '–' : nf(dec).format(v) + it.unit);
+    base.legend = { ...legend, itemHeight: 8, icon: 'roundRect' };
+    base.tooltip = { ...base.tooltip, trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(128,140,160,.12)' } }, valueFormatter: vf };
+    base.xAxis = { type: 'value', min: 0, splitLine: { lineStyle: { color: t.grid } }, axisLabel: { color: t.muted, fontSize: 11, hideOverlap: true } };
+    base.yAxis = { type: 'category', inverse: true, data: nimed, axisTick: { show: false }, axisLine: { lineStyle: { color: t.line } },
+      axisLabel: { color: t.muted, fontSize: 12, formatter: (v) => (v === nimed[0] ? `{k|${v}}` : v), rich: { k: { color: t.fg, fontWeight: 700, fontSize: 12 } } } };
+    const tulp = (name, c, rida) => ({ type: 'bar', name, barGap: '15%', barCategoryGap: '28%', itemStyle: { color: t.get(c) },
+      data: rida.map((s) => (s && i >= 0 ? s.y[i] : null)),
+      label: { show: true, position: 'right', distance: 4, color: t.fg, fontSize: 11, formatter: (p) => (p.value == null ? '' : nf(0).format(p.value)) } });
+    base.series = [tulp('PPS (hinnatasemega korrigeeritud)', '--s1', it.series), tulp('Nominaalne (eurodes)', '--s2', nimed.map((n) => it.nomSeries.find((s) => s.name === n)))];
+    base.series[0].markLine = { silent: true, symbol: 'none', lineStyle: { color: t.muted, type: 'dashed' }, label: { show: false }, data: [{ xAxis: 100 }] };
   } else if (it.kind === 'tulbad') {
     // Mitme rea muutused kõrvuti tulpadena (iga rida oma värviga)
     base.legend = { ...legend, itemHeight: 8, icon: 'roundRect' };
