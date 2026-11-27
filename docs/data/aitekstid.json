@@ -1,17 +1,17 @@
 {
- "uuendatud": "2026-11-27T06:11:35.959Z",
+ "uuendatud": "2026-11-27T16:33:58.519Z",
  "mudel": "claude-sonnet-5-5",
  "tekstid": {
   "yldine": {
    "laused": [
-    "Eesti majandus kasvab mõõdukalt, kuid pilt on vastuoluline: sisemajanduse koguprodukt oli kolmandas kvartalis aastaga 2,2 % suurem.",
-    "Kõige enam eristub töötuse määr, mis tõusis tööjõu-uuringu järgi kolmandas kvartalis 7,9 %-ni ja oli kõrgeim viimase viie kvartali seas.",
-    "Registreeritud töötuid oli oktoobri lõpus 11,6 % vähem kui aasta varem, kuid Töötukassa vabade töökohtade arv vähenes juulist oktoobrini igal kuul.",
-    "Tööstustoodang ja eksport kasvasid septembris aastaga, kuid jaemüügi maht langes oktoobris 0,3 % ja hinnatõus kiirenes 4,2 %-ni.",
-    "Majandususaldus on novembris pikaajalisest keskmisest veidi madalam."
+    "Eesti majandus kasvab mõõdukalt, kuid pilt on vastuoluline, sest tööturu näitajad ei liigu ühes suunas.",
+    "Sisemajanduse koguprodukt oli kiirhinnangu järgi kolmandas kvartalis 2,2 % suurem kui aasta varem ning töötleva tööstuse toodang ja eksport olid septembris samuti plussis.",
+    "Kõige enam eristub tööturg: tööjõu-uuringu töötuse määr tõusis kolmandas kvartalis 7,9 %-ni, teises kvartalis oli see 6,6 %.",
+    "Registreeritud töötuid oli oktoobri lõpus 11,6 % vähem kui aasta varem, kuid Töötukassa vahendatavate vabade töökohtade arv on juulist oktoobrini iga kuuga vähenenud.",
+    "Tarbijahinnad tõusid oktoobris aastaga 4,2 % ja hinnatõus kiirenes, jaemüügi maht aga oli 0,3 % väiksem kui aasta varem."
    ],
    "rohk": "majandus kasvab mõõdukalt",
-   "rasi": "099698e7bb9ab9bd",
+   "rasi": "8508674b4528f231",
    "aeg": "2026-11-27"
   },
   "indeksid": {
@@ -27,14 +27,14 @@
   },
   "vordlus_M": {
    "laused": [
-    "Eesti jääb kasvunäitajatelt võrdlusriikidest maha, hinnatõus on kiire ja töötus on riikide võrdluses keskel.",
-    "Majandus kasvas aastaga 2,2%, Rootsis aga 2,8%, ja tööstustoodangu kasv oli viie riigi seas neljas.",
-    "Tarbijahinnad tõusid Eestis 3,6%, kiiremini vaid Leedus, kus hinnatõus oli 6,1%.",
-    "Töötuse määr 8,0% jääb Leedu ja Soome vahele, kuid ettevõtete uute laenude intress 4,71% on euroala keskmisest kõrgem."
+    "Eesti on kuuandmete põhjal võrdlusriikide seas kasvult pigem tagapool, hinnatõusult aga eesotsas.",
+    "Majandus kasvas aastaga 2,2%, mis on nelja riigi seas kolmas koht, ja tööstustoodangu kasv oli viie riigi seas neljas.",
+    "Tarbijahinnad tõusid 3,6%, mis on hinnatõusu kiiruselt viiest riigist teine koht.",
+    "Tööpuudus on kahes riigis Eestist kõrgem, ettevõtete uute laenude intress 4,71% on aga euroala keskmisest kõrgem."
    ],
-   "rohk": "jääb kasvunäitajatelt võrdlusriikidest maha",
-   "rasi": "7ce28b2cdbcb8e97",
-   "aeg": "2026-11-26"
+   "rohk": "kasvult pigem tagapool",
+   "rasi": "6fa75d564c032d0c",
+   "aeg": "2026-11-27"
   },
   "vordlus_Q": {
    "laused": [
