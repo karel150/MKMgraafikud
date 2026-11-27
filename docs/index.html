@@ -748,7 +748,7 @@ function koostaGrupid(D, META) {
     { nr: '24', unitChip: 'panus, protsendipunkti', kind: 'stack', unit: '%', head: 'yoy',
       F: { Q: panus('q'), A: panus('a') },
       src: 'Statistikaamet RAA0042', url: SA('RAA0042'), note: 'Tulbad: tegevusalade panus SKP aastakasvu. Joon: SKP reaalkasv kokku, %.' },
-    { nr: '31', unitChip: 'nominaalmuutus, %', kind: 'lines', unit: '%', head: 'yoy',
+    { nr: '31', unitChip: 'nominaalmuutus, %', kind: 'tulbad', unit: '%', head: 'yoy',
       F: { Q: xy(krtQ, { series: [{ name: 'Kogurahvatulu', y: krtQ.values, c: '--s1' }, { name: 'SKP jooksevhindades', y: joonda(krtQ.periods, skpNQ), c: '--s2' }] }),
            A: xy(krtA, { series: [{ name: 'Kogurahvatulu', y: krtA.values, c: '--s1' }, { name: 'SKP jooksevhindades', y: joonda(krtA.periods, skpNA), c: '--s2' }] }) },
       src: 'Statistikaamet RAA0012', url: SA('RAA0012'), note: 'Jooksevhindades, seega sisaldab hinnamuutust.' },
@@ -762,8 +762,8 @@ function koostaGrupid(D, META) {
       src: 'Eurostat teibs070', url: 'https://ec.europa.eu/eurostat/databrowser/view/teibs070/default/table' },
     { nr: '20b', unitChip: 'mahu muutus aasta varem, %', kind: 'bar', unit: '%', head: 'custom', F: jaemF,
       src: 'Statistikaamet KM020', url: SA('KM020'), note: 'Jaekaubandus v.a mootorsõidukid (G47), mahuindeks püsivhindades. Kvartali ja aasta muutus on arvutatud kuuindeksite keskmisest. Sesoonselt korrigeerimata.' },
-    { nr: '20', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'yoy',
-      F: { Q: xy(Q('jae_q_G47'), { series: [{ name: 'Jaekaubandus (G47)', y: Q('jae_q_G47').values, c: '--s1' }, { name: 'Mootorsõidukid (G45)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45')), c: '--s2' }, { name: 'Kokku (G45+G47)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45_47')), c: '--s3' }] }) },
+    { nr: '20', unitChip: '%, aasta varem', kind: 'tulbad', unit: '%', head: 'yoy',
+      F: { Q: xy(Q('jae_q_G47'), { series: [{ name: 'Jaekaubandus (G47)', y: Q('jae_q_G47').values, c: '--s1' }, { name: 'Mootorsõidukid (G45)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45')), c: '--s2' }, { name: 'Kokku (G45+G47)', y: joonda(Q('jae_q_G47').periods, Q('jae_q_G45_47')), c: '--s3', joon: true }] }) },
       src: 'Statistikaamet KM0102', url: SA('KM0102'), note: 'Püsivhindades. Pealkirjas jaekaubandus ilma mootorsõidukiteta (G47).' },
     { nr: '26', unitChip: '% kasutatavast tulust', kind: 'line', unit: '%', head: 'level',
       F: { A: xy(S('saast_a')) },
@@ -796,10 +796,10 @@ function koostaGrupid(D, META) {
       F: { M: xy(alates(autoM, ALGUS)), Q: xy(alates(autoQ, ALGUS)), A: xy(autoA) },
       src: 'Statistikaamet TS322', url: SA('TS322'), note: 'Esmaselt registreeritud uued sõiduautod. Kvartal ja aasta on kuude summa. Suurte autoparkide tehingud tekitavad hüppeid.' },
 
-    { nr: '3', unitChip: 'reaalkasv, %', kind: 'lines', unit: '%', head: 'yoy',
-      F: { Q: xy(Q('eksp_q'), { series: [{ name: 'Kokku', y: Q('eksp_q').values, c: '--s1' }, { name: 'Kaubad', y: Q('ekspK_q').values, c: '--s2' }, { name: 'Teenused', y: Q('ekspT_q').values, c: '--s3' }] }),
-           A: xy(S('eksp_a'), { series: [{ name: 'Kokku', y: S('eksp_a').values, c: '--s1' }, { name: 'Kaubad', y: S('ekspK_a').values, c: '--s2' }, { name: 'Teenused', y: S('ekspT_a').values, c: '--s3' }] }) },
-      src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Pealkirjas kogu eksport. Aheldatud väärtuse muutus.' },
+    { nr: '3', unitChip: 'reaalkasv, %', kind: 'tulbad', unit: '%', head: 'yoy',
+      F: { Q: xy(Q('eksp_q'), { series: [{ name: 'Kokku', y: Q('eksp_q').values, c: '--s1', joon: true }, { name: 'Kaubad', y: Q('ekspK_q').values, c: '--s1' }, { name: 'Teenused', y: Q('ekspT_q').values, c: '--s2' }] }),
+           A: xy(S('eksp_a'), { series: [{ name: 'Kokku', y: S('eksp_a').values, c: '--s1', joon: true }, { name: 'Kaubad', y: S('ekspK_a').values, c: '--s1' }, { name: 'Teenused', y: S('ekspT_a').values, c: '--s2' }] }) },
+      src: 'Statistikaamet RAA0061', url: SA('RAA0061'), note: 'Pealkirjas kogu eksport (joon). Aheldatud väärtuse muutus.' },
     { nr: '4', unitChip: 'muutus aasta varem, %', kind: 'bar', unit: '%', head: 'custom', F: kaupF('kaup_m'),
       src: 'Statistikaamet VKK10', url: 'https://andmed.stat.ee/et/statsql/VKK10', note: 'Väliskaubandusstatistika, jooksevhindades. Kvartal ja aasta on kuude summa. Viimased kuud on esialgsed ja võivad muutuda.' },
     { nr: '4b', unitChip: 'muutus aasta varem, %', kind: 'bar', unit: '%', head: 'custom', F: kaupF('kaupEE_m'),
@@ -858,20 +858,20 @@ function koostaGrupid(D, META) {
       F: { A: xy(S('tfp_a_ee'), { series: [{ name: 'Eesti', y: S('tfp_a_ee').values, c: '--s1' }, { name: 'EL-27', y: joonda(S('tfp_a_ee').periods, S('tfp_a_eu')), c: '--peer' }] }) },
       src: 'Euroopa Komisjon, AMECO (ZVGDF)', url: 'https://db.nomics.world/AMECO/ZVGDF',
       note: 'Kogu majanduse kogutootlikkus: see osa toodangu kasvust, mida tööjõu ja kapitali kasv ei selgita. Euroopa Komisjoni arvutus tootmisfunktsiooni meetodil; komisjoni prognoosiaastaid ei näidata. Viimaste aastate väärtused muutuvad iga uue väljaandega.' },
-    { nr: '52b', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'yoy', ref: 0,
+    { nr: '52b', unitChip: '%, aasta varem', kind: 'tulbad', unit: '%', head: 'yoy', ref: 0,
       F: { A: xy(muutus(S('tfp_a_ee'), 1), { series: [{ name: 'Eesti', y: muutus(S('tfp_a_ee'), 1).values, c: '--s1' }, { name: 'EL-27', y: joonda(muutus(S('tfp_a_ee'), 1).periods, muutus(S('tfp_a_eu'), 1)), c: '--peer' }] }) },
       src: 'Euroopa Komisjon, AMECO (ZVGDF)', url: 'https://db.nomics.world/AMECO/ZVGDF',
       note: 'Kogutootlikkuse indeksi (näitaja 52) muutus eelmise aastaga võrreldes.' },
-    { nr: '17', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'yoy',
+    { nr: '17', unitChip: '%, aasta varem', kind: 'tulbad', unit: '%', head: 'yoy',
       F: { Q: xy(Q('ulc_nom_q'), { series: [{ name: 'Nominaalne', y: Q('ulc_nom_q').values, c: '--s1' }, { name: 'Reaalne', y: joonda(Q('ulc_nom_q').periods, Q('ulc_real_q')), c: '--s2' }], note: 'Sesoonselt korrigeeritud.' }),
            A: xy(S('ulc_nom_a'), { series: [{ name: 'Nominaalne', y: S('ulc_nom_a').values, c: '--s1' }, { name: 'Reaalne', y: joonda(S('ulc_nom_a').periods, S('ulc_real_a')), c: '--s2' }] }) },
       src: 'Statistikaamet RAL0013', url: SA('RAL0013'), note: 'Pealkirjas nominaalne tööjõu ühikukulu.' },
 
-    { nr: '9', unitChip: '%, aasta varem', kind: 'line', unit: '%', head: 'yoy',
+    { nr: '9', unitChip: '%, aasta varem', kind: 'bar', unit: '%', head: 'yoy',
       F: { M: xy(Q('thi_m')), Q: xy(koonda(Q('thi_m'), kvKey, 3, (v) => r1(mean(v))), { note: 'Kvartali kuude aastamuutuste keskmine.' }),
            A: xy(S('thi_a'), { src: 'Statistikaamet IA001', url: SA('IA001') }) },
       src: 'Statistikaamet IA021', url: SA('IA021') },
-    { nr: '23', unitChip: '%, aasta varem', kind: 'lines', unit: '%', head: 'yoy',
+    { nr: '23', unitChip: '%, aasta varem', kind: 'tulbad', unit: '%', head: 'yoy',
       F: { M: xy(ppiM('kokku'), { series: [{ name: 'Tööstus kokku', y: ppiM('kokku').values, c: '--s1' }, { name: 'Töötlev tööstus', y: joonda(ppiM('kokku').periods, ppiM('c')), c: '--s2' }] }),
            Q: xy(ppiQ('kokku'), { series: [{ name: 'Tööstus kokku', y: ppiQ('kokku').values, c: '--s1' }, { name: 'Töötlev tööstus', y: joonda(ppiQ('kokku').periods, ppiQ('c')), c: '--s2' }], note: 'Kvartalimuutus kuuindeksite keskmisest.' }),
            A: xy(S('ppi_a_kokku'), { series: [{ name: 'Tööstus kokku', y: S('ppi_a_kokku').values, c: '--s1' }, { name: 'Töötlev tööstus', y: joonda(S('ppi_a_kokku').periods, S('ppi_a_c')), c: '--s2' }], src: 'Statistikaamet IA029', url: SA('IA029') }) },
@@ -1421,7 +1421,7 @@ function buildTable(it) {
 function xAxisFor(it, t) {
   const yearly = it.x[0].length === 4;
   return {
-    type: 'category', data: it.x, boundaryGap: it.kind === 'bar' || it.kind === 'col',
+    type: 'category', data: it.x, boundaryGap: it.kind === 'bar' || it.kind === 'col' || it.kind === 'tulbad',
     axisLine: { lineStyle: { color: t.line } }, axisTick: { show: false },
     axisLabel: {
       color: t.muted, fontSize: 11, hideOverlap: true,
@@ -1443,9 +1443,9 @@ function economyOption(it) {
   const base = {
     animation: false,
     textStyle: { fontFamily: t.font },
-    grid: { left: 8, right: it.kind === 'riigid' ? 56 : 14, top: it.ryhmad ? 40 : it.kind === 'riigid' ? 6 : it.kind === 'stack' ? 74 : it.kind === 'lines' ? (it.series.length > 4 ? 74 : it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
+    grid: { left: 8, right: it.kind === 'riigid' ? 56 : 14, top: it.ryhmad ? 40 : it.kind === 'riigid' ? 6 : it.kind === 'stack' ? 74 : it.kind === 'lines' || it.kind === 'tulbad' ? (it.series.length > 4 ? 74 : it.series.length > 2 ? 52 : 34) : 14, bottom: 26, containLabel: true },
     tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.line, textStyle: { color: t.fg, fontSize: 12 },
-      valueFormatter: fmt, axisPointer: { type: it.kind === 'bar' || it.kind === 'col' ? 'shadow' : 'line', lineStyle: { color: t.muted }, shadowStyle: { color: 'rgba(128,140,160,.12)' } } },
+      valueFormatter: fmt, axisPointer: { type: it.kind === 'bar' || it.kind === 'col' || it.kind === 'tulbad' ? 'shadow' : 'line', lineStyle: { color: t.muted }, shadowStyle: { color: 'rgba(128,140,160,.12)' } } },
     xAxis: xAxisFor(it, t),
     yAxis: { type: 'value', scale: it.scale || (it.kind === 'line' && !it.ref && it.unit !== '%'), splitLine: { lineStyle: { color: t.grid } },
       axisLabel: { color: t.muted, fontSize: 11, formatter: (v) => nf(telgKoma(v)).format(v) } },
@@ -1538,6 +1538,14 @@ function economyOption(it) {
       data: rows.map((r) => ({ value: r.v - ref, label: r.v - ref < 0 ? { position: 'left' } : undefined, itemStyle: { color: r.ee ? t.s1 : r.riik ? t.peer : 'transparent', borderColor: r.riik ? undefined : t.muted, borderWidth: r.riik ? 0 : 1.5, borderType: 'dashed' } })),
       label: { show: true, position: 'right', distance: 6, color: t.fg, fontSize: 12, formatter: (p) => sgnFmt(rows[p.dataIndex].v) },
       markLine: it.ref != null ? { silent: true, symbol: 'none', label: { show: false }, lineStyle: { color: t.muted, type: 'dashed' }, data: [{ xAxis: 0 }] } : undefined }];
+  } else if (it.kind === 'tulbad') {
+    // Mitme rea muutused kõrvuti tulpadena (iga rida oma värviga)
+    base.legend = { ...legend, itemHeight: 8, icon: 'roundRect' };
+    const tihe = it.x.length * it.series.filter((s) => !s.joon).length > 90;
+    // joon: true – kokkuvõttev rida (nt kokku) joonena üle komponentide tulpade
+    base.series = it.series.map((s) => (s.joon
+      ? { type: 'line', name: s.name, data: s.y, showSymbol: true, symbol: 'circle', symbolSize: 4, lineStyle: { color: t.fg, width: 1.5 }, itemStyle: { color: t.fg }, z: 5 }
+      : { type: 'bar', name: s.name, data: s.y, barGap: tihe ? '0%' : '10%', barCategoryGap: tihe ? '15%' : '28%', itemStyle: { color: t.get(s.c) } }));
   } else if (it.kind === 'lines') {
     base.legend = legend;
     base.series = it.series.map((s) => ({ type: 'line', name: s.name, data: s.y, showSymbol: false, lineStyle: { width: 2, color: t.get(s.c) }, itemStyle: { color: t.get(s.c) } }));
