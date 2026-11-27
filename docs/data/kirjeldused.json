@@ -420,6 +420,20 @@
    "nimi": "Puidu, puitmajade ja puitmööbli ekspordi kilohind",
    "kirjeldus": "Puidu ja puittoodete (HS 44), puitmajade ja puitmööbli ekspordi keskmine hind kilogrammi kohta",
    "miks": "Näitab, kui palju väärtust ühe kilogrammi eksporditud puidu kohta saadakse – kõrgem kilohind viitab rohkem töödeldud toodetele või kõrgematele hindadele"
+  },
+  "56": {
+   "valdkond": "Tootlikkus ja kulud",
+   "peamine": false,
+   "nimi": "Tööjõu tootlikkus tegevusalati EL-27 suhtes",
+   "kirjeldus": "Tegevusala lisandväärtus hõivatu kohta, Eesti protsendina EL-27 tasemest, nii ostujõu standardis (PPS) kui ka eurodes",
+   "miks": "Näitab, millistes tegevusalades on Eesti mahajäämus ELi tootlikkusest suurim ja kus väikseim"
+  },
+  "56b": {
+   "valdkond": "Tootlikkus ja kulud",
+   "peamine": false,
+   "nimi": "Tööjõu tootlikkus tegevusalati EL-27 suhtes ajas",
+   "kirjeldus": "Tegevusala lisandväärtus hõivatu kohta ostujõu standardis, Eesti protsendina EL-27 tasemest aastate kaupa",
+   "miks": "Näitab, millistes tegevusalades Eesti läheneb ELi tootlikkusele ja millistes mitte"
   }
  }
 }

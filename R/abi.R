@@ -915,6 +915,53 @@ tootlikkus_tegevusalati <- local({
   }
 })
 
+# ---- Tööjõu tootlikkus tegevusalati võrreldes EL-27-ga (Eurostat) ------------
+# Lisandväärtus (nama_10_a10, B1G) hõivatu kohta (nama_10_a10_e, EMP_DC, siseriiklik mõiste),
+# Eesti protsendina EL-27 tasemest. Kaks mõõtu: jooksevhindades eurodes (nominaalne) ja
+# ostujõu standardis (PPS, arvestab hinnataseme erinevust). Tulemus: list(pps, nom), kummaski
+# nimega list seeriatest NACE koodi järgi.
+SEKTORID_EL <- c(TOTAL = "kokku", A = "pollumajandus", C = "tootlev", F = "ehitus", "G-I" = "kaubandus",
+                 J = "info", K = "finants", "M_N" = "kutse")
+tootlikkus_el_suhtes <- local({
+  malu <- NULL
+  function() {
+    if (!is.null(malu)) { if (inherits(malu, "error")) stop(malu); return(malu) }
+    malu <<- tryCatch({
+      geos <- c("EE", "EU27_2020"); alad <- names(SEKTORID_EL)
+      lv <- eurostat_tabel("nama_10_a10", list(geo = geos, na_item = "B1G", unit = c("CP_MEUR", "CP_MPPS_EU27_2020"),
+                                               nace_r2 = alad, freq = "A"))
+      ho <- eurostat_tabel("nama_10_a10_e", list(geo = geos, na_item = "EMP_DC", unit = "THS_PER", nace_r2 = alad, freq = "A"))
+      aeg <- function(df) norm_periood(as.character(df[[intersect(c("time", "TIME_PERIOD"), names(df))[1]]]))
+      lv$per <- aeg(lv); ho$per <- aeg(ho)
+      lv <- lv[!is.na(lv$values), ]; ho <- ho[!is.na(ho$values) & ho$values > 0, ]
+      if (!nrow(lv) || !nrow(ho)) stop("nama_10_a10: päring ei tagastanud andmeid.")
+      message("Tootlikkus EL suhtes: ühikud ", paste(unique(lv$unit), collapse = ", "))
+      # lisandväärtus hõivatu kohta riigi, ühiku ja tegevusala järgi (nimega vektor perioodide kaupa)
+      tl <- function(geo, yhik, ala) {
+        v <- lv[lv$geo == geo & lv$unit == yhik & lv$nace_r2 == ala, ]
+        h <- ho[ho$geo == geo & ho$nace_r2 == ala, ]
+        per <- intersect(v$per, h$per)
+        setNames(v$values[match(per, v$per)] / h$values[match(per, h$per)], per)
+      }
+      suhe <- function(yhik, yhik_el = yhik) lapply(setNames(alad, alad), function(a) {
+        ee <- tl("EE", yhik, a); el <- tl("EU27_2020", yhik_el, a)
+        per <- sort(intersect(names(ee), names(el)))
+        if (length(per) < 3) return(NULL)
+        seeria(per, unname(round(100 * ee[per] / el[per], 1)))
+      })
+      # EL-27 PPS-is on definitsiooni järgi sama mis eurodes; kui PPS-seeriat EL-27 kohta pole, kasuta eurosid
+      pps_el <- if (nrow(lv[lv$geo == "EU27_2020" & lv$unit == "CP_MPPS_EU27_2020", ])) "CP_MPPS_EU27_2020" else "CP_MEUR"
+      tul <- list(nom = suhe("CP_MEUR"), pps = suhe("CP_MPPS_EU27_2020", pps_el))
+      if (is.null(tul$nom$TOTAL)) stop("Tootlikkus EL suhtes: kogu majanduse andmed puuduvad.")
+      message("Tootlikkus EL suhtes ", utils::tail(tul$nom$TOTAL$periods, 1), ": nominaalne ",
+              utils::tail(tul$nom$TOTAL$values, 1), ", PPS ", if (!is.null(tul$pps$TOTAL)) utils::tail(tul$pps$TOTAL$values, 1) else "puudub")
+      tul
+    }, error = function(e) e)
+    if (inherits(malu, "error")) stop(malu)
+    malu
+  }
+})
+
 # ---- AMECO (Euroopa Komisjon) DBnomicsi kaudu ---------------------------------
 # AMECO riigikoodid. Komisjoni prognoosiaastaid ei võeta: ainult aastad enne jooksvat.
 AMECO_RIIGID <- c(EE = "EST", LV = "LVA", LT = "LTU", FI = "FIN", SE = "SWE", EU27_2020 = "EU27")
